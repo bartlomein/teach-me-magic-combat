@@ -1,0 +1,279 @@
+"use client";
+
+import Image from "next/image";
+import { useRef, ViewTransition, type PointerEvent, type ReactNode, type Ref } from "react";
+import { describeStats, KEYWORDS, type CardDef, type Keyword } from "@/lib/cards";
+import { useMotionMode } from "@/lib/motion-pref";
+import { BladesIcon, CheckIcon, MoonIcon, ShieldIcon, TapIcon, WebIcon, WingIcon } from "./icons";
+
+export type CardStatus = "attacking" | "blocking" | "new" | "tapped" | null;
+
+const STATUS: Record<Exclude<CardStatus, null>, { icon: ReactNode; text: string }> = {
+  attacking: { icon: <BladesIcon className="size-[1.15em]" />, text: "Attacking" },
+  blocking: { icon: <ShieldIcon className="size-[1.15em]" />, text: "Blocking" },
+  new: { icon: <MoonIcon className="size-[1.15em]" />, text: "New this turn" },
+  tapped: { icon: <TapIcon className="size-[1.15em]" />, text: "Tapped" },
+};
+
+const KEYWORD_ICON: Record<Keyword, ReactNode> = {
+  flying: <WingIcon className="size-[1.2em] shrink-0" />,
+  reach: <WebIcon className="size-[1.2em] shrink-0" />,
+};
+
+type Props = {
+  card: CardDef;
+  status?: CardStatus;
+  damage?: number;
+  /** Toggle-button state (selected as blocker, attacker, etc). */
+  pressed?: boolean;
+  flipped?: boolean;
+  foil?: boolean;
+  /** When set, the card is a real button. Otherwise it's a labelled, non-interactive figure. */
+  onSelect?: () => void;
+  disabled?: boolean;
+  /** Turned sideways: it attacked (or was used) and can't attack or block until it untaps. */
+  tapped?: boolean;
+  /** Hint level 3: highlighter ring so the learner can see which cards to look at. */
+  highlight?: boolean;
+  /** A lettered pin printed on the card, explained in the step's Key. */
+  pin?: string;
+  /** Linked highlighting with the Key: this pin is the one in focus, or another one is. */
+  pinState?: "active" | "dim";
+  /** The pin's Key line, added to the screen-reader label so nobody has to hunt for the Key. */
+  pinNote?: string;
+  /** Pointer or keyboard focus entering (true) / leaving (false) a pinned card. */
+  onPinHover?: (on: boolean) => void;
+  /** Tapping the pin itself (phones): point at its Key line. */
+  onPinTap?: () => void;
+  /** A short highlighter callout above the card (wide screens only; the pin + Key cover phones). */
+  callout?: string;
+  /** Same name on two screens = this card flies from one to the other during navigation. */
+  transitionName?: string;
+  ref?: Ref<HTMLDivElement>;
+};
+
+const MAX_TILT = 16; // degrees
+
+export function Card({
+  card,
+  status = null,
+  damage = 0,
+  pressed,
+  flipped,
+  foil,
+  onSelect,
+  disabled,
+  tapped,
+  highlight,
+  pin,
+  pinState,
+  pinNote,
+  onPinHover,
+  onPinTap,
+  callout,
+  transitionName,
+  ref,
+}: Props) {
+  const mode = useMotionMode();
+  const el = useRef<HTMLElement | null>(null);
+  const frame = useRef<number | null>(null);
+  const touchTimer = useRef<number | null>(null);
+
+  const label = [
+    card.name,
+    describeStats(card),
+    status ? STATUS[status].text : null,
+    tapped && status !== "tapped" ? "tapped" : null,
+    damage ? `${damage} damage` : null,
+    card.side === "opp" ? "opponent's creature" : null,
+    pinNote ?? null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  // ---- Tilt, glare and parallax follow the pointer (full motion only). ----
+  function setTilt(clientX: number, clientY: number) {
+    const node = el.current;
+    if (!node || mode !== "full") return;
+    const r = node.getBoundingClientRect();
+    const px = Math.min(Math.max((clientX - r.left) / r.width, 0), 1);
+    const py = Math.min(Math.max((clientY - r.top) / r.height, 0), 1);
+    if (frame.current) cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      node.style.setProperty("--rx", `${(px - 0.5) * MAX_TILT * 2}deg`);
+      node.style.setProperty("--ry", `${(0.5 - py) * MAX_TILT * 2}deg`);
+      node.style.setProperty("--mx", `${px * 100}%`);
+      node.style.setProperty("--my", `${py * 100}%`);
+      node.style.setProperty("--px", `${(px - 0.5) * 2}`);
+      node.style.setProperty("--py", `${(py - 0.5) * 2}`);
+      node.dataset.tracking = "true";
+    });
+  }
+
+  function resetTilt() {
+    const node = el.current;
+    if (!node) return;
+    if (frame.current) cancelAnimationFrame(frame.current);
+    for (const [k, v] of [["--rx", "0deg"], ["--ry", "0deg"], ["--px", "0"], ["--py", "0"]]) node.style.setProperty(k, v);
+    node.dataset.tracking = "false";
+  }
+
+  function onPointerMove(e: PointerEvent) {
+    if (e.pointerType === "mouse" || e.pointerType === "pen") setTilt(e.clientX, e.clientY);
+  }
+
+  // Phones have no hover: a tap gives a short tilt toward the finger, then settles.
+  function onPointerDown(e: PointerEvent) {
+    if (e.pointerType !== "touch") return;
+    setTilt(e.clientX, e.clientY);
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+    touchTimer.current = window.setTimeout(resetTilt, 380);
+  }
+
+  const shared = {
+    className: "card text-left",
+    "data-flipped": flipped ? "true" : "false",
+    "data-foil": foil ? "true" : "false",
+    "data-status": status ?? undefined,
+    "data-tapped": tapped ? "true" : "false",
+    onPointerMove,
+    onPointerLeave: resetTilt,
+    onPointerDown,
+  };
+
+  const inner = (
+    <>
+      <CardFace card={card} status={status} damage={damage} />
+      <div className="card__back" aria-hidden />
+      <div className="card__foil" aria-hidden />
+      <div className="card__glare" aria-hidden />
+      {pressed && (
+        <span className="card__check" aria-hidden>
+          <CheckIcon className="size-[60%]" />
+        </span>
+      )}
+    </>
+  );
+
+  const setNode = (n: HTMLElement | null) => {
+    el.current = n;
+  };
+
+  const wrap = (
+    <div
+      className="card-wrap relative"
+      ref={ref}
+      data-card-id={card.id}
+      data-highlight={highlight ? "true" : undefined}
+      data-pin-state={pin ? pinState : undefined}
+      onPointerEnter={(e) => e.pointerType !== "touch" && onPinHover?.(true)}
+      onPointerLeave={(e) => e.pointerType !== "touch" && onPinHover?.(false)}
+    >
+      {pin && (
+        // Decorative for screen readers (the note is in the card's label); a tap target for fingers.
+        <span aria-hidden className="card-pin" onClick={onPinTap}>
+          {pin}
+        </span>
+      )}
+      {callout && (
+        <span aria-hidden className="card-callout">
+          {callout}
+        </span>
+      )}
+      {onSelect ? (
+        <button
+          {...shared}
+          ref={setNode}
+          type="button"
+          aria-pressed={pressed ?? false}
+          aria-label={label}
+          disabled={disabled}
+          onClick={onSelect}
+          onFocus={() => onPinHover?.(true)}
+          onBlur={() => onPinHover?.(false)}
+        >
+          {inner}
+        </button>
+      ) : (
+        <div {...shared} ref={setNode} role="img" aria-label={label} style={{ cursor: "default" }}>
+          {inner}
+        </div>
+      )}
+    </div>
+  );
+  return transitionName ? (
+    <ViewTransition name={transitionName} share="morph" default="none">
+      {wrap}
+    </ViewTransition>
+  ) : (
+    wrap
+  );
+}
+
+/**
+ * The printed face. Sized entirely in container units (cqw) of .card-wrap, so the
+ * same markup works from a 112px board card to a 260px inspect card. Below 160px
+ * a container query hides the type line and text box.
+ * Also reused by the death shatter so shards look like the real card.
+ */
+export function CardFace({ card, status, damage = 0 }: { card: CardDef; status?: CardStatus; damage?: number }) {
+  return (
+    <div className="card__face cf" data-side={card.side} aria-hidden>
+      <div className="cf-title">
+        <p className="cf-name">{card.name}</p>
+      </div>
+
+      {/* Art: sky clipped to the window; the creature may break out of the right and bottom edges. */}
+      <div className="cf-art">
+        <div className="cf-window" style={{ background: `radial-gradient(circle at 50% 35%, ${card.art.from}, ${card.art.to})` }}>
+          {card.art.layers ? (
+            <Image src={card.art.layers.bg} alt="" fill sizes="(max-width: 640px) 50vw, 280px" className="art-layer art-bg object-cover" />
+          ) : (
+            <span className="cf-glyph">{card.art.glyph}</span>
+          )}
+        </div>
+        {card.art.layers && (
+          <div className="art-breakout">
+            <Image src={card.art.layers.fg} alt="" fill sizes="(max-width: 640px) 60vw, 320px" className="art-layer art-fg object-contain" />
+          </div>
+        )}
+        {status && (
+          <span className="cf-status" data-status={status}>
+            {STATUS[status].icon}
+            <span className="cf-status-word">{STATUS[status].text}</span>
+          </span>
+        )}
+        {damage > 0 && <span className="cf-damage">{damage}</span>}
+      </div>
+
+      <p className="cf-type">{card.type}</p>
+
+      <div className="cf-text">
+        {card.keywords.map((k) => (
+          <p key={k} className="cf-kw">
+            {KEYWORD_ICON[k]}
+            <span>
+              <b>{KEYWORDS[k].label}</b> <i className="cf-reminder">({KEYWORDS[k].reminder})</i>
+            </span>
+          </p>
+        ))}
+      </div>
+
+      {/* Small cards: keyword icon + word only (always rendered so the footer keeps its height). */}
+      <p className="cf-kw-mini">
+        {card.keywords.map((k) => (
+          <span key={k}>
+            {KEYWORD_ICON[k]}
+            {KEYWORDS[k].label}
+          </span>
+        ))}
+      </p>
+
+      <span className="cf-pt">
+        {card.power}
+        <span className="cf-pt-slash">/</span>
+        {card.toughness}
+      </span>
+    </div>
+  );
+}
