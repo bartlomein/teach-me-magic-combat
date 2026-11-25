@@ -33,21 +33,27 @@ const REACH: [depth: number, height: number][] = [
   [1.96, 3.27],
   [2.2, 3.15],
 ];
-/** Moments in the baked animation (frames at 30 fps), for the effects. */
+/** Moments in the baked animation (frames at 30 fps), for the effects. anim_golem.py prints these. */
 const EV = {
-  flare: 8,
-  punch: 22,
-  launch: 47,
-  out: 52,
-  land: 70,
-  pound1: 147,
-  pound2: 155,
-  roar: 141,
-  slam: 188,
-  hop: 231,
-  home: 246,
+  flare: 9,
+  punch: 24,
+  launch: 52,
+  out: 57,
+  land: 77,
+  look1: 127,
+  look2: 144,
+  pointText: 172,
+  pointYou: 213,
+  roar: 241,
+  pound1: 249,
+  pound2: 258,
+  roarEnd: 264,
+  roarOut: 270,
+  slam: 298,
+  hop: 349,
+  home: 365,
 };
-const CLIP_END = 258 / FPS;
+const CLIP_END = 378 / FPS;
 /** After the clip: the painting fades back in over the 3D golem, then the canvas goes. */
 const END = CLIP_END + 0.3;
 
@@ -259,6 +265,7 @@ export async function runGolem(
     const rootNode = node("Root");
     const fistR = node("FistR");
     const fistL = node("FistL");
+    const finger = node("FingerR");
     const chestNode = node("ChestRock");
     const v = new THREE.Vector3();
     /** A golem part's position in root space (world px, before scrolling). */
@@ -573,6 +580,13 @@ export async function runGolem(
           shake(3, 240);
         });
       }
+      // A glint off the fingertip as it points at the lesson text, and again at you.
+      for (const [name, frame] of [
+        ["pointText", EV.pointText],
+        ["pointYou", EV.pointYou],
+      ] as const) {
+        once(name, t, frame, () => emit("spark", 8, t, at(finger, [0, -0.27, 0]), { spread: 0.05, out: 0.5 }));
+      }
       once("slam", t, EV.slam, () => {
         const a = at(fistL);
         const b = at(fistR);
@@ -655,9 +669,11 @@ export async function runGolem(
         0.55 +
         0.45 * span(f, 0, EV.flare) +
         1.1 * pulse(f, EV.flare, 7) +
-        0.5 * pulse(f, 110, 6) +
-        0.5 * pulse(f, 124, 6) +
-        0.7 * (span(f, EV.roar, EV.roar + 4) - span(f, 160, 165)) +
+        0.5 * pulse(f, EV.look1, 6) +
+        0.5 * pulse(f, EV.look2, 6) +
+        0.6 * pulse(f, EV.pointText, 7) +
+        0.9 * pulse(f, EV.pointYou, 8) +
+        0.7 * (span(f, EV.roar, EV.roar + 4) - span(f, EV.roarEnd, EV.roarOut)) +
         1.2 * pulse(f, EV.slam, 8) -
         0.9 * span(t, CLIP_END - 0.25, CLIP_END + 0.1);
       for (const g of look.eyeGlows) {

@@ -234,16 +234,16 @@ export function applyGolemLook(
       mesh.material = fern;
     } else if (name.startsWith("eye")) {
       mesh.material = eye;
-      // one glow per eye: find the two eye centres from the geometry's vertices
+      // One glow per gem: the head's two eyes (split left/right), or the single fingertip.
       mesh.geometry.computeBoundingBox();
+      const box = mesh.geometry.boundingBox!;
+      const pair = box.max.x - box.min.x > 0.12;
       const pos = mesh.geometry.getAttribute("position");
       const centres = [new THREE.Vector3(), new THREE.Vector3()];
       const counts = [0, 0];
-      const mid =
-        (mesh.geometry.boundingBox!.min.x + mesh.geometry.boundingBox!.max.x) /
-        2;
+      const mid = (box.min.x + box.max.x) / 2;
       for (let i = 0; i < pos.count; i++) {
-        const k = pos.getX(i) > mid ? 0 : 1;
+        const k = pair && pos.getX(i) <= mid ? 1 : 0;
         centres[k].add(
           new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)),
         );

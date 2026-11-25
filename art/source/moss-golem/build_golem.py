@@ -95,6 +95,12 @@ for side, sx in (("L", 1), ("R", -1)):
         ferns=[((0.72*sx,0.05,1.9),(0.7*sx,0.35,0.45),0.34,10+s)])
     segment("Forearm"+side, J["Elbow"+side], [((0.31,0.29,0.34),(0.96*sx,-0.2,0.84),22+s,0.25), ((0.2,0.2,0.2),(1.03*sx,-0.08,1.0),29+s,0)])
     segment("Fist"+side, J["Wrist"+side], [((0.36,0.32,0.29),(1.0*sx,-0.36,0.42),43+s,0), ((0.26,0.13,0.13),(1.0*sx,-0.63,0.36),24+s,0), ((0.12,0.12,0.14),(0.83*sx,-0.52,0.48),37+s,0)])
+    if side == "R":
+        # The pointing finger: one stubby stone on its own joint at the front of the fist's base.
+        # The animation keeps it folded up into the fist, and swings it out only to point.
+        J["FingerR"] = empty("FingerR", (1.0*sx, -0.52, 0.2), J["WristR"])
+        segment("FingerRock", J["FingerR"], [((0.095,0.095,0.17),(1.0*sx,-0.52,0.07),61,0), ((0.075,0.075,0.08),(1.0*sx,-0.52,-0.07),62,0)],
+            eyes=[((1.0*sx,-0.52,-0.15),0.04)])  # a gold glowing tip, lit like the eyes
     segment("Thigh"+side, J["Hip"+side], [((0.29,0.29,0.27),(0.3*sx,0.0,0.56),25+s,0.2)])
     segment("Shin"+side, J["Knee"+side], [((0.27,0.27,0.22),(0.33*sx,-0.03,0.29),26+s,0)])
     segment("Foot"+side, J["Ankle"+side], [((0.3,0.36,0.11),(0.35*sx,-0.12,0.09),27+s,0)])

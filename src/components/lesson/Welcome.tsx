@@ -25,8 +25,8 @@ export function Welcome() {
   const continueHref = finished ? "/report" : stepHref(resume);
   const motion = useMotionMode();
   const cardRef = useRef<HTMLDivElement>(null);
-  // The Moss Golem stepping out of its card (three.js, loaded only when it plays): once per visit on its own,
-  // then on "Watch the golem". It runs about 9 seconds, so there's a Skip button (and Esc) while it plays.
+  // The Moss Golem stepping out of its card (three.js, loaded only when it plays): on its own once per page load,
+  // then on "Watch the golem". It runs about 13 seconds, so there's a Skip button (and Esc) while it plays.
   const [leapReady, setLeapReady] = useState(false);
   const canPlay = leapReady && motion === "full";
   const [playing, setPlaying] = useState(false);
@@ -209,22 +209,15 @@ export function Welcome() {
   );
 }
 
-const SEEN_KEY = "teach-me:golem-leap";
-/** sessionStorage can throw (private modes, blocked storage): then it just plays again next visit. */
-function readSeen() {
-  try {
-    return sessionStorage.getItem(SEEN_KEY) === "seen";
-  } catch {
-    return false;
-  }
-}
-function markSeen() {
-  try {
-    sessionStorage.setItem(SEEN_KEY, "seen");
-  } catch {
-    /* fine: see readSeen */
-  }
-}
+/**
+ * Played already since this page loaded? Kept in memory, not storage: a reload plays it again,
+ * but coming back to Welcome from a lesson step doesn't.
+ */
+let seenThisLoad = false;
+const readSeen = () => seenThisLoad;
+const markSeen = () => {
+  seenThisLoad = true;
+};
 
 /**
  * Wait until the pointer isn't tilting the card. The golem steps out through the
