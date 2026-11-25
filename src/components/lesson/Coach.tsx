@@ -142,7 +142,7 @@ export function PinKey({
   if (pins.length === 0) return null;
   return (
     <div className="flex flex-col gap-2.5">
-      <h4 className="text-sm font-bold text-ink-soft">Key</h4>
+      <h3 className="text-sm font-bold text-ink-soft">Key</h3>
       <ul className="flex flex-col gap-1.5 text-[15px] leading-snug">
         {pins.map((p) => (
           <li

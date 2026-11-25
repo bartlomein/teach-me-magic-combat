@@ -3,13 +3,20 @@
 import { motion } from "motion/react";
 import { ViewTransition, type ReactNode, type Ref } from "react";
 import { CheckIcon, CrossIcon } from "../icons";
-import { Speak } from "./Coach";
+import { FeedbackBox, Primary, Speak, type Feedback } from "./Coach";
+
+/** The headline of a finished step, unless the step has its own (the final challenge: "You win!"). */
+const STEP_COMPLETE = "Step complete";
 
 /**
  * The frame every lesson step shares: one ink-ruled panel with the blue task
  * band (step number, one sentence, read-aloud), the board as a diagram, and the
  * actions + feedback + Key. Desktop: band and actions on the left, board right.
  * Phone: band, board, then actions right under the board.
+ *
+ * The frame also owns the finished state (`done`), so it is the same in every
+ * step: the headline, one primary button ("Next: <next step>") and the feedback
+ * right under it. No how-to line, no second button, no hints or Key.
  */
 export function StepFrame({
   n,
@@ -22,8 +29,13 @@ export function StepFrame({
   bandActions,
   board,
   actions,
+  feedback,
   below,
   announce,
+  done = false,
+  doneHeadline = STEP_COMPLETE,
+  onNext,
+  nextTitle,
 }: {
   n: number;
   title: string;
@@ -40,10 +52,19 @@ export function StepFrame({
   board: ReactNode;
   /** Main buttons under the board / in the left column. */
   actions?: ReactNode;
-  /** Feedback, hint text, Key. */
+  /** The latest feedback. Always mounted, right under the buttons, in every step and phase. */
+  feedback: Feedback | null;
+  /** Hint text and the Key, under the feedback. */
   below?: ReactNode;
   /** Text twin of the latest animation, for screen readers. */
   announce?: string;
+  /** The step is passed: show the finished state instead of the task. */
+  done?: boolean;
+  /** Finished-state headline, when it isn't "Step complete". */
+  doneHeadline?: string;
+  /** Finished state: where "Next" goes, and the name of what comes next. */
+  onNext: () => void;
+  nextTitle: string | null;
 }) {
   return (
     <section
@@ -61,25 +82,35 @@ export function StepFrame({
                 Step {n}: {title}
               </span>
             </h1>
-            <Speak text={speak} onSpot />
+            <Speak text={done ? doneHeadline : speak} onSpot />
           </div>
           <h2
             ref={headlineRef}
             tabIndex={-1}
             className="text-[clamp(1.5rem,3vw,1.875rem)] leading-[1.15] font-bold tracking-[-0.015em]"
           >
-            {headline}
+            {done ? doneHeadline : headline}
           </h2>
-          {howTo && <p className="text-base text-panel/90">{howTo}</p>}
-          {bandActions && <div className="flex flex-wrap gap-3">{bandActions}</div>}
+          {!done && howTo && <p className="text-base text-panel/90">{howTo}</p>}
+          {!done && bandActions && <div className="flex flex-wrap gap-3">{bandActions}</div>}
         </div>
       </ViewTransition>
 
       <div className="[grid-area:board]">{board}</div>
 
       <div className="flex flex-col gap-5 p-5 [grid-area:act] sm:p-6 lg:border-r-[3px] lg:border-ink">
-        {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
-        {below}
+        {done ? (
+          // Finished: the one thing to do next.
+          nextTitle && (
+            <div className="flex flex-wrap gap-3">
+              <Primary onClick={onNext}>Next: {nextTitle}</Primary>
+            </div>
+          )
+        ) : (
+          actions && <div className="flex flex-wrap gap-3">{actions}</div>
+        )}
+        <FeedbackBox feedback={feedback} />
+        {!done && below}
       </div>
 
       <p aria-live="polite" className="sr-only">

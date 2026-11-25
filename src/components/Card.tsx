@@ -79,6 +79,14 @@ export function Card({
   const frame = useRef<number | null>(null);
   const touchTimer = useRef<number | null>(null);
 
+  // For buttons, the accessible name is the card's own visible text (so voice
+  // control can use what's on screen, WCAG 2.5.3) plus these unprinted facts.
+  const extras = [
+    tapped && status !== "tapped" ? "tapped" : null,
+    card.side === "opp" ? "opponent's creature" : null,
+    pinNote ?? null,
+  ].filter(Boolean);
+
   const label = [
     card.name,
     describeStats(card),
@@ -143,7 +151,8 @@ export function Card({
 
   const inner = (
     <>
-      <CardFace card={card} status={status} damage={damage} />
+      <CardFace card={card} status={status} damage={damage} readable={!!onSelect} />
+      {onSelect && extras.length > 0 && <span className="sr-only">, {extras.join(", ")}</span>}
       <div className="card__back" aria-hidden />
       <div className="card__foil" aria-hidden />
       <div className="card__glare" aria-hidden />
@@ -186,7 +195,6 @@ export function Card({
           ref={setNode}
           type="button"
           aria-pressed={pressed ?? false}
-          aria-label={label}
           disabled={disabled}
           onClick={onSelect}
           onFocus={() => onPinHover?.(true)}
@@ -216,9 +224,13 @@ export function Card({
  * a container query hides the type line and text box.
  * Also reused by the death shatter so shards look like the real card.
  */
-export function CardFace({ card, status, damage = 0 }: { card: CardDef; status?: CardStatus; damage?: number }) {
+/**
+ * The printed face. `readable`: screen readers read it (the card is a button and
+ * takes its name from this text); otherwise it's hidden and the card's label speaks.
+ */
+export function CardFace({ card, status, damage = 0, readable = false }: { card: CardDef; status?: CardStatus; damage?: number; readable?: boolean }) {
   return (
-    <div className="card__face cf" data-side={card.side} aria-hidden>
+    <div className="card__face cf" data-side={card.side} aria-hidden={readable ? undefined : true}>
       <div className="cf-title">
         <p className="cf-name">{card.name}</p>
       </div>
@@ -229,7 +241,9 @@ export function CardFace({ card, status, damage = 0 }: { card: CardDef; status?:
           {card.art.layers ? (
             <Image src={card.art.layers.bg} alt="" fill sizes="(max-width: 640px) 50vw, 280px" className="art-layer art-bg object-cover" />
           ) : (
-            <span className="cf-glyph">{card.art.glyph}</span>
+            <span className="cf-glyph" aria-hidden>
+              {card.art.glyph}
+            </span>
           )}
         </div>
         {card.art.layers && (
@@ -243,7 +257,12 @@ export function CardFace({ card, status, damage = 0 }: { card: CardDef; status?:
             <span className="cf-status-word">{STATUS[status].text}</span>
           </span>
         )}
-        {damage > 0 && <span className="cf-damage">{damage}</span>}
+        {damage > 0 && (
+          <span className="cf-damage">
+            {damage}
+            <span className="sr-only"> damage</span>
+          </span>
+        )}
       </div>
 
       <p className="cf-type">{card.type}</p>
@@ -260,7 +279,7 @@ export function CardFace({ card, status, damage = 0 }: { card: CardDef; status?:
       </div>
 
       {/* Small cards: keyword icon + word only (always rendered so the footer keeps its height). */}
-      <p className="cf-kw-mini">
+      <p className="cf-kw-mini" aria-hidden={card.keywords.length ? undefined : true}>
         {card.keywords.map((k) => (
           <span key={k}>
             {KEYWORD_ICON[k]}
@@ -273,6 +292,9 @@ export function CardFace({ card, status, damage = 0 }: { card: CardDef; status?:
         {card.power}
         <span className="cf-pt-slash">/</span>
         {card.toughness}
+      </span>
+      <span className="sr-only">
+        , power {card.power}, toughness {card.toughness}
       </span>
     </div>
   );

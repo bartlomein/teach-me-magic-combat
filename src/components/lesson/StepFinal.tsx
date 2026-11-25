@@ -17,7 +17,7 @@ import {
 } from "@/lib/lesson/steps";
 import { declareAttackers, describe as describeCombat, resolveCombat, type Blocks, type GameState } from "@/lib/rules/engine";
 import { Board, BlockLines, CardSlot, Row, useBoardFx } from "../board/Board";
-import { FeedbackBox, HintButton, HintText, OnSpot, Primary, Secondary, type Feedback } from "./Coach";
+import { HintButton, HintText, OnSpot, Primary, Secondary, type Feedback } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 
 const now = () => Date.now();
@@ -302,11 +302,9 @@ export function StepFinal({
           ? "Your turn."
           : phase === "ask"
             ? `${name(askAbout ?? "")} blocked last turn. Can it attack now?`
-            : phase === "won"
-              ? "You win!"
-              : phase === "fail2"
-                ? "So close."
-                : FINAL.promptAttack;
+            : phase === "fail2"
+              ? "So close."
+              : FINAL.promptAttack;
 
   return (
     <StepFrame
@@ -460,22 +458,21 @@ export function StepFinal({
               <Secondary onClick={start}>Start over</Secondary>
             </>
           )}
-          {phase === "won" && (
-            <>
-              {nextTitle ? <Primary onClick={onNext}>Next: {nextTitle}</Primary> : null}
-              <Secondary onClick={start}>Play again</Secondary>
-            </>
-          )}
         </>
       }
+      feedback={feedback}
       below={
         <>
-          <FeedbackBox feedback={feedback} />
           {(phase === "block" || phase === "attack") && <HintText level={hintLevel} hints={hints} />}
           {lighter && (phase === "block" || phase === "attack") && <p className="text-sm text-ink-soft">Extra help is on: the highlighted cards are the answer.</p>}
         </>
       }
       announce={announce}
+      // Same finished state as every step; only the headline is its own.
+      done={phase === "won"}
+      doneHeadline="You win!"
+      onNext={onNext}
+      nextTitle={nextTitle}
     />
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { animate, stagger } from "motion/react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, ViewTransition, type Dispatch, type Ref } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type Ref } from "react";
 import { CARDS } from "@/lib/cards";
 import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { takeArrival } from "@/lib/lesson/store";
@@ -20,7 +20,8 @@ import {
 } from "@/lib/rules/engine";
 import { AttackArrow, Board, Row, useBoardFx } from "../board/Board";
 import { Card } from "../Card";
-import { FeedbackBox, HintButton, HintText, OnSpot, PinKey, Primary, Secondary, Speak, type Feedback } from "./Coach";
+import { HintButton, HintText, OnSpot, PinKey, Primary, type Feedback } from "./Coach";
+import { StepFrame } from "./StepFrame";
 
 /**
  * Step 1: Attacking. Loop: Explain → Watch → Try (pick attackers, then pick a
@@ -241,18 +242,12 @@ export function StepAttack({
       `Ember Pup and Moss Golem attack your opponent and hit for 5. Their life goes from 20 to ${result.state.life.opp}.`,
     );
     dispatch({ type: "complete", step: "attack", at: now() });
-    setFeedback({ tone: "good", text: ATTACK.win });
+    setFeedback({ tone: "good", text: `${ATTACK.win} ${ATTACK.after}` });
     setPhase("done");
   }
 
-  const prompt =
-    phase === "pick"
-      ? lighter
-        ? ATTACK.prompts.pickLighter
-        : ATTACK.prompts.pick
-      : phase === "resolving"
-        ? "Attack!"
-        : "Step complete";
+  // The finished state (headline, Next button) comes from StepFrame.
+  const prompt = phase === "pick" ? (lighter ? ATTACK.prompts.pickLighter : ATTACK.prompts.pick) : "Attack!";
 
   const n = selected.length;
 
@@ -295,130 +290,99 @@ export function StepAttack({
   const arrowOn = phase === "watch" || phase === "resolving" || phase === "done";
 
   return (
-    // One framed panel. Desktop: task band + actions on the left, board on the right.
-    // Phone: task band, board, then actions + feedback + key right under the board.
-    <section
-      aria-labelledby="step-title"
-      className="grid grid-cols-[minmax(0,1fr)] border-[3px] border-ink bg-panel [grid-template-areas:'task'_'board'_'act'] lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:[grid-template-areas:'task_board'_'act_board']"
-    >
-      {/* Task band (the welcome screen's blue band morphs into this one) */}
-      <ViewTransition name="task-band" share="morph" default="none">
-      <div className="on-spot flex flex-col gap-4 bg-spot p-5 text-panel [grid-area:task] sm:p-6 lg:border-r-[3px] lg:border-ink">
-        <div className="flex items-start justify-between gap-4">
-          <h1 id="step-title" ref={headingRef} tabIndex={-1} className="leading-none">
-            <span aria-hidden className="text-[2.5rem] font-extrabold tracking-[-0.04em]">
-              1
-            </span>
-            <span className="sr-only">Step 1: Attacking</span>
-          </h1>
-          <Speak text={explaining ? ATTACK.explain : prompt} onSpot />
-        </div>
-        {explaining ? (
-          // One sentence. The Watch demo shows the rest (attackers turn sideways),
-          // and the board marks the exception (pin B: new this turn).
-          <h2 className="text-[clamp(1.5rem,3vw,1.875rem)] leading-[1.15] font-bold tracking-[-0.015em]">{ATTACK.headline}</h2>
-        ) : (
-          <h2 ref={promptRef} tabIndex={-1} className="text-[clamp(1.5rem,3vw,1.875rem)] leading-[1.15] font-bold tracking-[-0.015em]">
-            {prompt}
-          </h2>
-        )}
-        {explaining ? (
+    <StepFrame
+      n={1}
+      title={ATTACK.title}
+      headingRef={headingRef}
+      // One sentence while explaining. The Watch demo shows the rest (attackers
+      // turn sideways), and the board marks the exception (pin A: new this turn).
+      headline={explaining ? ATTACK.headline : prompt}
+      headlineRef={promptRef}
+      speak={explaining ? ATTACK.explain : prompt}
+      howTo={
+        phase === "pick"
+          ? lighter
+            ? "A smaller board first. Then back to the full one."
+            : "Tap your creatures, then press Attack."
+          : phase === "resolving"
+            ? "Attackers go at the player."
+            : undefined
+      }
+      bandActions={
+        explaining ? (
+          watched ? (
+            <>
+              <OnSpot primary onClick={startTry}>
+                Try it
+              </OnSpot>
+              <OnSpot onClick={watch}>Watch again</OnSpot>
+            </>
+          ) : (
+            <>
+              <OnSpot primary onClick={watch} disabled={phase === "watch"}>
+                {phase === "watch" ? "Watching…" : "Watch it"}
+              </OnSpot>
+              <OnSpot onClick={startTry} disabled={phase === "watch"}>
+                Skip to try
+              </OnSpot>
+            </>
+          )
+        ) : undefined
+      }
+      board={
+        <Board
+          scope={fx.scope}
+          layer={fx.layer}
+          className="border-y-[3px] border-ink lg:border-y-0"
+          between={arrowOn ? <AttackArrow label="attacks the player" /> : null}
+          caption={<>{arrowOn ? "Creatures that attack turn sideways." : "Your turn."}</>}
+          opp={
+            <Row side="opp" life={oppLife}>
+              {theirs.map((c) => (
+                <Card
+                  key={c.id}
+                  card={CARDS[c.id as keyof typeof CARDS]}
+                  status={c.tapped ? "tapped" : null}
+                  tapped={c.tapped}
+                  pin={pinFor(c.id)}
+                  {...pinProps(c.id)}
+                  onSelect={() => onCard(c)}
+                  disabled={phase !== "pick"}
+                />
+              ))}
+            </Row>
+          }
+          you={
+            <Row side="you" life={20}>
+              {yours.map((c) => (
+                <Card
+                  key={c.id}
+                  card={CARDS[c.id as keyof typeof CARDS]}
+                  status={
+                    attacking.includes(c.id) || (phase === "pick" && selected.includes(c.id) && !lighter)
+                      ? "attacking"
+                      : c.enteredThisTurn
+                        ? "new"
+                        : null
+                  }
+                  tapped={tapped.includes(c.id)}
+                  pressed={phase === "pick" ? selected.includes(c.id) : undefined}
+                  highlight={hintOn && (ATTACK.hintHighlight as readonly string[]).includes(c.id)}
+                  pin={pinFor(c.id)}
+                  {...pinProps(c.id)}
+                  transitionName={c.id === "stormHawk" ? "card-stormHawk" : c.id === "emberPup" ? "card-emberPup" : undefined}
+                  callout={c.enteredThisTurn ? ATTACK.callouts[c.id as keyof typeof ATTACK.callouts] : undefined}
+                  onSelect={() => onCard(c)}
+                  disabled={phase !== "pick"}
+                />
+              ))}
+            </Row>
+          }
+        />
+      }
+      actions={
+        explaining ? undefined : (
           <>
-            <div className="flex flex-wrap gap-3">
-              {watched ? (
-                <>
-                  <OnSpot primary onClick={startTry}>
-                    Try it
-                  </OnSpot>
-                  <OnSpot onClick={watch}>Watch again</OnSpot>
-                </>
-              ) : (
-                <>
-                  <OnSpot primary onClick={watch} disabled={phase === "watch"}>
-                    {phase === "watch" ? "Watching…" : "Watch it"}
-                  </OnSpot>
-                  <OnSpot onClick={startTry} disabled={phase === "watch"}>
-                    Skip to try
-                  </OnSpot>
-                </>
-              )}
-            </div>
-          </>
-        ) : (
-          <p className="text-base text-panel/90">
-            {phase === "pick"
-              ? lighter
-                ? "A smaller board first. Then back to the full one."
-                : "Tap your creatures, then press Attack."
-              : phase === "resolving"
-                ? "Attackers go at the player."
-                : "Your attackers stay tapped until your next turn."}
-          </p>
-        )}
-      </div>
-
-      </ViewTransition>
-
-      {/* Board */}
-      <Board
-        scope={fx.scope}
-        layer={fx.layer}
-        className="border-y-[3px] border-ink [grid-area:board] lg:border-y-0"
-        between={arrowOn ? <AttackArrow label="attacks the player" /> : null}
-        caption={
-          <>
-            
-            {arrowOn ? "Creatures that attack turn sideways." : "Your turn."}
-          </>
-        }
-        opp={
-          <Row side="opp" life={oppLife}>
-            {theirs.map((c) => (
-              <Card
-                key={c.id}
-                card={CARDS[c.id as keyof typeof CARDS]}
-                status={c.tapped ? "tapped" : null}
-                tapped={c.tapped}
-                pin={pinFor(c.id)}
-                {...pinProps(c.id)}
-                onSelect={() => onCard(c)}
-                disabled={phase !== "pick"}
-              />
-            ))}
-          </Row>
-        }
-        you={
-          <Row side="you" life={20}>
-            {yours.map((c) => (
-              <Card
-                key={c.id}
-                card={CARDS[c.id as keyof typeof CARDS]}
-                status={
-                  attacking.includes(c.id) || (phase === "pick" && selected.includes(c.id) && !lighter)
-                    ? "attacking"
-                    : c.enteredThisTurn
-                      ? "new"
-                      : null
-                }
-                tapped={tapped.includes(c.id)}
-                pressed={phase === "pick" ? selected.includes(c.id) : undefined}
-                highlight={hintOn && (ATTACK.hintHighlight as readonly string[]).includes(c.id)}
-                pin={pinFor(c.id)}
-                {...pinProps(c.id)}
-                transitionName={c.id === "stormHawk" ? "card-stormHawk" : c.id === "emberPup" ? "card-emberPup" : undefined}
-                callout={c.enteredThisTurn ? ATTACK.callouts[c.id as keyof typeof ATTACK.callouts] : undefined}
-                onSelect={() => onCard(c)}
-                disabled={phase !== "pick"}
-              />
-            ))}
-          </Row>
-        }
-      />
-
-      {/* Actions, feedback, key */}
-      <div className="flex flex-col gap-5 p-5 [grid-area:act] sm:p-6 lg:border-r-[3px] lg:border-ink">
-        {!explaining && (
-          <div className="flex flex-wrap gap-3">
             {phase === "pick" && !lighter && (
               <>
                 <Primary onClick={confirmAttackers} disabled={n === 0}>
@@ -428,31 +392,29 @@ export function StepAttack({
               </>
             )}
             {phase === "pick" && lighter && lighterPassed && <Primary onClick={backToFull}>Back to the full board</Primary>}
-            {phase === "done" && (
-              <>
-                {nextTitle && <Primary onClick={onNext}>Next: {nextTitle}</Primary>}
-                <Secondary onClick={startTry}>Play again</Secondary>
-              </>
-            )}
-          </div>
-        )}
-        <FeedbackBox feedback={feedback} />
-        {phase === "pick" && !lighter && <HintText level={progress.hints} hints={ATTACK.hints} />}
-        <PinKey
-          pins={keyPins}
-          active={letterOf(shownActive)}
-          onHover={(letter) => setActivePin(idOf(letter))}
-          onTap={(letter) => {
-            const id = idOf(letter);
-            setActivePin(id);
-            scrollTo(document.querySelector(`[data-card-id="${id}"]`));
-          }}
-        />
-      </div>
-
-      <p aria-live="polite" className="sr-only">
-        {announce}
-      </p>
-    </section>
+          </>
+        )
+      }
+      feedback={feedback}
+      below={
+        <>
+          {phase === "pick" && !lighter && <HintText level={progress.hints} hints={ATTACK.hints} />}
+          <PinKey
+            pins={keyPins}
+            active={letterOf(shownActive)}
+            onHover={(letter) => setActivePin(idOf(letter))}
+            onTap={(letter) => {
+              const id = idOf(letter);
+              setActivePin(id);
+              scrollTo(document.querySelector(`[data-card-id="${id}"]`));
+            }}
+          />
+        </>
+      }
+      announce={announce}
+      done={phase === "done"}
+      onNext={onNext}
+      nextTitle={nextTitle}
+    />
   );
 }

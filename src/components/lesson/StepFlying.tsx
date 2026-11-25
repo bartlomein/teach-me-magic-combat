@@ -6,7 +6,7 @@ import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { checkAssign, FLYING, flyingBoard, flyingLighterBoard, judgeFlying } from "@/lib/lesson/steps";
 import { describe as describeCombat, resolveCombat, type Blocks, type Myth } from "@/lib/rules/engine";
 import { Board, BlockLines, CardSlot, Row, useBoardFx } from "../board/Board";
-import { FeedbackBox, HintButton, HintText, OnSpot, PinKey, Primary, Secondary, type Feedback } from "./Coach";
+import { HintButton, HintText, OnSpot, PinKey, Primary, type Feedback } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
 
@@ -241,15 +241,14 @@ export function StepFlying({
   const pairs = Object.entries(blocks).map(([from, to]) => ({ from, to }));
   const nBlocks = pairs.length;
 
+  // The finished state (headline, Next button) comes from StepFrame.
   const headline = explaining
     ? FLYING.headline
     : lighter && canPick
       ? FLYING.lighter.prompt
       : phase === "follow"
         ? FLYING.followUp.question
-        : phase === "done"
-          ? "Step complete"
-          : FLYING.prompt;
+        : FLYING.prompt;
 
   return (
     <StepFrame
@@ -376,22 +375,19 @@ export function StepFlying({
             />
           )}
           {phase === "missed" && <Primary onClick={startTry}>Try again</Primary>}
-          {phase === "done" && (
-            <>
-              {nextTitle && <Primary onClick={onNext}>Next: {nextTitle}</Primary>}
-              <Secondary onClick={startTry}>Play again</Secondary>
-            </>
-          )}
         </>
       }
+      feedback={feedback}
       below={
         <>
-          <FeedbackBox feedback={feedback} />
           {canPick && !lighter && <HintText level={progress.hints} hints={FLYING.hints} />}
           <PinKey {...keyProps} />
         </>
       }
       announce={announce}
+      done={phase === "done"}
+      onNext={onNext}
+      nextTitle={nextTitle}
     />
   );
 }

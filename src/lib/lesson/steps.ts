@@ -33,6 +33,8 @@ export const BLOCK = {
   hints: ["Compare power to toughness.", "You need 3 damage to kill the Boar.", "This one can do it."],
   hintHighlight: ["mossGolem"],
   pins: [{ id: "mossGolem", letter: "A", text: "Moss Golem is new, but new creatures can still block." }],
+  /** Highlighter tags above cards, as in Step 1 (wide screens; they replace the in-card ribbon there). */
+  callouts: { mossGolem: "New this turn" },
   lighter: { question: "Does Moss Golem kill the Boar and live?" },
   win: "Golem dealt 3 and took only 3 of its 4.",
 } as const;

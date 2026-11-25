@@ -6,7 +6,7 @@ import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { BLOCK, blockBoard, blockLighterBoard, judgeBlock } from "@/lib/lesson/steps";
 import { describe as describeCombat, resolveCombat, type Myth } from "@/lib/rules/engine";
 import { Board, BlockLines, CardSlot, Row, useBoardFx } from "../board/Board";
-import { FeedbackBox, HintButton, HintText, OnSpot, PinKey, Primary, Secondary, type Feedback } from "./Coach";
+import { HintButton, HintText, OnSpot, PinKey, Primary, Secondary, type Feedback } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
 
@@ -186,6 +186,7 @@ export function StepBlock({
   const hintOn = progress.hints >= 3 && phase === "pick" && !lighter;
   const canPick = phase === "pick" && !lighter;
 
+  // The finished state (headline, Next button) comes from StepFrame.
   const headline =
     phase === "ask"
       ? BLOCK.ask.question
@@ -193,10 +194,7 @@ export function StepBlock({
         ? BLOCK.headline
         : lighter && phase === "pick"
           ? BLOCK.lighter.question
-          : phase === "done"
-            ? "Step complete"
-            : BLOCK.prompt;
-
+          : BLOCK.prompt;
 
   return (
     <StepFrame
@@ -262,6 +260,8 @@ export function StepBlock({
                   fate={fates[c.id]}
                   card={CARDS[c.id as keyof typeof CARDS] as CardDef}
                   status={blocker === c.id ? "blocking" : c.enteredThisTurn ? "new" : null}
+                  // "New this turn" goes above the card, like Step 1. Not while it blocks: then the card says "Blocking".
+                  callout={c.enteredThisTurn && blocker !== c.id ? BLOCK.callouts[c.id as keyof typeof BLOCK.callouts] : undefined}
                   damage={damage[c.id]}
                   pressed={canPick ? blocker === c.id : undefined}
                   highlight={hintOn && (BLOCK.hintHighlight as readonly string[]).includes(c.id)}
@@ -313,22 +313,19 @@ export function StepBlock({
           )}
           {lighter && lighterAnswer === "yes" && <Primary onClick={backToFull}>Back to the full board</Primary>}
           {phase === "missed" && <Primary onClick={startTry}>Try again</Primary>}
-          {phase === "done" && (
-            <>
-              {nextTitle && <Primary onClick={onNext}>Next: {nextTitle}</Primary>}
-              <Secondary onClick={startTry}>Play again</Secondary>
-            </>
-          )}
         </>
       }
+      feedback={feedback}
       below={
         <>
-          <FeedbackBox feedback={feedback} />
           {canPick && <HintText level={progress.hints} hints={BLOCK.hints} />}
           {lighter ? <PinKey {...lighterLinks.keyProps} /> : <PinKey {...keyProps} />}
         </>
       }
       announce={announce}
+      done={phase === "done"}
+      onNext={onNext}
+      nextTitle={nextTitle}
     />
   );
 }

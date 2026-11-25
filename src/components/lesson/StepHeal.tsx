@@ -7,7 +7,7 @@ import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { HEAL, healBoard } from "@/lib/lesson/steps";
 import { endTurn, resolveCombat, declareAttackers, type Myth } from "@/lib/rules/engine";
 import { Board, CardSlot, Row, useBoardFx } from "../board/Board";
-import { FeedbackBox, PinKey, Primary, Secondary, type Feedback } from "./Coach";
+import { PinKey, type Feedback } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
 
@@ -57,7 +57,9 @@ export function StepHeal({
     if (phase === "q2" || phase === "done") headlineRef.current?.focus();
   }, [phase]);
 
-  const pinShown = (id: string) => id === "mossGolem" && golemDamage > 0;
+  // The pin is about the first turn's damage. It goes away with that damage and
+  // stays away for the second fight, so the finished state has no Key (like every step).
+  const pinShown = (id: string) => id === "mossGolem" && golemDamage > 0 && phase !== "playing" && phase !== "done";
   const { cardProps, keyProps } = usePinLinks(HEAL.pins, pinShown, fx.mode === "full");
 
   function miss(note: string, myth?: Myth) {
@@ -120,20 +122,8 @@ export function StepHeal({
     setPhase("done");
   }
 
-  function replay() {
-    setPhase("q1");
-    setQ1(null);
-    setQ2(null);
-    setGolemDamage(3);
-    setBoarDamage(0);
-    setBoarFate("alive");
-    setTurnEnded(false);
-    setFeedback(null);
-    fx.clearFx();
-  }
-
-  const headline =
-    phase === "q1" ? HEAL.q1.question : phase === "q2" || phase === "playing" ? HEAL.q2.question : phase === "done" ? "Step complete" : HEAL.headline;
+  // The finished state (headline, Next button) comes from StepFrame.
+  const headline = phase === "q1" ? HEAL.q1.question : phase === "q2" || phase === "playing" ? HEAL.q2.question : HEAL.headline;
 
   return (
     <StepFrame
@@ -216,21 +206,14 @@ export function StepHeal({
               onAnswer={answerQ2}
             />
           )}
-          {phase === "done" && (
-            <>
-              {nextTitle && <Primary onClick={onNext}>Next: {nextTitle}</Primary>}
-              <Secondary onClick={replay}>Play again</Secondary>
-            </>
-          )}
         </>
       }
-      below={
-        <>
-          <FeedbackBox feedback={feedback} />
-          <PinKey {...keyProps} />
-        </>
-      }
+      feedback={feedback}
+      below={<PinKey {...keyProps} />}
       announce={announce}
+      done={phase === "done"}
+      onNext={onNext}
+      nextTitle={nextTitle}
     />
   );
 }

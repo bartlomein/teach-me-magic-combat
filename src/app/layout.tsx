@@ -19,12 +19,15 @@ const cardText = Atkinson_Hyperlegible_Next({
   subsets: ["latin"],
   // Next has no fallback metrics for this newer font yet; skip instead of warning on every build.
   adjustFontFallback: false,
+  // Only cards use it: don't hold up the first paint for it.
+  preload: false,
 });
 
 // Fraunces: card names only (part of the card design).
 const display = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
+  preload: false, // only card names use it
 });
 
 export const metadata: Metadata = {
@@ -47,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               style={{ viewTransitionName: "site-header" }}
               className="flex items-center justify-between gap-3 border-b-4 border-ink pb-2.5"
             >
-              <Link href="/" transitionTypes={["nav-back"]} className="text-[clamp(1.25rem,3vw,1.625rem)] leading-tight font-extrabold tracking-[-0.02em] no-underline">
+              <Link href="/" transitionTypes={["nav-back"]} className="inline-flex min-h-11 items-center text-[clamp(1.25rem,3vw,1.625rem)] leading-tight font-extrabold tracking-[-0.02em] no-underline">
                 Magic combat
               </Link>
               <MotionToggle />

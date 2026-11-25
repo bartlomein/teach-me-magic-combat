@@ -458,9 +458,17 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
     aspect-ratio: auto;
   }
   .cf-type,
-  .cf-text,
-  .cf-status-word {
+  .cf-text {
     display: none;
+  }
+  /* Too small to print, but still read aloud (screen readers need the status). */
+  .cf-status-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .cf-kw-mini {
     display: flex;
@@ -648,8 +656,14 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
 /* Wide screens: the yellow tag above the card says it, so the card's own status
    ribbon steps aside. Phones keep the ribbon (the tag is hidden there). */
 @media (min-width: 901px) {
+  /* Hidden from sight, still read aloud: screen readers don't see the yellow tag. */
   .card-wrap:has(> .card-callout) .cf-status {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 

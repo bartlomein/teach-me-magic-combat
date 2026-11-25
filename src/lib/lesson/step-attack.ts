@@ -36,6 +36,8 @@ export const ATTACK = {
   hintHighlight: ["emberPup", "mossGolem"],
   /** Attacks always go at the player here (no planeswalkers or battles in this lesson). */
   win: "5 damage! Attackers hit the player. Their creatures choose whether to block.",
+  /** Shown after the win line, in the same feedback. */
+  after: "Your attackers stay tapped until your next turn.",
 } as const;
 
 /** Full board: your turn. Storm Hawk arrived this turn. */
