@@ -23,5 +23,5 @@ coverage/
 .DS_Store
 *.log
 
-# impeccable local cache
-.impeccable/hook.cache.json
+# impeccable design tool (local working files; DESIGN.md is the record)
+.impeccable/
