@@ -54,8 +54,15 @@ const EV = {
   home: 365,
 };
 const CLIP_END = 378 / FPS;
-/** After the clip: the painting fades back in over the 3D golem, then the canvas goes. */
-const END = CLIP_END + 0.3;
+/**
+ * The painted golem and the 3D one never cross-fade (they don't line up, so you'd see two golems).
+ * Instead a gold flash fills the art window, and they swap at its peak: FLASH_IN seconds up, FLASH_OUT down.
+ * The clip starts at the first peak, and the second flash peaks as it ends.
+ */
+const FLASH_IN = 0.4;
+const FLASH_OUT = 0.5;
+/** In clip time: the second flash has faded and everything is put away. */
+const END = CLIP_END + FLASH_OUT;
 
 const clamp = (x: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, x));
@@ -511,15 +518,68 @@ export async function runGolem(
           { duration: 260, composite: "replace" },
         ),
       );
-    // The painted golem fades out as the 3D one takes over, and back in at the end.
-    const fgOut = fg.animate([{ opacity: 1 }, { opacity: 0 }], {
-      duration: 220,
-      fill: "forwards",
-      easing: "ease-out",
+    // ---- The swaps: a gold flash over the art window (above the canvas, so it covers the 3D golem too). ----
+    const flash = document.createElement("div");
+    flash.setAttribute("aria-hidden", "true");
+    Object.assign(flash.style, {
+      position: "absolute",
+      left: `${win.left + window.scrollX}px`,
+      top: `${win.top + window.scrollY}px`,
+      width: `${win.width}px`,
+      height: `${win.height}px`,
+      borderRadius: getComputedStyle(windowEl).borderRadius,
+      background:
+        "radial-gradient(ellipse 75% 65% at 50% 62%, #fffaf0 0%, #ffe8a8 42%, #e9c46a 100%)",
+      opacity: "0",
+      pointerEvents: "none",
+      zIndex: "61",
     });
-    fgOut.pause();
-    cardAnims.push(fgOut);
-    let fgBack: Animation | null = null;
+    undo.push(() => flash.remove());
+    /** Rise to full, then fall. The painting glows up into it, or back down out of it. */
+    const flashUp = () =>
+      cardAnims.push(
+        flash.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: FLASH_IN * 1000,
+          fill: "forwards",
+          easing: "cubic-bezier(.5,0,.9,.6)",
+        }),
+      );
+    const flashDown = () =>
+      cardAnims.push(
+        flash.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: FLASH_OUT * 1000,
+          fill: "forwards",
+          easing: "cubic-bezier(.2,.5,.4,1)",
+        }),
+      );
+    const glow = (up: boolean, s: number) =>
+      cardAnims.push(
+        fg.animate(
+          [
+            { filter: "brightness(1)" },
+            { filter: "brightness(1.9) saturate(1.3)" },
+          ],
+          {
+            duration: s * 1000,
+            fill: "forwards",
+            easing: up ? "ease-in" : "ease-out",
+            direction: up ? "normal" : "reverse",
+          },
+        ),
+      );
+    let fgHidden: Animation | null = null;
+    /** At a flash's peak: show the 3D golem (in) or the painting (out). */
+    const swap = (in3d: boolean) => {
+      canvas.style.opacity = in3d ? "1" : "0";
+      if (in3d) {
+        fgHidden = fg.animate([{ opacity: 0 }, { opacity: 0 }], { duration: 1, fill: "forwards" });
+        cardAnims.push(fgHidden);
+      } else {
+        fgHidden?.cancel();
+        glow(false, FLASH_OUT);
+      }
+      flashDown();
+    };
     // While it performs, the card holds still (no hover tilt), so the window stays where the portal is.
     host.dataset.performing = "true";
     undo.push(() => delete host.dataset.performing);
@@ -534,7 +594,7 @@ export async function runGolem(
     };
     function effects(t: number) {
       once("swap", t, 0, () => {
-        fgOut.play();
+        swap(true);
         emit(
           "dust",
           14,
@@ -622,14 +682,8 @@ export async function runGolem(
         );
         shake(6, 380);
       });
-      once("fgBack", t, (CLIP_END - 0.05) * FPS, () => {
-        fgBack = fg.animate([{ opacity: 0 }, { opacity: 1 }], {
-          duration: 300,
-          fill: "forwards",
-          easing: "ease-in",
-        });
-        cardAnims.push(fgBack);
-      });
+      once("flashBack", t, (CLIP_END - FLASH_IN) * FPS, flashUp);
+      once("swapBack", t, CLIP_END * FPS, () => swap(false));
     }
     let ringStart = -1;
 
@@ -647,7 +701,7 @@ export async function runGolem(
     renderer.debug.onShaderError = () => {
       shaderFailed = true;
     };
-    const t0 = performance.now();
+    let t0 = 0; // set when it goes on screen, so the clip and the flash share a clock
 
     function draw(t: number) {
       const scrolled = window.scrollY - scrollY0;
@@ -749,10 +803,12 @@ export async function runGolem(
       if (stopped) return;
       if (shaderFailed) return stop(); // a shader didn't compile: keep the painted card instead
       // rAF's timestamp is when the frame began, which can be a moment before t0: never let time run backwards.
-      const t = Math.max(0, (now - t0) / 1000);
+      // Clip time: the clip starts once the first flash has risen.
+      const t = (now - t0) / 1000 - FLASH_IN;
       if (t >= END) return stop();
       try {
-        draw(t);
+        if (t >= 0 && t < CLIP_END) draw(t);
+        else if (t >= CLIP_END) effects(t); // just the swap back: the canvas is hidden from here
       } catch {
         return stop(); // never leave the card's art hidden
       }
@@ -783,6 +839,7 @@ export async function runGolem(
       renderer.dispose();
       renderer.forceContextLoss();
       canvas.remove();
+      flash.remove();
       resolveStarted();
       resolveDone();
     }
@@ -808,7 +865,12 @@ export async function runGolem(
     window.addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onHidden);
     canvas.addEventListener("webglcontextlost", onLost);
+    canvas.style.opacity = "0"; // until the first flash peaks
     document.body.appendChild(canvas);
+    document.body.appendChild(flash);
+    t0 = performance.now();
+    flashUp();
+    glow(true, FLASH_IN);
     raf = requestAnimationFrame(frame);
     await started;
     return { stop, done };
