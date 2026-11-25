@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion, useAnimate } from "motion/react";
-import { useLayoutEffect, useState, ViewTransition, type ReactNode } from "react";
+import { Children, useLayoutEffect, useState, ViewTransition, type ReactNode } from "react";
 import { useMotionMode } from "@/lib/motion-pref";
 import type { PlayerId } from "@/lib/rules/engine";
 import { Card } from "../Card";
@@ -221,9 +221,10 @@ export function Board({
   return (
     <figure ref={scope} className={`ruled relative m-0 flex flex-col gap-2 overflow-visible px-3 pt-6 pb-5 sm:px-6 ${className}`}>
       {opp}
-      {/* Centered, in line with both player plates: attacks go at the player, not a creature. */}
-      <div aria-hidden className="flex min-h-12 items-center justify-center">
-        {between}
+      {/* The middle of the table: a printed dashed line, with the turn tag or attack arrow
+          sitting on it, centered in line with both players. */}
+      <div aria-hidden className="table-midline relative flex min-h-12 items-center justify-center">
+        {between && <span className="relative bg-panel px-3">{between}</span>}
       </div>
       {you}
       {caption && <figcaption className="mt-6 text-sm text-ink-soft">{caption}</figcaption>}
@@ -241,6 +242,9 @@ export function AttackArrow({ label }: { label: string }) {
     </span>
   );
 }
+
+/** Card spots per side of the table (the most any step uses). */
+const TABLE_SPOTS = 3;
 
 export function Row({
   side,
@@ -273,11 +277,25 @@ export function Row({
       </div>
     </div>
   );
+  // Every side shows the same three card spots, so an empty side reads as "no
+  // creatures here" instead of a blank gap.
+  const spots = Math.max(0, TABLE_SPOTS - Children.toArray(children).length);
   return (
-    <div className="flex flex-col gap-5">
+    // Each half of the table: a faint tint and a faded edge painting (see .table-side).
+    <div
+      data-side={side}
+      className={`table-side -mx-3 flex flex-col gap-5 px-3 sm:-mx-6 sm:px-6 ${side === "opp" ? "-mt-6 pt-6 pb-3" : "pt-3 pb-5"}`}
+    >
       {side === "opp" && plate}
       {/* One row per side, like a real table: cards shrink to fit instead of wrapping. */}
-      <div className="board-row flex min-h-[8rem] items-center justify-center gap-2.5 sm:gap-5">{children}</div>
+      <div className="board-row flex min-h-[8rem] items-center justify-center gap-2.5 sm:gap-5">
+        {children}
+        {Array.from({ length: spots }, (_, i) => (
+          <div key={`spot-${i}`} aria-hidden className="card-wrap">
+            <div className="table-spot aspect-[5/7]" />
+          </div>
+        ))}
+      </div>
       {side === "you" && plate}
     </div>
   );
@@ -343,7 +361,7 @@ export function CardSlot({
 function GraveSlot({ name }: { name: string }) {
   return (
     <div className="card-wrap" aria-label={`${name} died`} role="img">
-      <div className="grid aspect-[5/7] place-items-center border-2 border-dashed border-rule p-2 text-center text-xs text-ink-soft">
+      <div className="table-spot grid aspect-[5/7] place-items-center p-2 text-center text-xs text-ink-soft">
         <span>
           {name}
           <br />

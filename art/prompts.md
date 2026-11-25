@@ -119,3 +119,14 @@ Shown small in a circle next to each player's life total, so you can tell sides 
 **You** (`avatar-you.png`): a friendly owl in a navy cloak with gold trim, calm and encouraging, on deep navy with a warm glow.
 
 **Opponent** (`avatar-opp.png`): a sly but playful crow in a slate cloak with silver trim, a friendly rival, on dark slate with a cool glow.
+
+
+## Table edges
+
+Two wide strips that sit faintly along the far edge (opponent) and near edge (you) of the game table. They're atmosphere, not pictures: big flat woodblock shapes, low contrast, no focal point. In the app they're shown at low strength, tinted to each side's color, and faded toward the middle so the cards and combat zone stay clean.
+
+Made for both screen sizes: full width on desktop (3:1) and the center third on phones, so the shapes run evenly across and the center works on its own.
+
+**Opponent edge** (`table-edge-opp.png`, top): distant night mountains in slate and steel blue, under a dark sky. The bottom 40% is a plain pale area that fades into the table.
+
+**Your edge** (`table-edge-you.png`, bottom): warm rolling hills and a treeline at dusk in amber and gold. The top 40% is a plain cream area that fades into the table.

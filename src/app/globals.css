@@ -933,3 +933,47 @@ html[data-motion="calm"] .key-row[data-state="active"] .key-pin {
 .report-table tbody tr:last-child th {
   border-bottom: 0;
 }
+
+/* ---- The game table ----
+   Each half gets a faint tint and a faded edge painting: night mountains
+   behind the opponent (top), warm hills behind you (bottom). They're
+   atmosphere, kept low and faded toward the middle, so the cards stay the
+   brightest thing on the table. Phones see the center of each painting. */
+.table-side {
+  position: relative;
+  isolation: isolate;
+}
+.table-side::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-repeat: no-repeat;
+  background-size: max(100%, 1100px) auto;
+  opacity: 0.3;
+}
+.table-side[data-side="opp"]::before {
+  background-color: #4f78a80f;
+  background-image: url("/art/table-edge-opp.webp");
+  background-position: center top;
+  mask-image: linear-gradient(to bottom, #000 0%, #000 25%, transparent 85%);
+}
+.table-side[data-side="you"]::before {
+  background-color: #d9a4410f;
+  background-image: url("/art/table-edge-you.webp");
+  background-position: center bottom;
+  mask-image: linear-gradient(to top, #000 0%, #000 25%, transparent 85%);
+}
+/* A printed card spot: where a card sits (or sat). */
+.table-spot {
+  border: 1.5px dashed color-mix(in oklab, var(--rule) 85%, var(--panel) 15%);
+  border-radius: 6%/4.3%;
+  background: color-mix(in oklab, var(--panel) 35%, transparent);
+}
+/* The middle of the table: one dashed line across. */
+.table-midline::before {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  border-top: 2px dashed color-mix(in oklab, var(--rule) 70%, var(--ink) 30%);
+}
