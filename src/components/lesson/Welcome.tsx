@@ -55,7 +55,7 @@ export function Welcome() {
               Learn Magic combat
             </h1>
             <p className="max-w-[34ch] text-xl text-panel/90">
-              Magic: The Gathering is a fantasy card game where creatures battle.
+              Magic: The Gathering is a fantasy card game. You battle an opponent using creatures and spells.
             </p>
             {/* Facts checked Nov 2026: released Aug 5, 1993 (Guinness World Records: first modern trading
                 card game); "played by over 50 million players" (Hasbro investor site). */}
