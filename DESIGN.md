@@ -325,3 +325,6 @@ On top of the preserved card design: a selected card gets a white gap and a 4px 
 - **Don't** use red or yellow decoratively.
 - **Don't** set UI text in the card fonts, or restyle the card faces with UI tokens.
 - **Don't** show a state with color alone.
+
+### The Storm Hawk leap (welcome page)
+Once per visit, after the page has loaded and the card is on screen, the hawk leaps out of its card in three.js (2.5D: the card's painting displaced by a depth map, wings flapping), turns slightly, dives back in and lands with a few gold sparks, a soft shadow and a 4px card bump. About 2.5 seconds, then the page is still. "Watch the hawk" under the card replays it. It stays inside the welcome panel. Full motion only; Calm, Off, reduced motion, data saver, low-memory devices and software-only WebGL keep the plain card. The canvas exists only while it plays, is aria-hidden and ignores the pointer.

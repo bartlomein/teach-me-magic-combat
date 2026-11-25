@@ -1,12 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, ViewTransition } from "react";
+import { useEffect, useRef, useState, ViewTransition } from "react";
 import { CARDS } from "@/lib/cards";
 import { resumeStep, STEPS, stepHref } from "@/lib/lesson/lesson";
 import { buildReport } from "@/lib/lesson/report";
 import { dispatch, useLesson } from "@/lib/lesson/store";
+import { useMotionMode } from "@/lib/motion-pref";
 import { Card } from "../Card";
+import { canLeap, playHawkLeap, stopHawkLeap } from "../hawk/hawkLeap";
 import { OnSpot } from "./Coach";
 import { useArrivalFocus } from "./useArrivalFocus";
 
@@ -21,6 +23,78 @@ export function Welcome() {
   // Finished the whole lesson: "Continue" opens the report card.
   const finished = started && buildReport(lesson).complete;
   const continueHref = finished ? "/report" : stepHref(resume);
+  const motion = useMotionMode();
+  const cardRef = useRef<HTMLDivElement>(null);
+  // The Storm Hawk leap (three.js, loaded only when it plays): once per visit on its own, then on "Watch the hawk".
+  const [leapReady, setLeapReady] = useState(false);
+  const canPlay = leapReady && motion === "full";
+  const [playing, setPlaying] = useState(false);
+
+  async function playLeap(onStart?: () => void) {
+    if (!cardRef.current || motion !== "full") return;
+    setPlaying(true);
+    const result = await playHawkLeap(cardRef.current, onStart);
+    // A newer play took over: it owns the button's state now.
+    if (result !== "superseded") setPlaying(false);
+  }
+
+  // After the page has loaded and gone quiet, so it never slows the first paint. Full motion only.
+  useEffect(() => {
+    if (motion !== "full") {
+      stopHawkLeap();
+      return;
+    }
+    let cancelled = false;
+    let timer = 0;
+    let idle = 0;
+    let seen: IntersectionObserver | null = null;
+    const begin = () => {
+      idle = window.requestIdleCallback?.(() => (timer = window.setTimeout(go, 700)), { timeout: 2000 }) ?? window.setTimeout(go, 900);
+    };
+    const go = () => {
+      const el = cardRef.current;
+      if (cancelled || !el || !canLeap(motion)) return;
+      setLeapReady(true);
+      if (readSeen()) return;
+      // Only once the card is (almost) fully on screen: on phones it's below the fold until you scroll.
+      const threshold = Math.min(0.85, (window.innerHeight * 0.9) / Math.max(1, el.offsetHeight));
+      seen = new IntersectionObserver(
+        ([e]) => {
+          if (!e.isIntersecting || cancelled) return;
+          seen?.disconnect();
+          void whenStill(el).then(() => {
+            if (!cancelled) void playLeap(markSeen);
+          });
+        },
+        { threshold },
+      );
+      seen.observe(el);
+    };
+    // Leaving by any link or the Back button: put the hawk back first, before the page transition snapshots it.
+    const onLinkClick = (e: MouseEvent) => (e.target as Element | null)?.closest?.("a[href]") && stopHawkLeap();
+    if (document.readyState === "complete") begin();
+    else window.addEventListener("load", begin, { once: true });
+    document.addEventListener("click", onLinkClick, true);
+    window.addEventListener("popstate", stopHawkLeap);
+    return () => {
+      cancelled = true;
+      seen?.disconnect();
+      window.removeEventListener("load", begin);
+      document.removeEventListener("click", onLinkClick, true);
+      window.removeEventListener("popstate", stopHawkLeap);
+      window.clearTimeout(timer);
+      if (idle) window.cancelIdleCallback?.(idle);
+      stopHawkLeap();
+    };
+    // playLeap only reads `motion` (a dependency already) and refs; re-running on its identity would restart the timers.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [motion]);
+
+  /** Leave the page: put the hawk back on its card first, so the page transition captures the card. */
+  function go(href: string) {
+    stopHawkLeap();
+    router.push(href, { transitionTypes: ["nav-forward"] });
+  }
 
   // Load the next screen ahead of the click, so it's ready in the same frame and
   // the blue band and Storm Hawk can morph across instead of popping in.
@@ -34,7 +108,7 @@ export function Welcome() {
   // check, where each right answer skips a step.
   function start(experience: "new" | "some") {
     dispatch({ type: "start", experience, at: Date.now() });
-    router.push(experience === "new" ? "/basics" : "/quick-check", { transitionTypes: ["nav-forward"] });
+    go(experience === "new" ? "/basics" : "/quick-check");
   }
 
   return (
@@ -70,7 +144,7 @@ export function Welcome() {
               <div className="flex flex-wrap gap-3">
                 <OnSpot
                   primary
-                  onClick={() => router.push(continueHref, { transitionTypes: ["nav-forward"] })}
+                  onClick={() => go(continueHref)}
                 >
                   {finished ? "See your report card" : `Continue: Step ${resumeIndex + 1}`}
                 </OnSpot>
@@ -90,12 +164,53 @@ export function Welcome() {
           )}
         </div>
       </ViewTransition>
-      <div className="paper flex items-center justify-center border-t-[3px] border-ink p-8 md:border-t-0">
-        <div className="[--card-w:clamp(190px,52vw,250px)]">
+      <div className="paper flex flex-col items-center justify-center gap-3 border-t-[3px] border-ink p-8 md:border-t-0">
+        <div ref={cardRef} className="[--card-w:clamp(190px,52vw,250px)]">
           {/* Flies onto the Step 1 board as the screen changes. */}
           <Card card={CARDS.stormHawk} foil transitionName="card-stormHawk" />
         </div>
+        {canPlay && (
+          <button
+            type="button"
+            onClick={() => void playLeap()}
+            disabled={playing}
+            className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-bold text-ink-soft hover:text-ink disabled:opacity-50"
+          >
+            <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12a8 8 0 1 0 2.4-5.7" />
+              <path d="M4 4v4.5h4.5" />
+            </svg>
+            Watch the hawk
+          </button>
+        )}
       </div>
     </section>
   );
+}
+
+const SEEN_KEY = "teach-me:hawk-leap";
+/** sessionStorage can throw (private modes, blocked storage): then it just plays again next visit. */
+function readSeen() {
+  try {
+    return sessionStorage.getItem(SEEN_KEY) === "seen";
+  } catch {
+    return false;
+  }
+}
+function markSeen() {
+  try {
+    sessionStorage.setItem(SEEN_KEY, "seen");
+  } catch {
+    /* fine: see readSeen */
+  }
+}
+
+/**
+ * Wait until the pointer isn't tilting the card. The leap starts pixel-matched
+ * to the painted hawk, which only holds while the card sits flat.
+ */
+function whenStill(el: HTMLElement): Promise<void> {
+  const card = el.querySelector<HTMLElement>(".card");
+  if (!card || !card.matches(":hover")) return Promise.resolve();
+  return new Promise((resolve) => card.addEventListener("pointerleave", () => window.setTimeout(resolve, 500), { once: true }));
 }
