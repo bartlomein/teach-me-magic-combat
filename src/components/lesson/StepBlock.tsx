@@ -244,7 +244,7 @@ export function StepBlock({
           className="border-y-[3px] border-ink lg:border-y-0"
           caption={
             <>
-              <b className="text-ink">Fig. 2</b> Their turn. Thorn Boar attacks you.
+              Their turn. Thorn Boar attacks you.
             </>
           }
           opp={

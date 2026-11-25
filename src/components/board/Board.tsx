@@ -198,8 +198,8 @@ export function useBoardFx() {
 }
 
 /**
- * The battlefield, drawn like a diagram in a rules sheet: ruled paper, opponent
- * on top, you below, an optional printed mark between (an arrow), and a Fig. caption.
+ * The battlefield, drawn like a diagram in a rules sheet: plain paper, opponent
+ * on top, you below, an optional printed mark between (an arrow), and a caption for screen readers.
  */
 export function Board({
   scope,
@@ -219,7 +219,7 @@ export function Board({
   className?: string;
 }) {
   return (
-    <figure ref={scope} className={`ruled relative m-0 flex flex-col gap-2 overflow-visible px-3 pt-6 pb-5 sm:px-6 ${className}`}>
+    <figure ref={scope} className={`paper relative m-0 flex flex-col gap-2 overflow-visible px-3 pt-6 sm:px-6 ${className}`}>
       {opp}
       {/* The middle of the table: a printed dashed line, with the turn tag or attack arrow
           sitting on it, centered in line with both players. */}
@@ -227,7 +227,8 @@ export function Board({
         {between && <span className="relative bg-panel px-3">{between}</span>}
       </div>
       {you}
-      {caption && <figcaption className="mt-6 text-sm text-ink-soft">{caption}</figcaption>}
+      {/* Screen readers only: the task panel already says this on screen. */}
+      {caption && <figcaption className="sr-only">{caption}</figcaption>}
       {layer}
     </figure>
   );
@@ -284,7 +285,7 @@ export function Row({
     // Each half of the table: a faint tint and a faded edge painting (see .table-side).
     <div
       data-side={side}
-      className={`table-side -mx-3 flex flex-col gap-5 px-3 sm:-mx-6 sm:px-6 ${side === "opp" ? "-mt-6 pt-6 pb-3" : "pt-3 pb-5"}`}
+      className={`table-side -mx-3 flex flex-col gap-5 px-3 sm:-mx-6 sm:px-6 ${side === "opp" ? "-mt-6 pt-6 pb-3" : "pt-3 pb-6"}`}
     >
       {side === "opp" && plate}
       {/* One row per side, like a real table: cards shrink to fit instead of wrapping. */}

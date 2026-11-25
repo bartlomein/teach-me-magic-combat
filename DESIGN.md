@@ -4,7 +4,6 @@ description: A printed quick-start rules sheet that teaches Magic combat; the bo
 colors:
   sheet: "#eef1f6"
   panel: "#ffffff"
-  ruled: "#e6ebf3"
   rule: "#ccd3e1"
   ink: "#121d38"
   ink-soft: "#46506a"
@@ -153,7 +152,7 @@ components:
 
 **Creative North Star: "The Printed Rules Sheet"**
 
-The lesson reads like a quick-start rules sheet from a game box. Each step is a numbered panel framed in ink; the board is that panel's diagram, drawn on ruled paper with a "Fig." caption, lettered pins and a printed red arrow. The learner reads one bold task, looks at the diagram, taps, and gets a one-line correction tied to the card it concerns.
+The lesson reads like a quick-start rules sheet from a game box. Each step is a numbered panel framed in ink; the board is that panel's diagram, drawn as a game table with lettered pins and a printed red arrow. The learner reads one bold task, looks at the diagram, taps, and gets a one-line correction tied to the card it concerns.
 
 The sheet is flat, cool white and ink. Two spot inks do all the signalling: blue for the task and for selection, red only for mistakes. A highlighter yellow marks what to look at. Density is low and type is large; Lexend carries all UI text because it reads easily for learners with dyslexia. The world refuses both the dark fantasy glow of the game's own marketing and the soft, rounded white edtech app.
 
@@ -163,7 +162,7 @@ The collectible cards are a separate, preserved layer: they keep their original 
 - Cool white sheet, white panels, 3px ink frame rules, square corners.
 - One spot blue for task, current step and selection; red only for mistakes, life and the attack arrow.
 - Highlighter yellow for callouts, hints and selected text.
-- Board drawn on ruled paper with a Fig. caption, lettered pins and a Key.
+- Board drawn as a game table (tinted halves, faded edge paintings, card spots, a dashed center line) with lettered pins and a Key. Its caption is for screen readers only, since the task panel already says it on screen (Nov 25).
 - Every state is an icon plus a word, never color alone.
 - Flat: no gradients as fills, no glow, no blur, no glass in UI chrome.
 
@@ -189,7 +188,6 @@ Two spot inks and a highlighter on a cool white sheet, printed in deep navy ink.
 - **Faded Ink** (ink-soft): secondary text, captions, inactive tabs, the footer. 8:1 on white.
 - **Cool Sheet** (sheet): the page behind the panels; also the browser theme color.
 - **Panel White** (panel): framed panels, the board paper, text on blue and ink.
-- **Ruled Line** (ruled): the 1px lines every 32px on the board paper.
 - **Hairline** (rule): disabled control borders and the footer rule.
 
 ### Named Rules
@@ -214,7 +212,7 @@ Two spot inks and a highlighter on a cool white sheet, printed in deep navy ink.
 - **Title** (800, clamp 1.25 to 1.625rem): the page title in the header.
 - **Body** (400, 17px, 1.55): base text. Feedback and hints sit at 16px.
 - **Label** (600 to 700, 15px): step tabs, player names, life chips, the Key list.
-- **Caption** (400, 14px): Fig. captions (with a bold "Fig. n"), the Key heading, the Motion label, the turn timeline.
+- **Caption** (400, 14px): the Key heading, the Motion label, small notes under controls.
 
 ### Named Rules
 **The One Face Rule.** All UI text is Lexend. Card fonts stay inside cards.
@@ -261,7 +259,7 @@ Smoothness rules (each one fixed a visible jank):
 The UI chrome is flat. Depth comes from ink frame rules and fills, not shadows: panels sit on the sheet because of their 3px ink border and white fill. The only shadows in the product live on the card layer (a soft drop shadow under each card that follows its tilt). Small 2px white halos around pins and check badges are separation rings, not elevation.
 
 ### Named Rules
-**The Flat Sheet Rule.** No gradients as fills, no glow, no blur, no glass in UI chrome. The board's ruled lines are hard-stop lines, not a gradient fill.
+**The Flat Sheet Rule.** No gradients as fills, no glow, no blur, no glass in UI chrome.
 
 ## Shapes
 
@@ -296,7 +294,7 @@ A segmented control (Full / Calm / Off) in a 2px ink box: semibold faded-ink lab
 The blue head of every step panel: the giant step numeral, the read-aloud button, one headline prompt and one how-to line at 90% white. While explaining it also carries the turn timeline (Combat boxed in white with blue text) and the Watch / Try buttons.
 
 ### Board diagram (signature)
-White ruled paper (1px ruled lines every 32px), opponent row on top, your row below, each led by a bold name and a square life chip (red heart plus tabular number). When the player is the target, the opponent's life becomes a solid ink "Attack them" button. Between the rows, the printed red attack arrow with a short red label, aligned under the opponent's life column. A caption under the board starts with a bold "Fig. n".
+A game table on plain white paper (no ruled lines since Nov 25). Each half has a faint tint and a faded edge painting: night mountains behind the opponent, warm hills behind you. Each side shows three card spots (dashed outlines when empty). The opponent's plate (avatar, name, square life chip) sits centered above their cards; yours sits centered below yours. When the player is the target, the opponent's life becomes a solid ink "Attack them" button. Between the rows, a dashed center line; the turn tag or the printed red attack arrow sits on it, centered. The board's caption is screen-reader only.
 
 ### Lettered pins and Key (signature)
 A 26px ink disc with a white 13px extra-bold letter and a 2px white halo, pinned to a card's top-left corner (following the card when it is tapped). The Key under the actions repeats each letter with a one-line explanation. Pins show while explaining, from hint 2, and on any card a correction names. Highlighter callouts (yellow, 2px ink border, 13px bold) may label a card while explaining, desktop only.

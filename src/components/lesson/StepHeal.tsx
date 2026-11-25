@@ -166,7 +166,7 @@ export function StepHeal({
           }
           caption={
             <>
-              <b className="text-ink">Fig. 4</b> {golemDamage > 0 ? "Golem has 3 damage marked." : "A new turn. Golem is fully healed."}
+              {golemDamage > 0 ? "Golem has 3 damage marked." : "A new turn. Golem is fully healed."}
             </>
           }
           opp={

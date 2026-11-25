@@ -366,7 +366,7 @@ export function StepAttack({
         between={arrowOn ? <AttackArrow label="attacks the player" /> : null}
         caption={
           <>
-            <b className="text-ink">Fig. 1</b>{" "}
+            
             {arrowOn ? "Creatures that attack turn sideways." : "Your turn."}
           </>
         }

@@ -307,11 +307,11 @@ export function StepFlying({
             <>
               {figure ? (
                 <>
-                  <b className="text-ink">Fig. 3b</b> Sky Finch flies. Thorn Boar doesn&apos;t.
+                  Sky Finch flies. Thorn Boar doesn&apos;t.
                 </>
               ) : (
                 <>
-                  <b className="text-ink">Fig. 3</b> Their turn. A flyer and a ground creature attack.
+                  Their turn. A flyer and a ground creature attack.
                 </>
               )}
             </>

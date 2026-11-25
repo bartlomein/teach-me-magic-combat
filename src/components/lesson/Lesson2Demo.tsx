@@ -48,7 +48,7 @@ export function Lesson2Demo() {
 
   return (
     <figure className="flex flex-col gap-4">
-      <div className="ruled relative grid min-h-[22rem] grid-cols-[1fr_auto_1fr] items-center gap-3 border-2 border-ink p-4 [--card-w:clamp(110px,24vw,150px)] sm:p-6">
+      <div className="paper relative grid min-h-[22rem] grid-cols-[1fr_auto_1fr] items-center gap-3 border-2 border-ink p-4 [--card-w:clamp(110px,24vw,150px)] sm:p-6">
         <div className="relative justify-self-end">
           <motion.div
             animate={anim ? { opacity: boarDead ? 0.35 : 1, rotate: boarDead ? -8 : 0, filter: boarDead ? "grayscale(1)" : "grayscale(0)" } : undefined}
@@ -105,7 +105,7 @@ export function Lesson2Demo() {
         <p aria-live="polite" className="text-base">
           {beat === -1 ? (
             <>
-              <b>Fig. L2</b> <span className="text-ink-soft">Spells can change a fight after blocks.</span>
+              <span className="text-ink-soft">Spells can change a fight after blocks.</span>
             </>
           ) : (
             <>

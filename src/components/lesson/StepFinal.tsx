@@ -365,7 +365,7 @@ export function StepFinal({
           }
           caption={
             <>
-              <b className="text-ink">Fig. 5</b>{" "}
+              
               {theirTurn || intro
                 ? `Their turn. You have ${FINAL_LIFE.you} life. Bat and Boar attack; Spider stays home.`
                 : `Your turn. They have ${game.life.opp} life. Tapped creatures can't block.`}

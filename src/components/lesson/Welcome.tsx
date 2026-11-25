@@ -90,7 +90,7 @@ export function Welcome() {
           )}
         </div>
       </ViewTransition>
-      <div className="ruled flex items-center justify-center border-t-[3px] border-ink p-8 md:border-t-0">
+      <div className="paper flex items-center justify-center border-t-[3px] border-ink p-8 md:border-t-0">
         <div className="[--card-w:clamp(190px,52vw,250px)]">
           {/* Flies onto the Step 1 board as the screen changes. */}
           <Card card={CARDS.stormHawk} foil transitionName="card-stormHawk" />

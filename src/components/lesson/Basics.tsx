@@ -125,7 +125,7 @@ function Panel({
   return (
     // The paper is always there; only what's printed on it arrives. (Fading the
     // whole panel would show the ink behind the divider lines as a dark block.)
-    <li className="ruled flex">
+    <li className="paper flex">
       <motion.div {...motionProps} className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
         {/* The line first (scan 1, 2, 3), then the picture that shows it. */}
         <p className="flex items-start gap-2.5 text-[17px] leading-snug font-bold">

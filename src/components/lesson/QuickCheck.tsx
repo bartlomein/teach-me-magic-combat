@@ -102,7 +102,7 @@ export function QuickCheck() {
         </div>
       </ViewTransition>
 
-      <div className="ruled flex min-h-[20rem] flex-col items-center justify-center gap-4 border-y-[3px] border-ink p-6 [grid-area:board] lg:border-y-0">
+      <div className="paper flex min-h-[20rem] flex-col items-center justify-center gap-4 border-y-[3px] border-ink p-6 [grid-area:board] lg:border-y-0">
         <AnimatePresence mode="wait">
           {!done ? (
             <motion.div key={i} {...fade} className="flex flex-col items-center gap-4">

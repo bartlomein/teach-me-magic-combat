@@ -117,9 +117,6 @@ export function Report({ feedbackOn }: { feedbackOn: boolean }) {
                 </tbody>
               </table>
             </div>
-            <figcaption className="text-sm text-ink-soft">
-              <b className="text-ink">Fig. R1</b> How each step went.
-            </figcaption>
           </figure>
 
           {/* Mistakes by myth */}

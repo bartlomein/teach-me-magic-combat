@@ -7,7 +7,6 @@
 :root {
   --sheet: #eef1f6; /* page */
   --panel: #ffffff; /* framed panels */
-  --ruled: #e6ebf3; /* ruled lines on the board */
   --rule: #ccd3e1; /* hairlines */
   --ink: #121d38; /* text + frame rules, 15:1 on white */
   --ink-soft: #46506a; /* secondary text, 8:1 on white */
@@ -34,7 +33,6 @@
 @theme inline {
   --color-sheet: var(--sheet);
   --color-panel: var(--panel);
-  --color-ruled: var(--ruled);
   --color-rule: var(--rule);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
@@ -653,10 +651,9 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   }
 }
 
-/* The board is drawn on ruled paper, like a diagram in a rules sheet. */
-.ruled {
+/* Diagram paper: the plain white the board and figures are drawn on. */
+.paper {
   background-color: var(--panel);
-  background-image: repeating-linear-gradient(0deg, transparent 0 31px, var(--ruled) 31px 32px);
 }
 /* A tapped card is turned and scaled, so its pin follows the turned card's corner. */
 .card-wrap:has(> .card[data-tapped="true"]) > .card-pin {

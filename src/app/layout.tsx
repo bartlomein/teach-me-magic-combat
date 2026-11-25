@@ -45,11 +45,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {/* Named so it stays still while pages slide underneath. */}
             <header
               style={{ viewTransitionName: "site-header" }}
-              className="flex items-end justify-between gap-3 border-b-4 border-ink pb-2.5"
+              className="flex items-center justify-between gap-3 border-b-4 border-ink pb-2.5"
             >
               <Link href="/" transitionTypes={["nav-back"]} className="text-[clamp(1.25rem,3vw,1.625rem)] leading-tight font-extrabold tracking-[-0.02em] no-underline">
                 Magic combat
-                <span className="block text-sm font-medium tracking-normal text-ink-soft">Quick-start, lesson 1</span>
               </Link>
               <MotionToggle />
             </header>
