@@ -293,11 +293,14 @@ A segmented control (Full / Calm / Off) in a 2px ink box: semibold faded-ink lab
 ### Task band (signature)
 The blue head of every step panel: the giant step numeral, the read-aloud button, one headline prompt and one how-to line at 90% white. While explaining it also carries the turn timeline (Combat boxed in white with blue text) and the Watch / Try buttons.
 
+### Finished step
+Every step ends the same way, drawn by the shared step frame (Nov 25). The task band keeps the numeral and shows one headline: "Step complete" (the final challenge: "You win!"). The left column shows one Primary button, "Next: <next step>" (after the last step: "Next: Your report card"), with the feedback block right under it. No how-to line, no second button, no hints, no Key. To practice a finished step again, reopen it from the step tabs.
+
 ### Board diagram (signature)
 A game table on plain white paper (no ruled lines since Nov 25). Each half has a faint tint and a faded edge painting: night mountains behind the opponent, warm hills behind you. Each side shows three card spots (dashed outlines when empty). The opponent's plate (avatar, name, square life chip) sits centered above their cards; yours sits centered below yours. When the player is the target, the opponent's life becomes a solid ink "Attack them" button. Between the rows, a dashed center line; the turn tag or the printed red attack arrow sits on it, centered. The board's caption is screen-reader only.
 
 ### Lettered pins and Key (signature)
-A 26px ink disc with a white 13px extra-bold letter and a 2px white halo, pinned to a card's top-left corner (following the card when it is tapped). The Key under the actions repeats each letter with a one-line explanation. Pins show while explaining, from hint 2, and on any card a correction names. Highlighter callouts (yellow, 2px ink border, 13px bold) may label a card while explaining, desktop only.
+A 26px ink disc with a white 13px extra-bold letter and a 2px white halo, pinned to a card's top-left corner (following the card when it is tapped). The Key under the actions repeats each letter with a one-line explanation. Pins show while explaining, from hint 2, and on any card a correction names. Highlighter callouts (yellow, 2px ink border, 13px bold) may label a card while explaining, desktop only. A creature that is new this turn carries the callout "New this turn" above the card (Step 1, Step 2, the quick check); from 901px it replaces the card's own status ribbon, below that the ribbon stays.
 
 ### Card selection
 On top of the preserved card design: a selected card gets a white gap and a 4px spot-blue ring plus a blue round check badge; keyboard focus gets a similar 3px ring. Attackers step forward 4% and tapped cards turn 90 degrees, so state is shape as well as color.
