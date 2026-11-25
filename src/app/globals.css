@@ -1,26 +1,935 @@
 @import "tailwindcss";
 
+/* ---------- Theme: the printed rules sheet ----------
+   A cool white sheet, ink rules, two spot inks (blue for the task and
+   selection, red only for mistakes and attack arrows), and a highlighter
+   yellow for callouts and hints. Flat: no gradients, glow, blur or glass. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --sheet: #eef1f6; /* page */
+  --panel: #ffffff; /* framed panels */
+  --ruled: #e6ebf3; /* ruled lines on the board */
+  --rule: #ccd3e1; /* hairlines */
+  --ink: #121d38; /* text + frame rules, 15:1 on white */
+  --ink-soft: #46506a; /* secondary text, 8:1 on white */
+  --spot: #2a45c4; /* task band, current step, selection, 7.6:1 on white */
+  --spot-tint: #e7ebfb;
+  --hi: #ffd84a; /* highlighter: callouts + hints */
+  --miss: #c23a26; /* mistakes + attack arrows, 5.6:1 on white */
+  --miss-tint: #fbe8e4;
+  --ok-tint: #e6f2ea;
+  --ok: #1f6b43;
+
+  /* Card-face inks. Cards keep their original design; only cards use these. */
+  --night: #0d1530;
+  --lav: #c9c3f0;
+  --mist: #f1f3fb;
+  --muted: #b7bfdc;
+  --gold: #f6cf6a;
+  --ember: #ff9a62;
+  --tide: #8fb7e8;
+  --good: #8fe0ad;
+  --bad: #ff9c9c;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-sheet: var(--sheet);
+  --color-panel: var(--panel);
+  --color-ruled: var(--ruled);
+  --color-rule: var(--rule);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-spot: var(--spot);
+  --color-spot-tint: var(--spot-tint);
+  --color-hi: var(--hi);
+  --color-miss: var(--miss);
+  --color-miss-tint: var(--miss-tint);
+  --color-ok: var(--ok);
+  --color-ok-tint: var(--ok-tint);
+  --font-sans: var(--font-ui);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html {
+  background: var(--sheet);
+  scrollbar-color: var(--ink-soft) var(--sheet);
+}
+body {
+  color: var(--ink);
+  background: var(--sheet);
+  font-family: var(--font-ui), system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+  caret-color: var(--spot);
+}
+::selection {
+  background: var(--hi);
+  color: var(--ink);
+}
+a {
+  text-underline-offset: 0.2em;
+}
+/* Tailwind v4 resets buttons to the default arrow; anything clickable gets the hand. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+label:has(> input:not(:disabled)),
+summary {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Two-tone focus: a white gap then a blue ring, visible on white, blue and ink. */
+:focus-visible {
+  outline: 3px solid var(--spot);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--panel);
+}
+/* On the blue band: a highlighter-yellow ring, visible against blue and white buttons. */
+.on-spot :focus-visible {
+  outline-color: var(--hi);
+  box-shadow: 0 0 0 2px var(--spot);
+}
+
+/* Prototype page only (old style test). */
+.aurora {
+  display: none;
+}
+
+/* ==========================================================================
+   Card
+   Everything inside is sized in cqw (1% of the card's width), so one design
+   scales from a 112px board card to a 280px inspect card.
+   ========================================================================== */
+.card-wrap {
+  perspective: 900px;
+  width: var(--card-w, clamp(112px, 27vw, 176px));
+  container-type: inline-size;
+}
+
+.card {
+  font-family: var(--font-card), system-ui, sans-serif;
+  --rx: 0deg;
+  --ry: 0deg;
+  --mx: 50%;
+  --my: 50%;
+  --flip: 0deg;
+  --lift: 0%;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  border-radius: 6cqw;
+  transform-style: preserve-3d;
+  transform: translateY(var(--lift)) rotateX(var(--ry)) rotateY(calc(var(--rx) + var(--flip)));
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    rotate 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    scale 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.4s,
+    box-shadow 0.3s;
+  box-shadow: calc(var(--rx) * -0.6) calc(8px + var(--ry) * 0.6) 18px #121d3840;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.card[data-tracking="true"] {
+  transition:
+    transform 0.08s linear,
+    rotate 0.5s,
+    scale 0.5s,
+    box-shadow 0.3s;
+}
+/* Tapped: turned sideways, the real-game cue. Scaled so it still fits its slot. */
+.card[data-tapped="true"] {
+  rotate: 90deg;
+  scale: 0.72;
+}
+.card[data-tapped="true"]:not([data-status="attacking"]) {
+  filter: saturate(0.6) brightness(0.85);
+}
+/* Hint level 3: a highlighter ring around the cards to look at. */
+.card-wrap[data-highlight="true"] .card {
+  animation: hint-glow 1.6s ease-in-out infinite;
+}
+@keyframes hint-glow {
+  50% {
+    box-shadow:
+      0 0 0 4px var(--panel),
+      0 0 0 9px var(--hi),
+      0 12px 22px #121d3840;
+  }
+}
+html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
+  animation: none;
+  box-shadow:
+    0 0 0 4px var(--panel),
+    0 0 0 9px var(--hi);
+}
+.card[data-flipped="true"] {
+  --flip: 180deg;
+}
+.card[data-status="attacking"] {
+  --lift: -4%; /* attackers step forward: a shape cue, not just a color */
+}
+.card:disabled {
+  cursor: default;
+}
+/* Two-tone ring so focus shows on the sheet and on the gold rim. */
+.card:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px var(--panel),
+    0 0 0 6px var(--spot),
+    0 12px 22px #121d3840;
+}
+/* Selected: a blue ring + a check badge (shape), never color alone. */
+.card[aria-pressed="true"] {
+  box-shadow:
+    0 0 0 3px var(--panel),
+    0 0 0 7px var(--spot),
+    0 12px 22px #121d3840;
+}
+.card__check {
+  position: absolute;
+  top: -3cqw;
+  right: -3cqw;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 13cqw;
+  min-width: 20px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--spot);
+  color: var(--panel);
+  box-shadow: 0 0 0 2px var(--panel);
+  transform: translateZ(1px);
+}
+
+.card__face,
+.card__back {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+/* The front face does NOT use backface-visibility. Safari (WebKit) drops the
+   images and art inside a backface-hidden face while the card tilts in 3D, even
+   when it faces you. Instead the face simply hides at the midpoint of a flip
+   (the card is edge-on then, so the swap is invisible). */
+/* No isolation/will-change here either: an isolated, clipped face inside a
+   tilting 3D card makes Safari drop the face's own navy background. */
+.card__face {
+  transition: visibility 0s linear 0.22s;
+}
+.card[data-flipped="true"] .card__face {
+  visibility: hidden;
+}
+.card[data-flipped="true"] .card__back {
+  visibility: visible;
+}
+/* The back is also hidden outright unless the card is flipped (it appears at
+   the flip's midpoint, like the face disappears). Backface hiding alone isn't
+   enough: Safari flattens the 3D card when it snapshots it for a page
+   transition, and the back then paints over the front. */
+.card__back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  visibility: hidden;
+  transition: visibility 0s linear 0.22s;
+  transform: rotateY(180deg);
+  border: 3.5cqw solid transparent;
+  background:
+    radial-gradient(circle at 50% 50%, #c9c3f0 0 7%, #6b5bd6 7.5% 9%, transparent 9.5%) padding-box,
+    repeating-conic-gradient(from 0deg, #2c3a74 0 15deg, #1f2a58 15deg 30deg) padding-box,
+    conic-gradient(from 200deg, #e9c46a, #8a6424 25%, #fff3c4 40%, #e9c46a 55%, #8a6424 80%, #e9c46a) border-box;
+}
+
+/* ---------- Printed face ---------- */
+.cf {
+  /* Metal for your side: gilt. */
+  --metal: #e9c46a;
+  --metal-lo: #8a6424;
+  --metal-hi: #fff3c4;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  row-gap: 2cqw;
+  padding: 2.6cqw 3cqw 3cqw;
+  border: 3.5cqw solid transparent;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") padding-box,
+    radial-gradient(120% 60% at 50% 0%, #1d2752, transparent 70%) padding-box,
+    linear-gradient(#141c3f, #0c1230) padding-box,
+    conic-gradient(
+        from 200deg,
+        var(--metal),
+        var(--metal-lo) 25%,
+        var(--metal-hi) 40%,
+        var(--metal) 55%,
+        var(--metal-lo) 80%,
+        var(--metal)
+      )
+      border-box;
+  box-shadow:
+    inset 0 0 0 1px #0008,
+    inset 0 1px 0 #ffffff22;
+  color: var(--mist);
+}
+/* Opponent: moon-silver frame (board side also tells you whose it is). */
+.cf[data-side="opp"] {
+  --metal: #b9cbe8;
+  --metal-lo: #4a5f8a;
+  --metal-hi: #f1f6ff;
+}
+
+/* Title bar: name */
+.cf-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+  min-height: 11cqw;
+  padding: 1.6cqw 0.6cqw 0;
+}
+.cf-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: clamp(10px, 8cqw, 22px);
+  font-variation-settings: "opsz" 24;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+}
+/* Art */
+.cf-art {
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+.cf-window {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 3cqw;
+  box-shadow:
+    0 0 0 1px var(--metal-lo),
+    0 0 0 2px #0008;
+}
+.cf-glyph {
+  font-size: 28cqw;
+  filter: drop-shadow(0 4px 10px #0008);
+}
+.card[data-status="new"] .cf-window {
+  filter: saturate(0.55) brightness(0.9); /* "still settling in" */
+}
+
+/* Status ribbon across the bottom of the art: icon + word + colored edge. */
+.cf-status {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5cqw;
+  padding: 1.6cqw 2cqw;
+  border-top: 2px solid var(--st, var(--lav));
+  border-radius: 0 0 3cqw 3cqw;
+  background: #0d1530e6;
+  color: var(--mist);
+  font-weight: 700;
+  font-size: clamp(10px, 5cqw, 13px);
+  line-height: 1;
+  white-space: nowrap;
+}
+.cf-status[data-status="attacking"] {
+  --st: var(--ember);
+}
+.cf-status[data-status="blocking"] {
+  --st: var(--tide);
+}
+.cf-status[data-status="new"] {
+  --st: var(--lav);
+}
+.cf-status[data-status="tapped"] {
+  --st: var(--muted);
+}
+
+/* Damage marker on the art. Toughness itself never changes; damage is marked. */
+.cf-damage {
+  position: absolute;
+  top: 2cqw;
+  left: 2cqw;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  /* Equal width and height so it's a true circle, never an oval. */
+  --d: max(22px, 13cqw);
+  width: var(--d);
+  height: var(--d);
+  padding: 0;
+  border-radius: 50%;
+  font-variant-numeric: tabular-nums;
+  /* Trim the font's extra space above and below the digit so it sits dead center. */
+  text-box: trim-both cap alphabetic;
+  background: var(--bad);
+  color: #3a0b0b;
+  box-shadow: 0 0 0 2px var(--night);
+  font-family: var(--font-card), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(11px, 7cqw, 17px);
+  line-height: 1;
+}
+
+/* Type line */
+.cf-type {
+  padding: 0 0.6cqw 1.6cqw;
+  border-bottom: 1px solid color-mix(in srgb, var(--metal-lo) 70%, transparent);
+  color: var(--muted);
+  font-size: clamp(9px, 4.4cqw, 12px);
+  line-height: 1.2;
+}
+
+/* Text box: keyword + reminder. Leaves room for the P/T badge. */
+.cf-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2cqw;
+  padding: 0 0.6cqw 20cqw; /* room for the P/T badge */
+  font-size: clamp(9px, 4.4cqw, 12px);
+  line-height: 1.32;
+}
+.cf-kw {
+  display: flex;
+  gap: 1.6cqw;
+  align-items: flex-start;
+}
+.cf-kw svg {
+  color: var(--metal);
+  margin-top: 0.05em;
+}
+.cf-kw b {
+  font-weight: 700;
+}
+.cf-reminder {
+  color: var(--muted);
+}
+.cf-kw-mini {
+  display: none;
+}
+
+/* Power / toughness: a metal lozenge inside the frame, with breathing room above the rim. */
+.cf-pt {
+  position: absolute;
+  right: 4cqw;
+  bottom: 4cqw;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32cqw;
+  height: 14cqw;
+  padding: 0 5cqw;
+  clip-path: polygon(9% 0, 91% 0, 100% 50%, 91% 100%, 9% 100%, 0 50%);
+  background: linear-gradient(165deg, var(--metal-hi), var(--metal) 45%, var(--metal-lo));
+  color: #141b3a;
+  font-family: var(--font-card), system-ui, sans-serif; /* Atkinson: built for legibility, unambiguous digits */
+  font-weight: 800;
+  font-size: clamp(15px, 9.6cqw, 25px);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+.cf-pt-slash {
+  margin: 0 0.28em;
+  font-weight: 400;
+  opacity: 0.55;
+}
+
+/* ---------- Small cards (board size) ---------- */
+@container (width < 160px) {
+  .cf {
+    grid-template-rows: auto 1fr auto;
+    row-gap: 2.5cqw;
+  }
+  .cf-art {
+    aspect-ratio: auto;
+  }
+  .cf-type,
+  .cf-text,
+  .cf-status-word {
+    display: none;
+  }
+  .cf-kw-mini {
+    display: flex;
+    align-items: center;
+    gap: 2cqw;
+    min-height: 12cqw;
+    padding-right: 30cqw; /* room for P/T */
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .cf-kw-mini span {
+    display: inline-flex;
+    align-items: center;
+    gap: 1cqw;
+  }
+  .cf-kw-mini svg {
+    color: var(--metal);
+  }
+  .cf-pt {
+    bottom: 2.5cqw;
+    right: 2.5cqw;
+    height: 14cqw;
+  }
+  .art-fg {
+    filter: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------- Foil + glare ---------- */
+/* Foil lives on the art only, so it never sits on top of text. */
+.card__foil {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  background: repeating-linear-gradient(115deg, #ff7eb3 0%, #ffd36e 8%, #8fe0ad 16%, #8fb7e8 24%, #c9a7ff 32%, #ff7eb3 40%);
+  background-size: 260% 260%;
+  background-position: var(--mx) var(--my);
+  /* soft-light, not color-dodge: Safari renders color-dodge as a blown-out
+     red/blue wash; soft-light gives the same gentle shimmer in every browser. */
+  mix-blend-mode: soft-light;
+  mask-image: linear-gradient(transparent 12%, #000 16% 56%, transparent 62%);
+}
+.card[data-foil="true"] .card__foil {
+  opacity: 0.35;
+}
+.card[data-foil="true"][data-tracking="true"] .card__foil {
+  opacity: 0.6;
+}
+.card__glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  background: radial-gradient(circle at var(--mx) var(--my), #ffffff55 0%, transparent 45%);
+  mix-blend-mode: overlay;
+}
+.card:hover .card__glare,
+.card[data-tracking="true"] .card__glare {
+  opacity: 1;
+}
+
+/* ---------- Parallax art ----------
+   2D transforms only, and no will-change. A 3D transform or will-change gives the
+   art its own GPU layer inside a card that rotates in 3D with its back face hidden;
+   browsers can cull that child layer mid-tilt, so the creature vanishes. Keeping
+   the art flat makes it paint as part of the card face, on every card. */
+.art-layer {
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.card[data-tracking="true"] .art-layer {
+  transition: transform 0.08s linear;
+}
+.art-bg {
+  transform: translate(calc(var(--px, 0) * -6px), calc(var(--py, 0) * -5px)) scale(1.08);
+  mask-image: radial-gradient(120% 100% at 50% 40%, #000 70%, #0008);
+}
+/* Break-out: clipped top and left like the sky, but may spill past the right
+   edge onto the rim. Never past the bottom: the type line sits there and must stay readable. */
+.art-breakout {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  clip-path: inset(-2% -14% 0 0 round 3cqw);
+  isolation: isolate;
+}
+.art-fg {
+  transform: translate(calc(var(--px, 0) * 10px + 8%), calc(var(--py, 0) * 8px + 3%)) scale(1.14);
+  filter: drop-shadow(0 6px 8px #0d1530aa);
+}
+[data-motion="calm"] .art-layer,
+[data-motion="off"] .art-layer {
+  --px: 0;
+  --py: 0;
+}
+
+/* Calm / Off: no tilt, no moving foil, flips become a crossfade. */
+[data-motion="calm"] .card,
+[data-motion="off"] .card {
+  --rx: 0deg !important;
+  --ry: 0deg !important;
+}
+[data-motion="calm"] .card__foil,
+[data-motion="off"] .card__foil {
+  background-position: 50% 50%;
+}
+[data-motion="calm"] .card[data-flipped="true"],
+[data-motion="off"] .card[data-flipped="true"] {
+  --flip: 0deg;
+}
+[data-motion="calm"] .card .card__back,
+[data-motion="off"] .card .card__back {
+  transform: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+[data-motion="calm"] .card[data-flipped="true"] .card__back,
+[data-motion="off"] .card[data-flipped="true"] .card__back {
+  opacity: 1;
+}
+[data-motion="off"] *,
+[data-motion="off"] *::before,
+[data-motion="off"] *::after {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+}
+[data-motion="calm"] .aurora,
+[data-motion="off"] .aurora {
+  animation: none;
+}
+
+/* Belt and braces: if the OS asks for reduced motion and JS hasn't run yet. */
+@media (prefers-reduced-motion: reduce) {
+  .aurora {
+    animation: none;
+  }
+}
+
+/* Board rows: cards share the row and shrink to fit (never wrap). */
+.board-row > .card-wrap {
+  flex: 0 1 var(--card-w, clamp(112px, 27vw, 176px));
+  min-width: 0;
+}
+
+/* Printed diagram marks on the board: a lettered pin and a highlighter callout. */
+.card-pin {
+  position: absolute;
+  z-index: 6;
+  top: -11px;
+  left: -11px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--panel);
+  font: 800 13px/1 var(--font-ui), sans-serif;
+  box-shadow: 0 0 0 2px var(--panel);
+}
+.card-callout {
+  position: absolute;
+  z-index: 6;
+  right: -6px;
+  top: -34px;
+  padding: 3px 8px;
+  border: 2px solid var(--ink);
+  background: var(--hi);
+  color: var(--ink);
+  font: 700 13px/1.2 var(--font-ui), sans-serif;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .card-callout {
+    display: none;
+  }
+}
+/* Wide screens: the yellow tag above the card says it, so the card's own status
+   ribbon steps aside. Phones keep the ribbon (the tag is hidden there). */
+@media (min-width: 901px) {
+  .card-wrap:has(> .card-callout) .cf-status {
+    display: none;
+  }
+}
+
+/* The board is drawn on ruled paper, like a diagram in a rules sheet. */
+.ruled {
+  background-color: var(--panel);
+  background-image: repeating-linear-gradient(0deg, transparent 0 31px, var(--ruled) 31px 32px);
+}
+/* A tapped card is turned and scaled, so its pin follows the turned card's corner. */
+.card-wrap:has(> .card[data-tapped="true"]) > .card-pin {
+  top: calc(34cqw - 11px);
+  left: -11px;
+}
+
+/* ==========================================================================
+   Page transitions (browser View Transitions, driven by React <ViewTransition>)
+   Forward slides left, back slides right, untagged navigations crossfade.
+   The header and step tabs hold still; the task band and Storm Hawk morph.
+   Old content leaves fast, new content arrives a touch slower.
+   ========================================================================== */
+::view-transition {
+  pointer-events: none; /* clicks during an animation reach the live page */
+}
+::view-transition-old(.nav-forward) {
+  --slide: -48px;
+  animation:
+    240ms ease-in both vt-fade reverse,
+    590ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide: 48px;
+  animation:
+    360ms ease-out 200ms both vt-fade,
+    680ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide: 48px;
+  animation:
+    240ms ease-in both vt-fade reverse,
+    590ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide: -48px;
+  animation:
+    360ms ease-out 200ms both vt-fade,
+    680ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide;
+}
+::view-transition-old(.fade) {
+  animation: 240ms ease-in both vt-fade reverse;
+}
+::view-transition-new(.fade) {
+  animation: 360ms ease-out 160ms both vt-fade;
+}
+/* Shared elements: one object moving, not two swapping. Drawn above the page
+   snapshots, which otherwise paint their empty slot (white panel) over them. */
+/* "assemble" (Basics -> Step 1): the primer turns into the board. Its pieces are
+   the stars (the band, both life totals and Ember Pup fly to their spots, a beat
+   apart), so the rest of the old screen just steps back and the board's frame
+   fades in under them. The remaining cards are dealt in by StepAttack. */
+::view-transition-old(.assemble) {
+  animation: 260ms ease-in both vt-fade reverse;
+}
+::view-transition-new(.assemble) {
+  animation: 460ms ease-out 260ms both vt-fade;
+}
+html:active-view-transition-type(assemble)::view-transition-group(task-band) {
+  animation-duration: 820ms;
+}
+html:active-view-transition-type(assemble)::view-transition-group(card-emberPup) {
+  animation-duration: 820ms;
+  animation-delay: 70ms;
+}
+html:active-view-transition-type(assemble)::view-transition-group(life-opp) {
+  animation-duration: 760ms;
+  animation-delay: 140ms;
+}
+html:active-view-transition-type(assemble)::view-transition-group(life-you) {
+  animation-duration: 760ms;
+  animation-delay: 200ms;
+}
+
+::view-transition-group(page),
+::view-transition-group(site-footer) {
+  animation-duration: 680ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+::view-transition-group(.morph) {
+  z-index: 50;
+  animation-duration: 760ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The task band changes shape (tall on welcome, short on a step). Instead of
+   stretching its text, morph a solid blue box and crossfade the text inside it
+   at its real size, pinned top-left. */
+::view-transition-group(task-band) {
+  background: var(--spot);
+  overflow: clip;
+}
+::view-transition-old(task-band),
+::view-transition-new(task-band) {
+  width: auto;
+  height: auto;
+  object-fit: none;
+  object-position: left top;
+  inset: 0 auto auto 0;
+}
+/* Old words leave fast, then the new words arrive: never two texts on top of each other. */
+::view-transition-old(task-band) {
+  animation: 200ms ease-in both vt-fade reverse;
+}
+::view-transition-new(task-band) {
+  animation: 380ms ease-out 190ms both vt-fade;
+}
+/* Anchor: the header never moves during a page change. (The step tabs are not
+   named on purpose: they ride inside the lesson area, so arriving from the
+   welcome or basics screen they slide in with it, in every browser, and between
+   steps they sit in the still background.) */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+/* Step tabs: between two steps both snapshots exist, so they hold perfectly
+   still. Arriving from a screen without tabs (welcome, basics) only the new one
+   exists, so it fades in with the page; leaving, the old one fades out. */
+::view-transition-group(step-nav) {
+  animation: none;
+  z-index: 90;
+}
+::view-transition-old(step-nav):not(:only-child) {
+  display: none;
+}
+::view-transition-new(step-nav):not(:only-child) {
+  animation: none;
+}
+::view-transition-new(step-nav):only-child {
+  animation: 360ms ease-out 200ms both vt-fade;
+}
+::view-transition-old(step-nav):only-child {
+  animation: 240ms ease-in both vt-fade reverse;
+}
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vt-slide {
+  from {
+    translate: var(--slide) 0;
+  }
+}
+
+/* Calm: fades only. Nothing slides or flies. */
+html[data-motion="calm"]::view-transition-group(*) {
+  animation-duration: 0s;
+}
+html[data-motion="calm"]::view-transition-old(*) {
+  animation: 160ms ease-in both vt-fade reverse;
+}
+html[data-motion="calm"]::view-transition-new(*) {
+  animation: 200ms ease-out both vt-fade;
+}
+/* Off: instant swap, like a normal page change. */
+html[data-motion="off"]::view-transition-group(*),
+html[data-motion="off"]::view-transition-old(*),
+html[data-motion="off"]::view-transition-new(*),
+html[data-motion="off"]::view-transition-image-pair(*) {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+/* The header (and the step tabs between steps) stay still in every motion mode. */
+html[data-motion]::view-transition-new(site-header),
+html[data-motion]::view-transition-new(step-nav):not(:only-child) {
+  animation: none;
+}
+
+/* ==========================================================================
+   Linked highlighting: a pin on the board and its line in the Key light up
+   together. The Key line gets a highlighter swept across it, the card a yellow
+   ring, and its pin grows; other pins step back. Ease-out expo, under 0.35s.
+   ========================================================================== */
+.card-pin {
+  cursor: pointer;
+  transform-origin: 80% 80%; /* grows outward, away from the card's name */
+  transition:
+    scale 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease-out;
+}
+.card-wrap[data-pin-state="active"] > .card-pin {
+  scale: 1.22;
+  box-shadow:
+    0 0 0 2px var(--panel),
+    0 0 0 5px var(--hi);
+}
+.card-wrap[data-pin-state="dim"] > .card-pin {
+  opacity: 0.35;
+}
+.card-wrap[data-pin-state="active"] > .card {
+  box-shadow:
+    0 0 0 3px var(--panel),
+    0 0 0 8px var(--hi),
+    0 14px 26px #121d3845;
+}
+
+.key-row {
+  margin: 0 -8px;
+  padding: 5px 8px;
+  cursor: default;
+  /* The highlighter: a yellow band that sweeps in from the left. */
+  background: linear-gradient(var(--hi), var(--hi)) no-repeat left center / 0% 100%;
+  transition:
+    background-size 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease-out;
+}
+.key-row[data-state="active"] {
+  background-size: 100% 100%;
+}
+.key-row[data-state="dim"] {
+  opacity: 0.45;
+}
+.key-row .key-pin {
+  transition: scale 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.key-row[data-state="active"] .key-pin {
+  scale: 1.12;
+}
+@media (hover: hover) {
+  .key-row {
+    cursor: pointer;
+  }
+}
+/* Calm: the highlighter fades in instead of sweeping; pins don't grow. */
+html[data-motion="calm"] .key-row {
+  background-image: none;
+  transition:
+    background-color 0.25s ease-out,
+    opacity 0.25s ease-out;
+}
+html[data-motion="calm"] .key-row[data-state="active"] {
+  background-color: var(--hi);
+}
+html[data-motion="calm"] .card-wrap[data-pin-state="active"] > .card-pin,
+html[data-motion="calm"] .key-row[data-state="active"] .key-pin {
+  scale: 1;
+}
+/* Calm / Off flip is a crossfade: hide the face only once the back has faded in. */
+[data-motion="calm"] .card__face {
+  transition: visibility 0s linear 0.3s;
+}
+
+/* ---- Check-in slider: a printed 1-5 scale with tick marks, ink thumb. ---- */
+/* ---- Report card ---- */
+.report-table th,
+.report-table td {
+  padding: 0.7rem 0.75rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--rule);
+}
+.report-table thead th {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  border-bottom: 2px solid var(--ink);
+}
+.report-table tbody tr:last-child td,
+.report-table tbody tr:last-child th {
+  border-bottom: 0;
 }

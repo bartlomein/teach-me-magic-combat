@@ -1,0 +1,481 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-25T09:31:55+00:00",
+  "title": "Design System: Teach Me: Magic Combat",
+  "extensions": {
+    "colorMeta": {
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Cool Sheet",
+        "canonical": "oklch(95.7% 0.007 261)",
+        "tonalRamp": [
+          "#101215",
+          "#27292d",
+          "#404246",
+          "#616368",
+          "#84868b",
+          "#a8abb0",
+          "#ced1d6",
+          "#eceff4"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel White",
+        "canonical": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#121212",
+          "#292929",
+          "#424242",
+          "#636363",
+          "#868686",
+          "#ababab",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "ruled": {
+        "role": "neutral",
+        "displayName": "Ruled Line",
+        "canonical": "oklch(93.9% 0.012 260)",
+        "tonalRamp": [
+          "#0e1217",
+          "#25292f",
+          "#3f4349",
+          "#5f636a",
+          "#82868e",
+          "#a6abb3",
+          "#ccd1d9",
+          "#eaeff7"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(86.6% 0.021 264)",
+        "tonalRamp": [
+          "#101215",
+          "#26292f",
+          "#3e424b",
+          "#5e636f",
+          "#818692",
+          "#a6abb4",
+          "#ced1d8",
+          "#eceef3"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Rules-Sheet Ink",
+        "canonical": "oklch(23.7% 0.054 266)",
+        "tonalRamp": [
+          "#0d111b",
+          "#222938",
+          "#384258",
+          "#566380",
+          "#7886a4",
+          "#a0abc3",
+          "#c9d1e3",
+          "#e9effb"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Faded Ink",
+        "canonical": "oklch(43.3% 0.045 268)",
+        "tonalRamp": [
+          "#0e1119",
+          "#242935",
+          "#3b4254",
+          "#59637b",
+          "#7c869f",
+          "#a2abbf",
+          "#cbd1e0",
+          "#eaeef9"
+        ]
+      },
+      "spot": {
+        "role": "primary",
+        "displayName": "Spot Blue",
+        "canonical": "oklch(45.8% 0.199 268)",
+        "tonalRamp": [
+          "#050c33",
+          "#12215e",
+          "#22388d",
+          "#3756c9",
+          "#597def",
+          "#86a6ff",
+          "#b6cfff",
+          "#dbeeff"
+        ]
+      },
+      "spot-tint": {
+        "role": "primary",
+        "displayName": "Spot Wash",
+        "canonical": "oklch(94.2% 0.022 275)",
+        "tonalRamp": [
+          "#101115",
+          "#27292f",
+          "#40424b",
+          "#60636f",
+          "#828692",
+          "#a8aab5",
+          "#cfd1d8",
+          "#edeef3"
+        ]
+      },
+      "hi": {
+        "role": "tertiary",
+        "displayName": "Highlighter Yellow",
+        "canonical": "oklch(89.1% 0.159 93)",
+        "tonalRamp": [
+          "#1b1000",
+          "#382600",
+          "#573f00",
+          "#805e00",
+          "#a38300",
+          "#c2a955",
+          "#e2d197",
+          "#faeec7"
+        ]
+      },
+      "miss": {
+        "role": "secondary",
+        "displayName": "Misprint Red",
+        "canonical": "oklch(54.7% 0.176 31)",
+        "tonalRamp": [
+          "#290200",
+          "#4e0e05",
+          "#771d10",
+          "#ac3220",
+          "#d35b48",
+          "#ed8d7b",
+          "#ffbdaf",
+          "#ffe1d7"
+        ]
+      },
+      "miss-tint": {
+        "role": "secondary",
+        "displayName": "Misprint Wash",
+        "canonical": "oklch(94.5% 0.022 32)",
+        "tonalRamp": [
+          "#15100f",
+          "#2e2725",
+          "#4a403d",
+          "#6e5f5c",
+          "#91827f",
+          "#b4a8a5",
+          "#d8cfcd",
+          "#f3edeb"
+        ]
+      },
+      "ok": {
+        "role": "secondary",
+        "displayName": "Proof Green",
+        "canonical": "oklch(47.1% 0.098 156)",
+        "tonalRamp": [
+          "#02160a",
+          "#0e311d",
+          "#1d4d32",
+          "#31724d",
+          "#589670",
+          "#88b899",
+          "#b9dbc4",
+          "#def6e5"
+        ]
+      },
+      "ok-tint": {
+        "role": "secondary",
+        "displayName": "Proof Wash",
+        "canonical": "oklch(95.0% 0.017 157)",
+        "tonalRamp": [
+          "#0b140f",
+          "#222b26",
+          "#3b453f",
+          "#5c665f",
+          "#7e8982",
+          "#a3aea7",
+          "#c9d4cd",
+          "#e6f2ea"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display-hero": {
+        "displayName": "Display hero",
+        "purpose": "Welcome headline on the blue band only."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "The big step numeral on the task band."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The one task prompt per step, at most 8 words."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Page title in the header."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base UI text."
+      },
+      "body-sm": {
+        "displayName": "Body small",
+        "purpose": "Feedback and hint text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Step tabs, player names, life chips, Key items (600 to 700)."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Fig. captions, Key heading, Motion label, turn timeline, footer."
+      }
+    },
+    "frameRules": [
+      {
+        "name": "header-rule",
+        "value": "4px solid var(--ink)",
+        "purpose": "Under the page header."
+      },
+      {
+        "name": "panel-frame",
+        "value": "3px solid var(--ink)",
+        "purpose": "Step and welcome panel frames and the rules between their regions."
+      },
+      {
+        "name": "control",
+        "value": "2px solid var(--ink)",
+        "purpose": "Buttons, life chips, Motion control, callouts, step strip baseline."
+      },
+      {
+        "name": "hairline",
+        "value": "1px solid var(--rule)",
+        "purpose": "Footer rule, disabled borders."
+      }
+    ],
+    "focus": [
+      {
+        "name": "focus-default",
+        "value": "outline: 3px solid var(--spot); outline-offset: 2px; box-shadow: 0 0 0 2px var(--panel)",
+        "purpose": "Two-tone ring everywhere."
+      },
+      {
+        "name": "focus-on-spot",
+        "value": "outline-color: var(--hi); box-shadow: 0 0 0 2px var(--spot)",
+        "purpose": "Inside the blue task band (.on-spot); white rings were invisible on white buttons on blue."
+      },
+      {
+        "name": "card-focus",
+        "value": "box-shadow: 0 0 0 3px var(--panel), 0 0 0 6px var(--spot)",
+        "purpose": "Keyboard focus on a card."
+      },
+      {
+        "name": "card-selected",
+        "value": "box-shadow: 0 0 0 3px var(--panel), 0 0 0 7px var(--spot)",
+        "purpose": "Selected card, always with the blue check badge."
+      },
+      {
+        "name": "hint-ring",
+        "value": "box-shadow: 0 0 0 4px var(--panel), 0 0 0 9px var(--hi)",
+        "purpose": "Hint level 3 on cards; pulses in Full motion, static when Off."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "card-drop",
+        "value": "0 8px 18px #121d3840 (shifts with tilt)",
+        "purpose": "Card layer only. UI chrome has no shadows."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Feedback entrance (0.25s, 4px rise); card rotate/scale."
+      },
+      {
+        "name": "step-change",
+        "value": "0.25s fade + 10px rise",
+        "purpose": "Switching steps."
+      },
+      {
+        "name": "modes",
+        "value": "Full / Calm / Off",
+        "purpose": "Calm removes tilt, parallax and flips (crossfade instead); Off zeroes all durations. Every animation has a screen-reader text twin."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "Wider page padding and band padding."
+      },
+      {
+        "name": "md",
+        "value": "768px",
+        "purpose": "Step strip becomes a 5-column grid with names; welcome panel splits."
+      },
+      {
+        "name": "callouts",
+        "value": "900px",
+        "purpose": "Card callouts hidden below."
+      },
+      {
+        "name": "lg",
+        "value": "1024px",
+        "purpose": "Step panel becomes two columns: 23rem band+actions, board right."
+      }
+    ],
+    "cardLayer": {
+      "note": "Preserved card design, out of scope for the UI system. Only cards use these.",
+      "fonts": {
+        "card-text": "Atkinson Hyperlegible Next (card text, P/T numbers)",
+        "card-name": "Fraunces 600 (card names)"
+      },
+      "inks": {
+        "night": "#0d1530",
+        "lav": "#c9c3f0",
+        "mist": "#f1f3fb",
+        "muted": "#b7bfdc",
+        "gold": "#f6cf6a",
+        "ember": "#ff9a62",
+        "tide": "#8fb7e8",
+        "good": "#8fe0ad",
+        "bad": "#ff9c9c"
+      },
+      "materials": "Gilt (yours) or moon-silver (opponent) conic frame, dark navy face with noise, foil and glare, parallax art, rounded 6cqw corners, drop shadow."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid ink box: the one thing to do next.",
+      "html": "<button class=\"ds-btn-primary\">Attack with 2</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:2px solid;border-radius:0;font:700 17px/1 Lexend,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s;border-color:var(--ink);background:var(--ink);color:var(--panel);}.ds-btn-primary:hover{border-color:var(--spot);background:var(--spot);}.ds-btn-primary:focus-visible{outline:3px solid var(--spot);outline-offset:2px;box-shadow:0 0 0 2px var(--panel);}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined printed box for the alternative action; disabled reads as struck through.",
+      "html": "<button class=\"ds-btn-secondary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z\"/></svg>Hint</button> <button class=\"ds-btn-secondary\" disabled>Pick attackers</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:2px solid;border-radius:0;font:700 17px/1 Lexend,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s;border-color:var(--ink);background:var(--panel);color:var(--ink);}.ds-btn-secondary:hover:enabled{background:var(--spot-tint);}.ds-btn-secondary:disabled{border-color:var(--rule);color:color-mix(in srgb,var(--ink-soft) 70%,transparent);text-decoration:line-through 1px;cursor:not-allowed;}.ds-btn-secondary:focus-visible{outline:3px solid var(--spot);outline-offset:2px;box-shadow:0 0 0 2px var(--panel);}"
+    },
+    {
+      "name": "Task Band",
+      "kind": "custom",
+      "refersTo": "task-band",
+      "description": "Blue head of each step panel: giant numeral, one prompt, on-band buttons with the yellow focus ring.",
+      "html": "<div class=\"ds-band\"><span class=\"ds-band-num\">1</span><h3 class=\"ds-band-h\">Choose who to attack.</h3><p class=\"ds-band-p\">Tap “Attack them”, or tap a creature.</p><div class=\"ds-band-row\"><button class=\"ds-band-btn ds-band-btn--primary\">Watch it</button><button class=\"ds-band-btn\">Skip to try</button></div></div>",
+      "css": ".ds-band{display:flex;flex-direction:column;gap:16px;padding:24px;background:var(--spot);color:var(--panel);border:3px solid var(--ink);font-family:Lexend,system-ui,sans-serif;max-width:23rem;}.ds-band-num{font-size:5rem;font-weight:800;letter-spacing:-.04em;line-height:1;}.ds-band-h{margin:0;font-size:1.875rem;font-weight:700;line-height:1.15;letter-spacing:-.015em;}.ds-band-p{margin:0;font-size:16px;color:rgb(255 255 255 / .9);}.ds-band-row{display:flex;flex-wrap:wrap;gap:12px;}.ds-band-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:2px solid;border-radius:0;font:700 17px/1 Lexend,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s;border-color:rgb(255 255 255 / .8);background:transparent;color:var(--panel);}.ds-band-btn:hover{background:rgb(255 255 255 / .15);}.ds-band-btn--primary{border-color:var(--panel);background:var(--panel);color:var(--spot);}.ds-band-btn--primary:hover{background:var(--spot-tint);}.ds-band-btn:focus-visible{outline:3px solid var(--hi);outline-offset:2px;box-shadow:0 0 0 2px var(--spot);}"
+    },
+    {
+      "name": "Feedback",
+      "kind": "custom",
+      "refersTo": "feedback-right",
+      "description": "Tinted fill, round icon badge, bold tone word. Never a side stripe.",
+      "html": "<div class=\"ds-fb ds-fb--ok\"><span class=\"ds-fb-badge\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12.5 4.5 4.5L19 7.5\"/></svg></span><p><b>Right.</b> Both are attacking. They turned sideways.</p></div><div class=\"ds-fb ds-fb--miss\"><span class=\"ds-fb-badge\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6 6 18\"/></svg></span><p><b>Not quite.</b> Storm Hawk is new. It can’t attack yet.</p></div>",
+      "css": ".ds-fb{display:flex;align-items:flex-start;gap:12px;padding:14px;margin-bottom:12px;font:400 16px/1.5 Lexend,system-ui,sans-serif;color:var(--ink);}.ds-fb p{margin:0;flex:1;}.ds-fb-badge{display:grid;place-items:center;flex:none;width:24px;height:24px;margin-top:2px;border-radius:50%;color:var(--panel);}.ds-fb--ok{background:var(--ok-tint);}.ds-fb--ok .ds-fb-badge{background:var(--ok);}.ds-fb--ok b{color:var(--ok);}.ds-fb--miss{background:var(--miss-tint);}.ds-fb--miss .ds-fb-badge{background:var(--miss);}.ds-fb--miss b{color:var(--miss);}"
+    },
+    {
+      "name": "Step Strip",
+      "kind": "nav",
+      "refersTo": "step-tab-current",
+      "description": "Five printed tabs; current has a blue disc and 5px blue underline, locked shows a lock.",
+      "html": "<ol class=\"ds-steps\"><li><button class=\"ds-step ds-step--current\" aria-current=\"step\"><span class=\"ds-step-disc\">1</span>Attacking</button></li><li><button class=\"ds-step\"><span class=\"ds-step-disc\">2</span>Blocking</button></li><li><button class=\"ds-step\" disabled><span class=\"ds-step-disc\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><rect x=\"6\" y=\"11\" width=\"12\" height=\"9\" rx=\"1.5\"/><path d=\"M9 11V8a3 3 0 0 1 6 0v3\"/></svg></span>Flying + reach</button></li></ol>",
+      "css": ".ds-steps{display:grid;grid-template-columns:repeat(3,1fr);margin:0;padding:0;list-style:none;border-bottom:2px solid var(--ink);font-family:Lexend,system-ui,sans-serif;}.ds-step{display:flex;align-items:center;gap:8px;width:100%;min-height:48px;padding:10px 8px;border:0;background:none;color:var(--ink-soft);font:600 15px/1.3 Lexend,system-ui,sans-serif;text-align:left;cursor:pointer;transition:background-color .15s;}.ds-step:hover:enabled{background:var(--spot-tint);}.ds-step:disabled{cursor:not-allowed;}.ds-step-disc{display:grid;place-items:center;flex:none;width:26px;height:26px;border:2px solid currentColor;border-radius:50%;font-size:12px;font-weight:700;}.ds-step--current{color:var(--ink);box-shadow:inset 0 -5px 0 var(--spot);}.ds-step--current .ds-step-disc{border-color:var(--spot);background:var(--spot);color:var(--panel);}.ds-step:focus-visible{outline:3px solid var(--spot);outline-offset:2px;box-shadow:0 0 0 2px var(--panel);}"
+    },
+    {
+      "name": "Motion Control",
+      "kind": "chip",
+      "refersTo": "motion-toggle-selected",
+      "description": "Full / Calm / Off segmented radios in a 2px ink box.",
+      "html": "<div class=\"ds-seg\"><label class=\"ds-seg-opt\"><input type=\"radio\" name=\"ds-m\">Full</label><label class=\"ds-seg-opt\"><input type=\"radio\" name=\"ds-m\" checked>Calm</label><label class=\"ds-seg-opt\"><input type=\"radio\" name=\"ds-m\">Off</label></div>",
+      "css": ".ds-seg{display:inline-flex;border:2px solid var(--ink);background:var(--panel);font-family:Lexend,system-ui,sans-serif;}.ds-seg-opt{position:relative;min-width:52px;padding:0 12px;line-height:44px;text-align:center;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:background-color .15s;}.ds-seg-opt input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;}.ds-seg-opt:hover{background:var(--spot-tint);}.ds-seg-opt:has(:checked){background:var(--ink);color:var(--panel);}.ds-seg-opt:has(:focus-visible){outline:3px solid var(--spot);outline-offset:2px;}"
+    },
+    {
+      "name": "Board Diagram",
+      "kind": "card",
+      "refersTo": "life-chip",
+      "description": "Ruled paper, life chips with a red heart, the printed red arrow under the opponent's life, a Fig. caption.",
+      "html": "<figure class=\"ds-board\"><div class=\"ds-board-row\"><b>Opponent</b><button class=\"ds-attack\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#c23a26\" aria-hidden=\"true\"><path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z\"/></svg>20 <span>Attack them</span></button></div><div class=\"ds-arrow\"><svg width=\"24\" height=\"44\" viewBox=\"0 0 24 44\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M12 42V3M5 10l7-7 7 7\"/></svg>attacks the player</div><div class=\"ds-board-row\"><b>You</b><span class=\"ds-life\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#c23a26\" aria-hidden=\"true\"><path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z\"/></svg>20</span></div><figcaption><b>Fig. 1</b> Creatures that attack turn sideways.</figcaption></figure>",
+      "css": ".ds-board{margin:0;padding:20px 24px 16px;border:3px solid var(--ink);background-color:var(--panel);background-image:repeating-linear-gradient(0deg,transparent 0 31px,var(--ruled) 31px 32px);font-family:Lexend,system-ui,sans-serif;color:var(--ink);}.ds-board-row{display:flex;align-items:center;gap:10px;font-size:15px;}.ds-life{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:2px solid var(--ink);background:var(--panel);font-weight:700;font-variant-numeric:tabular-nums;}.ds-attack{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px;border:2px solid var(--ink);background:var(--ink);color:var(--panel);font:700 15px Lexend,system-ui,sans-serif;cursor:pointer;}.ds-attack span{font-size:14px;}.ds-attack:hover{border-color:var(--spot);background:var(--spot);}.ds-attack:focus-visible{outline:3px solid var(--spot);outline-offset:2px;box-shadow:0 0 0 2px var(--panel);}.ds-arrow{display:flex;align-items:center;gap:8px;min-height:48px;padding-left:96px;color:var(--miss);font-size:14px;font-weight:700;}.ds-board figcaption{margin-top:8px;font-size:14px;color:var(--ink-soft);}.ds-board figcaption b{color:var(--ink);}"
+    },
+    {
+      "name": "Pin, Key and Callout",
+      "kind": "custom",
+      "refersTo": "card-pin",
+      "description": "Lettered ink pin on a card corner, explained in the Key; a highlighter callout labels a card while explaining.",
+      "html": "<div class=\"ds-pinwrap\"><div class=\"ds-pincard\"><span class=\"ds-pin\">B</span><span class=\"ds-callout\">New this turn</span></div><div class=\"ds-key\"><h4>Key</h4><ul><li><span class=\"ds-pin ds-pin--inline\">A</span>Bog Rat is tapped. It can’t block this turn.</li><li><span class=\"ds-pin ds-pin--inline\">B</span>Storm Hawk is new. It can’t attack yet.</li></ul></div></div>",
+      "css": ".ds-pinwrap{display:flex;gap:40px;align-items:flex-start;padding:40px 16px 16px;font-family:Lexend,system-ui,sans-serif;color:var(--ink);}.ds-pincard{position:relative;width:112px;aspect-ratio:5/7;border-radius:7px;background:#141c3f;}.ds-pin{position:absolute;top:-11px;left:-11px;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--panel);font:800 13px/1 Lexend,sans-serif;box-shadow:0 0 0 2px var(--panel);}.ds-pin--inline{position:static;flex:none;box-shadow:none;}.ds-callout{position:absolute;right:-6px;top:-34px;padding:3px 8px;border:2px solid var(--ink);background:var(--hi);color:var(--ink);font:700 13px/1.2 Lexend,sans-serif;white-space:nowrap;}.ds-key h4{margin:0 0 10px;font-size:14px;font-weight:700;color:var(--ink-soft);}.ds-key ul{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none;font-size:15px;line-height:1.375;}.ds-key li{display:flex;align-items:flex-start;gap:10px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Printed Rules Sheet",
+    "overview": "The lesson reads like a quick-start rules sheet from a game box. Each step is a numbered panel framed in ink; the board is that panel's diagram, drawn on ruled paper with a \"Fig.\" caption, lettered pins and a printed red arrow. The learner reads one bold task, looks at the diagram, taps, and gets a one-line correction tied to the card it concerns.\n\nThe sheet is flat, cool white and ink. Two spot inks do all the signalling: blue for the task and for selection, red only for mistakes. A highlighter yellow marks what to look at. Density is low and type is large; Lexend carries all UI text because it reads easily for learners with dyslexia. The world refuses both the dark fantasy glow of the game's own marketing and the soft, rounded white edtech app.\n\nThe collectible cards are a separate, preserved layer: they keep their original dark, gilt-framed, foil-and-parallax design and their own fonts and inks. The sheet frames them; it never restyles them.",
+    "keyCharacteristics": [
+      "Cool white sheet, white panels, 3px ink frame rules, square corners.",
+      "One spot blue for task, current step and selection; red only for mistakes, life and the attack arrow.",
+      "Highlighter yellow for callouts, hints and selected text.",
+      "Board drawn on ruled paper with a Fig. caption, lettered pins and a Key.",
+      "Every state is an icon plus a word, never color alone.",
+      "Flat: no gradients as fills, no glow, no blur, no glass in UI chrome."
+    ],
+    "rules": [
+      {
+        "name": "The Two Spot Inks Rule",
+        "body": "Blue means \"the task / your choice\"; red means \"a mistake / damage\". Red never decorates, never marks a creature as a target, and never stands in for blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Highlighter Rule",
+        "body": "Yellow is for callouts, hints and selected text. Its one other use is accessibility: the keyboard focus ring on the blue task band is yellow, because a white ring on white buttons on blue was invisible.",
+        "section": "colors"
+      },
+      {
+        "name": "The Icon-Plus-Word Rule",
+        "body": "Every state pairs a shape (icon, badge, ring, check) with a word. Color confirms; it never carries meaning alone.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Face Rule",
+        "body": "All UI text is Lexend. Card fonts stay inside cards.",
+        "section": "typography"
+      },
+      {
+        "name": "The Short Line Rule",
+        "body": "Prompts are one bold line of at most 8 words; feedback is one line led by a bold tone word.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Sheet Rule",
+        "body": "No gradients as fills, no glow, no blur, no glass in UI chrome. The board's ruled lines are hard-stop lines, not a gradient fill.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** frame every step as one white panel with a 3px ink rule, and separate its regions with 3px ink rules.",
+      "**Do** use spot blue for the task band, the current step and selection only.",
+      "**Do** keep red for mistakes, life hearts and the printed attack arrow, and point the arrow at the opponent's life column.",
+      "**Do** lead feedback with a round icon badge and a bold tone word (Right / Not quite / Note) on a tinted fill.",
+      "**Do** use the yellow focus ring (with a blue gap) for anything focusable on the blue task band; the blue two-tone ring everywhere else.",
+      "**Do** label board marks with lettered pins and explain them in a Key.",
+      "**Do** keep touch targets at 44px or more and buttons at 48px.",
+      "**Do** put actions, feedback and the Key directly under the board on phones."
+    ],
+    "donts": [
+      "**Don't** round UI chrome corners; circles are only for pins, discs and badges.",
+      "**Don't** use gradients as fills, glow, blur or glass in the UI.",
+      "**Don't** mark feedback with a colored side stripe.",
+      "**Don't** point the attack arrow at a creature.",
+      "**Don't** use red or yellow decoratively.",
+      "**Don't** set UI text in the card fonts, or restyle the card faces with UI tokens.",
+      "**Don't** show a state with color alone."
+    ]
+  }
+}
