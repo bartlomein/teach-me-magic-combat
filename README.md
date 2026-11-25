@@ -1,74 +1,102 @@
-> **Candidate notes (in progress).** The full write-up (setup, time spent, tools, tradeoffs, limitations) is coming.
-> About the commit history: the work was committed in logical steps at the end of the build. Each commit's date matches when that part was built, and each holds the finished version of its files, so early commits may not build on their own.
+# Teach Me: Magic combat
 
-# Frontend Take-Home: Teach Me
+An interactive lesson on how combat works in Magic: The Gathering. It takes about 10 minutes and you don't need any cards.
 
-Build a small interactive tutorial that teaches us something you know well. Choose a topic you have unique or extensive knowledge of. It can be professional, personal, serious, or fun.
+I picked combat because it's a real decision with real rules, and beginners get the same things wrong over and over. That makes it a good fit for practice and feedback instead of reading.
 
-For example, if you’re an experienced horseback rider, you might teach the steps involved in approaching a jump. If you’re a chef, you might teach someone how to chop an onion. Choose something that lets you demonstrate how you think about teaching and interaction, rather than simply displaying an article.
+## Run it
 
-## Time Limit
-
-Spend **no more than 4 hours total**, including planning, building, and documenting your work. You don’t need to use all four hours. We’d rather see a focused, polished experience than a broad, unfinished one.
-
-## Requirements
-
-Your tutorial should:
-
-- Guide a learner through a sequence of steps or concepts.
-- Include at least one meaningful interaction beyond navigating between steps. For example, a learner might make a choice, practice a skill, answer a question, or receive feedback based on an action.
-- Make it clear where the learner is and what to do next.
-- Work well on a recent desktop browser and a smaller screen.
-- Be either hosted at a publicly accessible URL **or** straightforward to run locally with documented setup instructions.
-
-A backend, database, authentication, and production infrastructure are **not required**. It’s fine to use mock or local data.
-
-## Starter Project
-
-The provided starter is a Next.js app using TypeScript, App Router, Tailwind CSS, and ESLint. You may add libraries or adapt the starter as needed.
-
-### Local Development
-
-Use Node.js 22 LTS or newer. From the `teach-me-candidate` directory, run:
+You need Node 22 or newer.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). You can start editing `src/app/page.tsx`; the shared layout and styles are in `src/app/layout.tsx` and `src/app/globals.css`.
+Then open http://localhost:3000.
 
-No environment variables are required for the starter. Its `next/font/google` configuration for Geist requires network access during the build.
-
-### Checks and Production Build
+Other commands:
 
 ```bash
+npm test        # 80 unit tests (rules engine, lesson flow, report card)
 npm run lint
 npm run build
-npm start
 ```
 
-### Optional Deployment to Vercel
+There are no environment variables and no backend. Progress is saved in the browser.
 
-1. Import your Git repository into [Vercel](https://vercel.com/new).
-2. Set the **Root Directory** to `./`.
-3. Use the automatically detected **Next.js** framework preset and default build settings.
-4. Deploy.
+## What's in it
 
-Alternatively, run `npx vercel` from the starter directory and follow the prompts to create a preview deployment. Use `npx vercel --prod` for production. Hosting is optional if your app is easy to run locally.
+You start by saying if you've played before.
 
-## AI and Other Tools
+- **Never played** gets a short "What's the game?" screen first.
+- **Played a bit** gets a 3 question quick check. Each right answer skips that step.
 
-You may use AI tools, documentation, and third-party libraries. Briefly tell us what you used and how. Be prepared to explain your implementation and the decisions you made.
+Then there are 5 steps: Attacking, Blocking, Flying + reach, Damage wears off, and a Final challenge. The first three show a short demo, then you try it on a real board. Wrong answers get feedback that names the exact mistake. If you miss twice, you get an easier version of the same step.
 
-## What to Submit
+At the end there's a report card. It shows how each step went, your mistakes grouped by type, and what to practice. If you go back and practice a step, the report shows that too.
 
-Please provide:
+## How it lines up with Marker
 
-1. A link to your source code and, if hosted, the live app.
-2. A short README with setup and run instructions, approximate time spent, and any significant tools or libraries used.
-3. A few notes on the tradeoffs you made, what you would improve with more time, and any known limitations.
+I read through Marker's site and tried to build a small version of the same ideas.
 
-## What We’ll Look For
+- Adapts when you struggle. Two misses gets you a lighter task.
+- Doesn't test what you already know. The quick check skips steps.
+- Corrective feedback. Every wrong answer is tied to a beginner myth (M1 to M10 in the code).
+- Error analysis. The report groups mistakes by myth, with strengths and things to practice.
+- Less text. Pictures, short sentences, a read-aloud button, tap instead of type.
 
-We’ll discuss your work with you. We’re interested in the quality of the learning experience and interaction, thoughtful frontend implementation, usability and accessibility, and how you prioritize and explain tradeoffs within a limited time. We’re not judging the topic you choose or expecting a production-ready application.
+## Time spent
+
+About 14 hours over two days, so well over the 4 hours. I went in knowing I'd go over. Most of the extra time went into the card art, a full redesign of the look halfway through, rebuilding the final challenge, and testing on phones and Safari.
+
+## Tools
+
+- Next.js 16, React 19, TypeScript, Tailwind CSS 4
+- Motion for animations, plus the View Transitions API between pages
+- Vitest for tests
+- Claude Code for planning, research, writing code with me, and testing (Playwright runs in Chrome and Safari, axe, Lighthouse)
+- Codex image generation for the card art and avatars. The prompts are in [art/prompts.md](art/prompts.md).
+
+The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2026). All the cards are made up.
+
+## Tradeoffs
+
+- **One topic, deep.** Combat only, instead of a light pass over six keywords. Flying and reach are the only keywords.
+- **Tap, don't drag.** Tap your creature, then tap what it blocks. It works the same with a mouse, a phone, or a keyboard.
+- **A real rules engine, scripted boards.** Every answer is checked by pure functions with tests, so the lesson can't call an illegal play right. The boards themselves are set up by hand instead of being a full game.
+- **Flat cards instead of 3D.** I started planning three.js and Blender. I went with CSS cards and painted art instead, because it's lighter on phones and easier to make accessible.
+- **Rebuilt the final challenge.** The first version had you attack first and guess what the opponent would do next. That was too much hidden info for a beginner. Now they attack first, and everything you need for your turn is on the board.
+- **Cut the check-in.** Marker asks students how tired they felt and how much they enjoyed it. I built that, but here the answer didn't do anything for the learner, so I took it out.
+
+## With more time
+
+- Test it with real beginners and watch where they get stuck.
+- More keywords: first strike, trample, deathtouch.
+- Lesson 2 (combat tricks). The report card already has a short demo of it.
+- A recorded voice instead of the browser's read-aloud.
+- Move all the text into one file so it can be translated.
+- Animate attackers stepping into the middle of the table.
+
+## Known limitations
+
+- Progress only lives in this browser. Clearing site data starts you over.
+- Step pages wait for saved progress before they show, so locked steps stay locked. On a slow phone that's about 3.7 seconds (Lighthouse mobile score 90). Desktop scores 100.
+- The opponent is predictable on purpose, so the final challenge has one clear answer. It doesn't play like a real person.
+- Read-aloud uses the browser's built-in speech, so the voice depends on the device.
+- I checked phone sizes in Chrome and Safari on my laptop, not on a real phone.
+
+## Checks I ran
+
+- axe: 0 issues on every page and state, desktop and phone.
+- Keyboard only: the whole lesson can be finished with Tab, Enter and Space.
+- Lighthouse: Accessibility, Best Practices and SEO 100. Performance 100 on desktop, 90 to 97 on mobile.
+- Reduced motion: the lesson starts in Calm mode. There's also a Full / Calm / Off switch in the header.
+
+## About the commit history
+
+I committed in steps at the end of the build. Each commit's date matches when that part was built, and each one holds the finished version of its files. Early commits may not build on their own.
+
+## Fan content
+
+Teach Me: Magic Combat is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
