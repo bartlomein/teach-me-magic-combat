@@ -1,23 +1,23 @@
 /**
  * The Storm Hawk leap, in three.js. Loaded only when it plays (see hawkLeap.ts).
  *
- * 2.5D: the card's own painting, on a dense plane pushed out by a depth map
- * (the chest bulges, the wingtips stay flat), so in 3D it still looks exactly
- * like the card art. It starts pixel-aligned with the painted hawk on the card,
- * flaps and leaps toward the viewer, dives back in and lands.
+ * The hawk is a 3D model built in Blender (art/source/storm-hawk-3d.blend):
+ * the card's own painting on a mesh cut to its outline, with a "relief" shape
+ * (the chest pushed toward the viewer) and a wing skeleton with a looping flap.
+ * Exported as public/art/storm-hawk-3d.glb. Its rest pose is flat and
+ * pixel-aligned with the painted hawk on the card, so the swap is invisible;
+ * then it bulges, flaps and leaps toward the viewer, dives back in and lands.
  *
  * A fixed, full-window canvas that exists only while it plays: aria-hidden,
  * ignores the pointer, and the card underneath stays the real content.
  */
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-const COLOR_SRC = "/art/storm-hawk-leap.webp";
-const DEPTH_SRC = "/art/storm-hawk-depth.webp";
+const MODEL_SRC = "/art/storm-hawk-3d.glb";
 /** The painting's size (the card shows it with object-fit: contain). */
 const IMG_W = 1280;
 const IMG_H = 1024;
-/** Where the hawk's body is in the painting (uv, from the depth map's peak): the wings bend around it. */
-const BODY_UV = [0.562, 0.581] as const;
 
 /** Timeline, in seconds. Short on purpose: one leap, then the page is still. */
 const T = { crouch: 0.3, leap: 1.05, hover: 1.35, land: 2.05, end: 2.45 };
@@ -29,30 +29,6 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
 const span = (t: number, a: number, b: number) => clamp((t - a) / (b - a), 0, 1);
 
-const HAWK_VERT = /* glsl */ `
-  uniform sampler2D uDepth;
-  uniform float uAmount;
-  uniform float uRelief; // 0 = flat like the card's painting, 1 = full bulge
-  uniform float uFlap;   // 0..1: how much the wings flap
-  uniform float uTime;
-  uniform vec2 uBody;
-  uniform vec2 uAspect;
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    vec3 p = position;
-    float d = texture2D(uDepth, uv).r;
-    p.z += d * uAmount * uRelief;
-    // Wings: the further from the body (and the flatter), the more they bend in and out of the screen.
-    float reach = smoothstep(0.1, 0.55, distance(uv * uAspect, uBody * uAspect));
-    float wing = reach * (1.0 - d * 0.7);
-    float beat = sin(uTime * 17.0);
-    p.z += beat * uFlap * wing * uAmount * 0.9;
-    p.y += beat * uFlap * wing * uAmount * 0.18;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-  }
-`;
-
 /** Shared by the hawk and its shadow: drop fragments outside the card's art window while it sits in the card. */
 const CLIP = /* glsl */ `
   uniform float uClip;
@@ -60,26 +36,6 @@ const CLIP = /* glsl */ `
   bool clipped() {
     return uClip > 0.5 && (gl_FragCoord.x < uClipRect.x || gl_FragCoord.x > uClipRect.z ||
                            gl_FragCoord.y < uClipRect.y || gl_FragCoord.y > uClipRect.w);
-  }
-`;
-
-const HAWK_FRAG = /* glsl */ `
-  uniform sampler2D uMap;
-  uniform sampler2D uDepth;
-  uniform vec2 uTexel;
-  uniform float uRelief;
-  ${CLIP}
-  varying vec2 vUv;
-  void main() {
-    vec4 c = texture2D(uMap, vUv);
-    if (c.a < 0.02 || clipped()) discard;
-    // Light the bulge a little, from the upper left, like the card's light.
-    float dx = texture2D(uDepth, vUv + vec2(uTexel.x, 0.0)).r - texture2D(uDepth, vUv - vec2(uTexel.x, 0.0)).r;
-    float dy = texture2D(uDepth, vUv + vec2(0.0, uTexel.y)).r - texture2D(uDepth, vUv - vec2(0.0, uTexel.y)).r;
-    vec3 n = normalize(vec3(-dx * 5.0, -dy * 5.0, 1.0));
-    float shade = mix(1.0, 0.92 + 0.14 * dot(n, normalize(vec3(-0.45, 0.6, 0.66))), uRelief);
-    gl_FragColor = vec4(c.rgb * shade, c.a);
-    #include <colorspace_fragment>
   }
 `;
 
@@ -104,6 +60,7 @@ const SHADOW_FRAG = /* glsl */ `
   void main() {
     if (clipped()) discard;
     vec2 uv = (vUv - 0.5) * uPad + 0.5; // the painting sits in the middle of the padded quad
+    uv.y = 1.0 - uv.y; // glTF textures aren't flipped (flipY = false)
     float inside = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
     // A blurry copy of the silhouette, in the card's ink color (#0d1530).
     float a = texture2D(uMap, clamp(uv, 0.0, 1.0), uBlur).a * inside;
@@ -148,9 +105,27 @@ type Leap = { stop: () => void; done: Promise<void> };
  * WebGL or the textures fail, leaving the card untouched.
  */
 export async function runLeap(img: HTMLImageElement): Promise<Leap> {
-  const loader = new THREE.TextureLoader();
-  const [map, depth] = await Promise.all([loader.loadAsync(COLOR_SRC), loader.loadAsync(DEPTH_SRC)]);
-  map.colorSpace = THREE.SRGBColorSpace;
+  const gltf = await new GLTFLoader().loadAsync(MODEL_SRC);
+  let found: THREE.SkinnedMesh | null = null;
+  gltf.scene.traverse((o) => {
+    if ((o as THREE.SkinnedMesh).isSkinnedMesh) found = o as THREE.SkinnedMesh;
+  });
+  const hawkMesh = found as THREE.SkinnedMesh | null;
+  const disposeModel = () =>
+    gltf.scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.geometry.dispose();
+      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+        (mat as THREE.MeshBasicMaterial).map?.dispose();
+        mat.dispose();
+      }
+    });
+  const map = (hawkMesh?.material as THREE.MeshStandardMaterial | undefined)?.map;
+  if (!hawkMesh || !map) {
+    disposeModel();
+    throw new Error("Storm Hawk model is missing its mesh or painting");
+  }
   map.anisotropy = 4;
 
   const canvas = document.createElement("canvas");
@@ -159,8 +134,7 @@ export async function runLeap(img: HTMLImageElement): Promise<Leap> {
   try {
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, failIfMajorPerformanceCaveat: true });
   } catch (e) {
-    map.dispose();
-    depth.dispose();
+    disposeModel();
     throw e;
   }
 
@@ -205,30 +179,33 @@ export async function runLeap(img: HTMLImageElement): Promise<Leap> {
     clipRect.set(clip.left * pr, (H - clip.bottom + scrolled) * pr, clip.right * pr, (H - clip.top + scrolled) * pr);
   setClipRect(0);
 
-  // ---- The hawk: its painting on a plane pushed out by the depth map. ----
-  const hawkGeo = new THREE.PlaneGeometry(hw, hh, 160, 128);
-  const hawkMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uMap: { value: map },
-      uDepth: { value: depth },
-      uAmount: { value: hh * 0.24 },
-      uRelief: { value: 0 },
-      uFlap: { value: 0 },
-      uTime: { value: 0 },
-      uBody: { value: new THREE.Vector2(...BODY_UV) },
-      uAspect: { value: new THREE.Vector2(IMG_W / IMG_H, 1) },
-      uTexel: { value: new THREE.Vector2(1 / 256, 1 / 205) },
-      uClip: { value: 1 },
-      uClipRect: { value: clipRect },
-    },
-    vertexShader: HAWK_VERT,
-    fragmentShader: HAWK_FRAG,
-    transparent: true,
-    depthWrite: false,
-  });
-  const hawk = new THREE.Mesh(hawkGeo, hawkMat);
-  hawk.renderOrder = 2;
+  // ---- The hawk: the Blender model, drawn unlit so it's exactly the card's painting. ----
+  const clipUniforms = { uClip: { value: 1 }, uClipRect: { value: clipRect } };
+  const hawkMat = new THREE.MeshBasicMaterial({ map, transparent: true, alphaTest: 0.02, side: THREE.DoubleSide, depthWrite: false });
+  hawkMat.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, clipUniforms);
+    shader.fragmentShader = CLIP + shader.fragmentShader.replace("#include <alphatest_fragment>", "if (clipped()) discard;\n#include <alphatest_fragment>");
+  };
+  hawkMat.customProgramCacheKey = () => "storm-hawk-clip";
+  (hawkMesh.material as THREE.Material).dispose();
+  hawkMesh.material = hawkMat;
+  hawkMesh.frustumCulled = false; // the flap and relief move it outside its rest bounds
+  hawkMesh.renderOrder = 2;
+  const reliefIndex = hawkMesh.morphTargetDictionary?.relief ?? 0;
+  // Model units: the painting is 1.25 x 1, centred, facing +Z in Blender. glTF is Y-up, so a quarter
+  // turn about X faces it to the camera; scaling by the hawk's on-screen height makes 1 unit = 1 pixel.
+  const model = gltf.scene;
+  model.rotation.x = Math.PI / 2;
+  model.scale.setScalar(hh);
+  const hawk = new THREE.Group();
+  hawk.add(model);
   root.add(hawk);
+  // The wing flap, baked in Blender: faded in with the leap and out before the landing.
+  const mixer = new THREE.AnimationMixer(model);
+  const flapClip = THREE.AnimationClip.findByName(gltf.animations, "Flap");
+  const flap = flapClip ? mixer.clipAction(flapClip) : null;
+  flap?.setLoop(THREE.LoopRepeat, Infinity).play();
+  flap?.setEffectiveWeight(0);
 
   // ---- Its shadow on the card: matches the card's CSS drop-shadow at rest, then softens as the hawk lifts. ----
   const shadowGeo = new THREE.PlaneGeometry(hw * SHADOW_PAD, hh * SHADOW_PAD);
@@ -373,6 +350,11 @@ export async function runLeap(img: HTMLImageElement): Promise<Leap> {
   const done = new Promise<void>((r) => (resolveDone = r));
   let resolveStarted!: () => void;
   const started = new Promise<void>((r) => (resolveStarted = r));
+  // If the GPU can't compile a shader, three.js only logs it; catch that and fall back to the card.
+  let shaderFailed = false;
+  renderer.debug.onShaderError = () => {
+    shaderFailed = true;
+  };
   const t0 = performance.now();
 
   function draw(t: number) {
@@ -384,18 +366,20 @@ export async function runLeap(img: HTMLImageElement): Promise<Leap> {
     hawk.position.set(p.x, p.y, p.z);
     hawk.rotation.set(p.rx, p.ry, p.rz);
     hawk.scale.set(p.sx, p.sy, 1);
-    hawkMat.uniforms.uTime.value = t;
     // The bulge grows in as it crouches and flattens as it lands, so it swaps with the flat card art invisibly.
-    hawkMat.uniforms.uRelief.value = t < T.land ? easeInOut(span(t, 0, T.crouch + 0.25)) : 1 - easeInOut(span(t, T.land, T.end - 0.05));
+    const dt = Math.min(Math.max(t - lastT, 0), 0.05); // real time, so slow phones don't slow anything down
+    lastT = t;
+    hawkMesh!.morphTargetInfluences![reliefIndex] = t < T.land ? easeInOut(span(t, 0, T.crouch + 0.25)) : 1 - easeInOut(span(t, T.land, T.end - 0.05));
     // Wings flap from takeoff until just before it lands.
-    hawkMat.uniforms.uFlap.value = Math.min(span(t, T.crouch, T.crouch + 0.15), 1 - span(t, T.land - 0.2, T.land));
+    flap?.setEffectiveWeight(Math.min(span(t, T.crouch, T.crouch + 0.15), 1 - span(t, T.land - 0.2, T.land)));
+    mixer.update(dt);
     // Clipped to the art window only while it sits in the card.
     const inCard = t < T.crouch + 0.02 || t >= T.land;
-    hawkMat.uniforms.uClip.value = inCard ? 1 : 0;
+    clipUniforms.uClip.value = inCard ? 1 : 0;
     shadowMat.uniforms.uClip.value = inCard ? 1 : 0;
 
     // The shadow stays on and around the card, slipping down-right and softening as the hawk lifts.
-    const lift = clamp(p.z / peakZ, 0, 1);
+    const lift = peakZ > 0 ? clamp(p.z / peakZ, 0, 1) : 0; // no lift room on very narrow panels
     const sh = 1 + lift * 0.3;
     shadow.position.set(lerp(restX, p.x, 0.25) + lift * 12, restY - 6 - lift * 18, -1);
     shadow.scale.set(sh, sh, 1);
@@ -412,8 +396,6 @@ export async function runLeap(img: HTMLImageElement): Promise<Leap> {
       // A tiny bump to the card itself, as the hawk lands back in it.
       card?.animate([{ translate: "0 0" }, { translate: "0 4px" }, { translate: "0 0" }], { duration: 280, easing: "ease-out" });
     }
-    const dt = Math.min(Math.max(t - lastT, 0), 0.05); // real time, so slow phones don't slow the sparks
-    lastT = t;
     for (let i = 0; i < N; i++) {
       if (born[i] < 0) continue;
       const age = (t - born[i]) / life[i];
@@ -437,6 +419,7 @@ export async function runLeap(img: HTMLImageElement): Promise<Leap> {
 
   function frame(now: number) {
     if (stopped) return;
+    if (shaderFailed) return stop(); // a shader didn't compile: keep the painted card instead
     const t = (now - t0) / 1000;
     if (t >= T.end) return stop();
     try {
@@ -461,14 +444,13 @@ export async function runLeap(img: HTMLImageElement): Promise<Leap> {
     window.removeEventListener("resize", onResize);
     document.removeEventListener("visibilitychange", onHidden);
     canvas.removeEventListener("webglcontextlost", onLost);
-    hawkGeo.dispose();
-    hawkMat.dispose();
+    mixer.stopAllAction();
+    hawkMesh!.skeleton.dispose();
+    disposeModel();
     shadowGeo.dispose();
     shadowMat.dispose();
     sparkGeo.dispose();
     sparkMat.dispose();
-    map.dispose();
-    depth.dispose();
     renderer.dispose();
     renderer.forceContextLoss();
     canvas.remove();
@@ -483,6 +465,11 @@ export async function runLeap(img: HTMLImageElement): Promise<Leap> {
     stop();
   };
 
+  renderer.compile(scene, camera);
+  if (shaderFailed) {
+    stop(); // nothing is on screen yet; this just frees everything
+    throw new Error("Storm Hawk shaders failed to compile");
+  }
   window.addEventListener("resize", onResize);
   document.addEventListener("visibilitychange", onHidden);
   canvas.addEventListener("webglcontextlost", onLost);
