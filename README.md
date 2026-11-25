@@ -1,3 +1,6 @@
+> **Candidate notes (in progress).** The full write-up (setup, time spent, tools, tradeoffs, limitations) is coming.
+> About the commit history: the work was committed in logical steps at the end of the build. Each commit's date matches when that part was built, and each holds the finished version of its files, so early commits may not build on their own.
+
 # Frontend Take-Home: Teach Me
 
 Build a small interactive tutorial that teaches us something you know well. Choose a topic you have unique or extensive knowledge of. It can be professional, personal, serious, or fun.
