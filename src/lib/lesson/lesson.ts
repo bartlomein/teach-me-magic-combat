@@ -41,8 +41,7 @@ export type StepProgress = {
   practiced?: "clean" | "missed";
 };
 
-/** The post-lesson check-in: "How much did you enjoy it?", 1 (not at all) to 5 (a lot). Marker asks the same after a test. */
-export type CheckIn = 1 | 2 | 3 | 4 | 5;
+
 
 export type Mistake = {
   step: StepId;
@@ -57,7 +56,6 @@ export type LessonState = {
   experience: "new" | "some" | null;
   steps: Record<StepId, StepProgress>;
   mistakes: Mistake[];
-  checkIn?: CheckIn;
 };
 
 export type LessonAction =
@@ -75,7 +73,6 @@ export type LessonAction =
   | { type: "hint"; step: StepId }
   | { type: "lighter-cleared"; step: StepId }
   | { type: "complete"; step: StepId; at: number }
-  | { type: "check-in"; answer: CheckIn }
   | { type: "restart" }
   /**
    * The quick check ("Played a bit"): each step whose question was answered
@@ -206,8 +203,6 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       next = patchStep(next, first, { status: "open", startedAt: a.at });
       return { ...next, view: first };
     }
-    case "check-in":
-      return { ...s, checkIn: a.answer };
     case "restart":
       return initialLesson();
   }

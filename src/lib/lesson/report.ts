@@ -3,10 +3,10 @@
  * the numbers are tested and the page just draws them.
  *
  * Modeled on Marker's own report: a result per concept, mistakes grouped by
- * type (here: by myth), strengths and needs, and the check-in.
+ * type (here: by myth), and strengths and needs.
  */
 import type { Myth } from "@/lib/rules/engine";
-import { resultOf, STEPS, type CheckIn, type LessonState, type StepId } from "./lesson";
+import { resultOf, STEPS, type LessonState, type StepId } from "./lesson";
 
 /** Each myth as the learner believed it, and the rule that fixes it. Plain words. */
 export const MYTHS: Record<Myth, { belief: string; rule: string }> = {
@@ -74,7 +74,6 @@ export type Report = {
   practice: StepId[];
   totalSeconds: number;
   hintsUsed: number;
-  checkIn?: CheckIn;
 };
 
 const QUICK_NOTE = "Quick check:";
@@ -146,7 +145,6 @@ export function buildReport(s: LessonState): Report {
     practice: needIds,
     totalSeconds: rows.reduce((t, r) => t + (r.seconds ?? 0), 0),
     hintsUsed: rows.reduce((t, r) => t + r.hints, 0),
-    ...(s.checkIn ? { checkIn: s.checkIn } : {}),
   };
 }
 

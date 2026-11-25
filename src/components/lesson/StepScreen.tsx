@@ -60,7 +60,7 @@ function KnownStep({ step }: { step: StepId }) {
 
   // "Next" goes to the next step still to do (skipped steps are passed over).
   const after = nextToDo(lesson, step) ?? nextStep(step);
-  // After the last step: the report card (with a one-tap check-in).
+  // After the last step: the report card.
   const nextTitle = after ? STEPS.find((s) => s.id === after)!.title : "Your report card";
   const goNext = () => router.push(after ? stepHref(after) : "/report", { transitionTypes: ["nav-forward"] });
 

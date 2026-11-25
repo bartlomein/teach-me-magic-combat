@@ -92,10 +92,6 @@ describe("report card", () => {
     expect(buildReport(s).complete).toBe(false);
   });
 
-  it("keeps the check-in", () => {
-    const s = run([{ type: "check-in", answer: 4 }], playAll());
-    expect(buildReport(s).checkIn).toBe(4);
-  });
 
   it("formats time plainly", () => {
     expect(formatTime(45)).toBe("45 s");

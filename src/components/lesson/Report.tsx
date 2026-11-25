@@ -7,7 +7,6 @@ import { buildReport, type ReportRow } from "@/lib/lesson/report";
 import { dispatch, useLesson } from "@/lib/lesson/store";
 import { BulbIcon, CheckIcon, CrossIcon, LockIcon } from "../icons";
 import { OnSpot, Primary } from "./Coach";
-import { CheckInQuestion } from "./CheckInQuestion";
 import { Lesson2Demo } from "./Lesson2Demo";
 import { useArrivalFocus } from "./useArrivalFocus";
 
@@ -15,9 +14,9 @@ import { useArrivalFocus } from "./useArrivalFocus";
 /**
  * The report card, modeled on Marker's own report: a result per step, mistakes
  * grouped by myth with the rule that fixes each one, strengths and needs, how
- * you got there, and the check-in. Then a look at what comes next.
+ * you got there. Then a look at what comes next.
  */
-export function Report({ feedbackOn }: { feedbackOn: boolean }) {
+export function Report() {
   const router = useRouter();
   const { lesson, ready } = useLesson();
   const headingRef = useArrivalFocus<HTMLHeadingElement>();
@@ -179,20 +178,14 @@ export function Report({ feedbackOn }: { feedbackOn: boolean }) {
           </section>
         </div>
 
-        {/* Strengths, needs, check-in */}
-        <div className={`grid grid-cols-[minmax(0,1fr)] border-t-[3px] border-ink ${feedbackOn ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+        {/* Strengths and needs */}
+        <div className="grid grid-cols-[minmax(0,1fr)] border-t-[3px] border-ink md:grid-cols-2">
           <Column title="Strengths">
             {r.strengths.length ? <List items={r.strengths} mark={<CheckIcon className="size-3.5" />} tone="bg-ok text-panel" /> : <Empty>Keep going. These build up.</Empty>}
           </Column>
           <Column title="To practice" className="border-t-[3px] border-ink md:border-t-0 md:border-l-[3px]">
             {r.needs.length ? <List items={r.needs} mark={<CrossIcon className="size-3.5" />} tone="bg-miss text-panel" /> : <Empty>Nothing left. You&apos;re ready for Lesson 2.</Empty>}
           </Column>
-          {/* Only when email is set up: the answer exists to reach the author. */}
-          {feedbackOn && (
-            <Column title="Did you enjoy it?" className="border-t-[3px] border-ink md:border-t-0 md:border-l-[3px]">
-              <CheckInQuestion report={r} answer={lesson.checkIn} />
-            </Column>
-          )}
         </div>
       </section>
 
