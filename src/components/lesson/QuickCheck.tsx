@@ -167,8 +167,9 @@ function QuickPicture({ n }: { n: number }) {
   const wrap = "[--card-w:clamp(130px,34vw,170px)]";
   if (n === 0)
     return (
-      <div className={wrap}>
-        <Card card={CARDS.emberPup as CardDef} status="new" />
+      // Room above the card for the yellow "New this turn" tag (desktop).
+      <div className={`${wrap} min-[901px]:pt-9`}>
+        <Card card={CARDS.emberPup as CardDef} status="new" callout="New this turn" />
       </div>
     );
   if (n === 1)

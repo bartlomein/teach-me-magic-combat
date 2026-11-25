@@ -243,7 +243,7 @@ export function missedWinMessage(s: GameState, attack: string[], lifeLeft: numbe
 // ---------------------------------------------------------------------------
 
 export const QUICK = [
-  { step: "attack", card: "emberPup", newThisTurn: true, question: "Can this creature attack this turn?", options: ["Yes", "No"], answer: "No", myth: "M2" as Myth },
+  { step: "attack", card: "emberPup", newThisTurn: true, question: "This creature was played this turn. Can it attack?", options: ["Yes", "No"], answer: "No", myth: "M2" as Myth },
   { step: "block", card: "thornBoar", attacking: true, question: "Thorn Boar attacks you. Who picks the blocker?", options: ["You", "Your opponent"], answer: "You", myth: "M3" as Myth },
   { step: "flying", card: "nightBat", question: "Can Moss Golem block Night Bat?", options: ["Yes", "No"], answer: "No", myth: "M6" as Myth },
 ] as const;
