@@ -370,7 +370,7 @@ export function StepAttack({
                   highlight={hintOn && (ATTACK.hintHighlight as readonly string[]).includes(c.id)}
                   pin={pinFor(c.id)}
                   {...pinProps(c.id)}
-                  transitionName={c.id === "stormHawk" ? "card-stormHawk" : c.id === "emberPup" ? "card-emberPup" : undefined}
+                  transitionName={c.id === "mossGolem" ? "card-mossGolem" : c.id === "emberPup" ? "card-emberPup" : undefined}
                   callout={c.enteredThisTurn ? ATTACK.callouts[c.id as keyof typeof ATTACK.callouts] : undefined}
                   onSelect={() => onCard(c)}
                   disabled={phase !== "pick"}

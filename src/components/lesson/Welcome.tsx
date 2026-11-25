@@ -8,7 +8,7 @@ import { buildReport } from "@/lib/lesson/report";
 import { dispatch, useLesson } from "@/lib/lesson/store";
 import { useMotionMode } from "@/lib/motion-pref";
 import { Card } from "../Card";
-import { canLeap, playHawkLeap, stopHawkLeap } from "../hawk/hawkLeap";
+import { canLeap, playGolemLeap, stopGolemLeap } from "../golem/golemLeap";
 import { OnSpot } from "./Coach";
 import { useArrivalFocus } from "./useArrivalFocus";
 
@@ -25,7 +25,8 @@ export function Welcome() {
   const continueHref = finished ? "/report" : stepHref(resume);
   const motion = useMotionMode();
   const cardRef = useRef<HTMLDivElement>(null);
-  // The Storm Hawk leap (three.js, loaded only when it plays): once per visit on its own, then on "Watch the hawk".
+  // The Moss Golem stepping out of its card (three.js, loaded only when it plays): once per visit on its own,
+  // then on "Watch the golem". It runs about 9 seconds, so there's a Skip button (and Esc) while it plays.
   const [leapReady, setLeapReady] = useState(false);
   const canPlay = leapReady && motion === "full";
   const [playing, setPlaying] = useState(false);
@@ -33,7 +34,7 @@ export function Welcome() {
   async function playLeap(onStart?: () => void) {
     if (!cardRef.current || motion !== "full") return;
     setPlaying(true);
-    const result = await playHawkLeap(cardRef.current, onStart);
+    const result = await playGolemLeap(cardRef.current, onStart);
     // A newer play took over: it owns the button's state now.
     if (result !== "superseded") setPlaying(false);
   }
@@ -41,7 +42,7 @@ export function Welcome() {
   // After the page has loaded and gone quiet, so it never slows the first paint. Full motion only.
   useEffect(() => {
     if (motion !== "full") {
-      stopHawkLeap();
+      stopGolemLeap();
       return;
     }
     let cancelled = false;
@@ -70,34 +71,42 @@ export function Welcome() {
       );
       seen.observe(el);
     };
-    // Leaving by any link or the Back button: put the hawk back first, before the page transition snapshots it.
-    const onLinkClick = (e: MouseEvent) => (e.target as Element | null)?.closest?.("a[href]") && stopHawkLeap();
+    // Leaving by any link or the Back button: put the golem back first, before the page transition snapshots it.
+    const onLinkClick = (e: MouseEvent) => (e.target as Element | null)?.closest?.("a[href]") && stopGolemLeap();
     if (document.readyState === "complete") begin();
     else window.addEventListener("load", begin, { once: true });
     document.addEventListener("click", onLinkClick, true);
-    window.addEventListener("popstate", stopHawkLeap);
+    window.addEventListener("popstate", stopGolemLeap);
     return () => {
       cancelled = true;
       seen?.disconnect();
       window.removeEventListener("load", begin);
       document.removeEventListener("click", onLinkClick, true);
-      window.removeEventListener("popstate", stopHawkLeap);
+      window.removeEventListener("popstate", stopGolemLeap);
       window.clearTimeout(timer);
       if (idle) window.cancelIdleCallback?.(idle);
-      stopHawkLeap();
+      stopGolemLeap();
     };
     // playLeap only reads `motion` (a dependency already) and refs; re-running on its identity would restart the timers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [motion]);
 
-  /** Leave the page: put the hawk back on its card first, so the page transition captures the card. */
+  // Esc skips it, like the Skip button.
+  useEffect(() => {
+    if (!playing) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && stopGolemLeap();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [playing]);
+
+  /** Leave the page: put the golem back on its card first, so the page transition captures the card. */
   function go(href: string) {
-    stopHawkLeap();
+    stopGolemLeap();
     router.push(href, { transitionTypes: ["nav-forward"] });
   }
 
   // Load the next screen ahead of the click, so it's ready in the same frame and
-  // the blue band and Storm Hawk can morph across instead of popping in.
+  // the blue band and Moss Golem can morph across instead of popping in.
   useEffect(() => {
     router.prefetch(continueHref);
     router.prefetch("/basics");
@@ -167,28 +176,40 @@ export function Welcome() {
       <div className="paper flex flex-col items-center justify-center gap-3 border-t-[3px] border-ink p-8 md:border-t-0">
         <div ref={cardRef} className="[--card-w:clamp(190px,52vw,250px)]">
           {/* Flies onto the Step 1 board as the screen changes. */}
-          <Card card={CARDS.stormHawk} foil transitionName="card-stormHawk" />
+          <Card card={CARDS.mossGolem} foil transitionName="card-mossGolem" />
         </div>
-        {canPlay && (
-          <button
-            type="button"
-            onClick={() => void playLeap()}
-            disabled={playing}
-            className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-bold text-ink-soft hover:text-ink disabled:opacity-50"
-          >
-            <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12a8 8 0 1 0 2.4-5.7" />
-              <path d="M4 4v4.5h4.5" />
-            </svg>
-            Watch the hawk
-          </button>
-        )}
+        {canPlay &&
+          (playing ? (
+            // Above the golem's canvas, so it can always be reached.
+            <button
+              type="button"
+              onClick={stopGolemLeap}
+              className="relative z-[61] inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-ink bg-panel px-4 text-sm font-bold text-ink"
+            >
+              <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="currentColor">
+                <path d="M5 5.5v13l9-6.5zM15 5h3v14h-3z" />
+              </svg>
+              Skip
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void playLeap()}
+              className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-bold text-ink-soft hover:text-ink"
+            >
+              <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12a8 8 0 1 0 2.4-5.7" />
+                <path d="M4 4v4.5h4.5" />
+              </svg>
+              Watch the golem
+            </button>
+          ))}
       </div>
     </section>
   );
 }
 
-const SEEN_KEY = "teach-me:hawk-leap";
+const SEEN_KEY = "teach-me:golem-leap";
 /** sessionStorage can throw (private modes, blocked storage): then it just plays again next visit. */
 function readSeen() {
   try {
@@ -206,8 +227,8 @@ function markSeen() {
 }
 
 /**
- * Wait until the pointer isn't tilting the card. The leap starts pixel-matched
- * to the painted hawk, which only holds while the card sits flat.
+ * Wait until the pointer isn't tilting the card. The golem steps out through the
+ * card's art window, which has to be where it was measured: only while the card sits flat.
  */
 function whenStill(el: HTMLElement): Promise<void> {
   const card = el.querySelector<HTMLElement>(".card");

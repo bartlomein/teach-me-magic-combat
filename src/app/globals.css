@@ -564,6 +564,15 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   transform: translate(calc(var(--px, 0) * 10px + 8%), calc(var(--py, 0) * 8px + 3%)) scale(1.14);
   filter: drop-shadow(0 6px 8px #0d1530aa);
 }
+/* While the Moss Golem steps out of its card, the card holds still: its art window is the golem's portal. */
+[data-performing] .card {
+  --rx: 0deg !important;
+  --ry: 0deg !important;
+}
+[data-performing] .art-layer {
+  --px: 0 !important;
+  --py: 0 !important;
+}
 [data-motion="calm"] .art-layer,
 [data-motion="off"] .art-layer {
   --px: 0;

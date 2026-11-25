@@ -54,7 +54,7 @@ About 14 hours over two days, so well over the 4 hours. I went in knowing I'd go
 
 - Next.js 16, React 19, TypeScript, Tailwind CSS 4
 - Motion for animations, plus the View Transitions API between pages
-- three.js and Blender for the Storm Hawk leaping out of its card on the welcome page (the Blender file is in [art/source/storm-hawk-3d.blend](art/source/storm-hawk-3d.blend))
+- three.js and Blender for the Moss Golem stepping out of its card on the welcome page (the Blender file and build scripts are in [art/source/](art/source/))
 - Vitest for tests
 - Claude Code for planning, research, writing code with me, and testing (Playwright runs in Chrome and Safari, axe, Lighthouse)
 - Codex image generation for the card art and avatars. The prompts are in [art/prompts.md](art/prompts.md).
@@ -66,7 +66,7 @@ The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2
 - **One topic, deep.** Combat only, instead of a light pass over six keywords. Flying and reach are the only keywords.
 - **Tap, don't drag.** Tap your creature, then tap what it blocks. It works the same with a mouse, a phone, or a keyboard.
 - **A real rules engine, scripted boards.** Every answer is checked by pure functions with tests, so the lesson can't call an illegal play right. The boards themselves are set up by hand instead of being a full game.
-- **Flat cards, one 3D moment.** The cards are CSS with painted art, because it's lighter on phones and easier to make accessible. The one 3D moment is the welcome page's Storm Hawk leaping out of its card. I built the hawk in Blender (scripted, from the card's own painting): a mesh cut to its outline with a "relief" shape for depth and a wing skeleton with a flap animation, exported as a 422 KB GLB that three.js plays. I tried an AI image-to-3D generator first, but it was out of credits, and a model made from the painting matches the card exactly anyway. It loads only after the page is ready, plays once, and is skipped in Calm and Off motion, on data saver, and on low-memory phones.
+- **Flat cards, one 3D moment.** The cards are CSS with painted art, because it's lighter on phones and easier to make accessible. The one 3D moment is on the welcome page: the Moss Golem punches through its card, climbs out, pounds its chest and the ground, and jumps back in. The card's art window works like a real window, so you only see the golem through it while it's behind the card. I built the golem in Blender with Python scripts: chiselled boulders with moss and ferns, hung on a joint rig, with one baked animation (272 KB GLB). An earlier version had the Storm Hawk cut out of its painting and leaping out, but it looked flat, so I replaced it. I tried an AI image-to-3D generator too, but it was out of credits. It loads only after the page is ready, plays once per visit, and is skipped in Calm and Off motion, on data saver, and on low-memory phones. It runs about 9 seconds, so there's a Skip button and Esc works.
 - **Rebuilt the final challenge.** The first version had you attack first and guess what the opponent would do next. That was too much hidden info for a beginner. Now they attack first, and everything you need for your turn is on the board.
 - **Cut the check-in.** Marker asks students how tired they felt and how much they enjoyed it. I built that, but here the answer didn't do anything for the learner, so I took it out.
 
