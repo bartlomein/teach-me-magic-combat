@@ -150,7 +150,8 @@ export function StepAttack({
       "Ember Pup turns sideways to attack, and hits your opponent for 2. Their life goes from 20 to 18.",
     );
     await fx.wait(1200);
-    resetBoard();
+    // Leave the result on the board (Pup tapped, opponent at 18) so it can be
+    // studied. "Try it" and "Watch again" both reset it.
     setWatched(true);
     setPhase("explain");
   }

@@ -121,7 +121,7 @@ export function StepBlock({
     await play("emberPup");
     setFeedback({ tone: "info", text: `Both hit at once. ${BLOCK.watchCaption}` });
     await readPause(3200);
-    reset();
+    // The result stays on the board until "Try it" or "Watch again" (both reset it).
     setWatched(true);
     setPhase("explain");
   }

@@ -132,8 +132,7 @@ export function StepFlying({
     await play({ vineArcher: "nightBat" }, ["nightBat"]);
     setFeedback({ tone: "good", text: "Archer stops the Bat." });
     await readPause(2600);
-    reset();
-    setFeedback(null);
+    // The result stays on the board until "Try it" or "Watch again" (both reset it).
     setWatched(true);
     setPhase("explain");
   }
