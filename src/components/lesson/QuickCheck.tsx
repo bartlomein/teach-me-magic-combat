@@ -123,7 +123,6 @@ export function QuickCheck() {
                       {skipped.includes(s.id) ? <CheckIcon className="size-3.5" /> : STEPS.indexOf(s) + 1}
                     </span>
                     <span className={skipped.includes(s.id) ? "text-ink-soft line-through decoration-1" : ""}>{s.title}</span>
-                    {skipped.includes(s.id) && <span className="text-sm text-ink-soft">(skipped, reviewable)</span>}
                   </li>
                 ))}
               </ul>
