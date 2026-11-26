@@ -291,13 +291,6 @@ export function StepFinal(props: StepProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 className={`inline-flex items-center gap-2 border-2 border-ink px-3 py-1 text-sm font-bold ${theirTurn ? "bg-hi" : "bg-panel"}`}
               >
-                <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                  {theirTurn ? (
-                    <path d="M12 5v14M6 13l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                  ) : (
-                    <path d="M12 19V5M6 11l6-6 6 6" strokeLinecap="round" strokeLinejoin="round" />
-                  )}
-                </svg>
                 {theirTurn ? "Turn 1: their turn" : "Turn 2: your turn"}
               </motion.span>
             )
