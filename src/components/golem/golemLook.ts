@@ -1,19 +1,6 @@
-/**
- * The Moss Golem's painted look in three.js: banded toon shading with the
- * card art's palette, warm gold light on top edges (never underneath), cool
- * blue-grey shadows, thin blue-grey outlines on the boulders, glowing eyes.
- *
- * No post-processing: the canvas is transparent over a white and blue page,
- * so everything is done in materials (glow uses normal blending, which still
- * shows on white, where additive light would vanish).
- */
 import * as THREE from "three";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
-/**
- * The card is a window into the golem's world: anything behind the card's plane (world z < 0)
- * shows only through the art window. Shared uniforms, updated as the page scrolls.
- */
 export type Portal = {
   uPortal: { value: number };
   uPortalRect: { value: THREE.Vector4 };
@@ -29,7 +16,6 @@ const PORTAL_TEST = /* glsl */ `
       gl_FragCoord.y < uPortalRect.y || gl_FragCoord.y > uPortalRect.w)) discard;
 `;
 
-/** Add the portal test to a built-in material's shaders (after any changes it already makes). */
 export function withPortal<M extends THREE.Material>(
   m: M,
   portal: Portal | undefined,
@@ -63,7 +49,6 @@ export function withPortal<M extends THREE.Material>(
   return m;
 }
 
-/** Three tone bands (linear values), like the flat planes of the gouache painting. */
 function makeRamp() {
   const ramp = new THREE.DataTexture(
     new Uint8Array([46, 118, 255]),
@@ -78,7 +63,6 @@ function makeRamp() {
   return ramp;
 }
 
-/** Toon material plus a gold rim on upward-facing edges (the painting's lit tops). */
 function toon(ramp: THREE.Texture, rimStrength: number) {
   const m = new THREE.MeshToonMaterial({
     color: 0xffffff,
@@ -99,7 +83,6 @@ function toon(ramp: THREE.Texture, rimStrength: number) {
         {
           vec3 Vd = normalize(vViewPosition);
           vec3 upV = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
-          // Gold only where a face both points up and turns away from the viewer: the top edges.
           float fres = pow(1.0 - saturate(dot(normal, Vd)), 3.0);
           float top = saturate(dot(normal, upV));
           float rim = smoothstep(0.32, 0.42, fres * top);
@@ -112,7 +95,6 @@ function toon(ramp: THREE.Texture, rimStrength: number) {
   return m;
 }
 
-/** Thin outline: the boulder's back faces, pushed out from its centre (facets have split normals). */
 function outlineMaterial() {
   const m = new THREE.MeshBasicMaterial({
     color: "#36404e",
@@ -131,7 +113,6 @@ function outlineMaterial() {
   return m;
 }
 
-/** A soft round gold glow (drawn as a sprite on each eye). */
 function glowTexture() {
   const c = document.createElement("canvas");
   c.width = c.height = 64;
@@ -148,12 +129,10 @@ function glowTexture() {
 }
 
 export type GolemLook = {
-  /** Eye glow sprites (scale/opacity can be pulsed). */
   eyeGlows: THREE.Sprite[];
   dispose: () => void;
 };
 
-/** Apply the look to a loaded golem scene. Materials are named Stone, Moss, Fern, Eye in Blender. */
 export function applyGolemLook(
   root: THREE.Object3D,
   portal?: Portal,
@@ -161,7 +140,6 @@ export function applyGolemLook(
   const ramp = makeRamp();
   const stone = withPortal(toon(ramp, 0.75), portal);
   const moss = withPortal(toon(ramp, 0.9), portal);
-  // Ferns are thin and often seen edge-on: a little self-light keeps them reading as bright green.
   const fern = withPortal(
     new THREE.MeshToonMaterial({
       color: 0xffffff,
@@ -196,8 +174,7 @@ export function applyGolemLook(
   for (const mesh of meshes) {
     const name = ((mesh.material as THREE.Material).name || "").toLowerCase();
     if (!name.startsWith("eye") && !mesh.geometry.getAttribute("normal")) {
-      // The GLB carries no normals (it's half the size without them): unshare the vertices so every
-      // facet gets its own flat normal, which is the chiselled look anyway.
+      // The GLB has no normals: unshare vertices so each facet gets a flat normal.
       const flat = mesh.geometry.index
         ? mesh.geometry.toNonIndexed()
         : mesh.geometry;
@@ -213,7 +190,7 @@ export function applyGolemLook(
     (mesh.material as THREE.Material).dispose();
     if (name.startsWith("stone")) {
       mesh.material = stone;
-      // Faceted rocks have split normals; the outline needs smooth ones or it cracks at every edge.
+      // The outline needs smooth normals or it cracks at every edge.
       const src =
         (mesh.userData.indexed as THREE.BufferGeometry | undefined) ??
         mesh.geometry;
@@ -234,7 +211,6 @@ export function applyGolemLook(
       mesh.material = fern;
     } else if (name.startsWith("eye")) {
       mesh.material = eye;
-      // One glow per gem: the head's two eyes (split left/right), or the single fingertip.
       mesh.geometry.computeBoundingBox();
       const box = mesh.geometry.boundingBox!;
       const pair = box.max.x - box.min.x > 0.12;
@@ -282,7 +258,6 @@ export function applyGolemLook(
   };
 }
 
-/** The light rig: warm key from upper left front, cool hemisphere fill (gives the blue shadow side). */
 export function golemLights() {
   const g = new THREE.Group();
   const key = new THREE.DirectionalLight("#fff6e6", 1.9);

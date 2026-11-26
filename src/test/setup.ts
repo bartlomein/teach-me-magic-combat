@@ -1,7 +1,3 @@
-/**
- * Shared setup. Screen tests opt into a browser with `// @vitest-environment jsdom`;
- * the rules and lesson tests run in plain Node and skip all of this.
- */
 import { afterEach } from "vitest";
 
 if (typeof window !== "undefined") {

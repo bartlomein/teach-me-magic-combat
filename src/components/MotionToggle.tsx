@@ -8,7 +8,6 @@ const OPTIONS: { value: MotionMode; label: string; hint: string }[] = [
   { value: "off", label: "Off", hint: "No animation" },
 ];
 
-/** A native radio group: arrow keys, labels and screen-reader support for free. */
 export function MotionToggle() {
   const mode = useMotionMode();
   return (

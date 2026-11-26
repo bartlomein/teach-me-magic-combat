@@ -1,15 +1,3 @@
-/**
- * The Moss Golem steps out of its card, in three.js. Loaded only when it plays (see golemLeap.ts).
- *
- * The golem is a 3D model built in Blender (art/source/moss-golem-3d.blend): boulders hung on a
- * joint hierarchy, with one baked animation (public/art/moss-golem-3d.glb). The card's art window
- * is a portal: the golem starts behind the card, seen through the window, punches through it,
- * leaps out to stand in front of the card, looks around, pounds its chest and the ground, nods,
- * and leaps back in. Dust, stone chips, moss and a shockwave are drawn here; the card itself shakes.
- *
- * A fixed, full-window canvas that exists only while it plays: aria-hidden, ignores the pointer,
- * and the card underneath stays the real content.
- */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
@@ -21,19 +9,13 @@ import {
 
 const MODEL_SRC = "/art/moss-golem-3d.glb";
 const FPS = 30;
-/** In the Blender scene the art window is 1.4 units wide; this sets the golem's size from the real card. */
 const WINDOW_UNITS = 1.4;
-/**
- * How high it reaches (golem units) at each distance in front of the card, measured from the bake:
- * the top of the leap out, and the ground pound's fists overhead. Used to fit it inside the window.
- */
 const REACH: [depth: number, height: number][] = [
   [1.54, 3.67],
   [1.78, 3.59],
   [1.96, 3.27],
   [2.2, 3.15],
 ];
-/** Moments in the baked animation (frames at 30 fps), for the effects. anim_golem.py prints these. */
 const EV = {
   flare: 9,
   punch: 24,
@@ -54,14 +36,9 @@ const EV = {
   home: 365,
 };
 const CLIP_END = 378 / FPS;
-/**
- * The painted golem and the 3D one never cross-fade (they don't line up, so you'd see two golems).
- * Instead a gold flash fills the art window, and they swap at its peak: FLASH_IN seconds up, FLASH_OUT down.
- * The clip starts at the first peak, and the second flash peaks as it ends.
- */
+// Never cross-fade the two golems (they don't line up): swap at a gold flash's peak.
 const FLASH_IN = 0.4;
 const FLASH_OUT = 0.5;
-/** In clip time: the second flash has faded and everything is put away. */
 const END = CLIP_END + FLASH_OUT;
 
 const clamp = (x: number, lo: number, hi: number) =>
@@ -106,11 +83,9 @@ const PARTICLE_FRAG = /* glsl */ `
     vec2 p = gl_PointCoord - 0.5;
     float a;
     if (vShape > 0.5) {
-      // a chip of stone: a hard-edged diamond
       if (abs(p.x) + abs(p.y) > 0.5) discard;
       a = 1.0;
     } else {
-      // a puff of dust: soft and round
       float r = length(p);
       if (r > 0.5) discard;
       a = smoothstep(0.5, 0.1, r);
@@ -121,11 +96,6 @@ const PARTICLE_FRAG = /* glsl */ `
 
 type Run = { stop: () => void; done: Promise<void> };
 
-/**
- * Start the golem from this card wrapper (the element holding the Moss Golem card). Resolves once the
- * first frame is drawn; `done` resolves when it ends or is stopped. Resolves to null if `cancelled()`
- * turns true before anything is shown. Throws if WebGL or the model fails, leaving the card untouched.
- */
 export async function runGolem(
   host: HTMLElement,
   cancelled: () => boolean = () => false,
@@ -139,7 +109,6 @@ export async function runGolem(
   const fg: HTMLElement = fgEl;
 
   const gltf = await new GLTFLoader().loadAsync(MODEL_SRC);
-  // Blender exports one animation per joint; together they're the one performance.
   const clip = gltf.animations.length
     ? new THREE.AnimationClip(
         "Perform",
@@ -174,13 +143,12 @@ export async function runGolem(
     disposeModel();
     throw e;
   }
-  // If anything below throws before it's running, undo what was done so far: the card must never be left changed.
+  // If anything throws before it's running, undo so the card is never left changed.
   const undo: (() => void)[] = [
     disposeModel,
     () => (renderer.dispose(), renderer.forceContextLoss()),
   ];
   try {
-    // ---- Where the card is right now. World units are CSS pixels, origin at the window's centre, y up. ----
     const W = document.documentElement.clientWidth;
     const H = window.innerHeight;
     const win = windowEl.getBoundingClientRect();
@@ -189,8 +157,6 @@ export async function runGolem(
     const floorY = H / 2 - cardBox.bottom; // the floor is level with the card's bottom edge
     const winBottomY = H / 2 - win.bottom;
     const camZ = H / 2 / Math.tan(THREE.MathUtils.degToRad(15));
-    // Pixels per golem unit: sized from the card's art window, but small enough that it never leaves the top
-    // of the window (on a short or wide screen it may pass over the header for a moment, mid-leap).
     const ceiling = H / 2 - 8;
     const fits = (u: number) =>
       REACH.every(
@@ -217,9 +183,6 @@ export async function runGolem(
     renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.NoToneMapping;
 
-    // ---- Camera: 1 world unit = 1 CSS pixel on the card's plane, with the eye level at the bottom of the art
-    // window (an off-axis frustum). Things coming toward the viewer grow around the card, and the floor in
-    // front of the card is seen from a little above, so the golem's feet stay near the card's bottom edge.
     const camera = new THREE.PerspectiveCamera(30, W / H, 1, camZ * 4);
     camera.position.set(cx, winBottomY, camZ);
     {
@@ -240,13 +203,12 @@ export async function runGolem(
     const root = new THREE.Group(); // follows the page if it scrolls mid-way
     scene.add(root);
 
-    // ---- The portal: behind the card's plane, only the art window shows. ----
     const portalRect = new THREE.Vector4();
     const portal: Portal = {
       uPortal: { value: 1 },
       uPortalRect: { value: portalRect },
     };
-    // Scrolling down by s moves the card up on screen, i.e. up in gl_FragCoord (origin bottom left).
+    // gl_FragCoord's origin is bottom left.
     const setPortal = (scrolled: number) =>
       portalRect.set(
         win.left * pr,
@@ -256,7 +218,6 @@ export async function runGolem(
       );
     setPortal(0);
 
-    // ---- The golem: Blender's Z-up becomes three's Y-up, and Blender's -Y (its front) faces the viewer. ----
     const look = applyGolemLook(gltf.scene, portal);
     const golem = new THREE.Group();
     golem.position.set(cx, floorY, 0);
@@ -277,7 +238,6 @@ export async function runGolem(
     const finger = node("FingerR");
     const chestNode = node("ChestRock");
     const v = new THREE.Vector3();
-    /** A golem part's position in root space (world px, before scrolling). */
     const at = (
       o: THREE.Object3D,
       off: [number, number, number] = [0, 0, 0],
@@ -286,7 +246,6 @@ export async function runGolem(
       return root.worldToLocal(v).clone();
     };
 
-    // ---- Blob shadow on the floor under the golem. ----
     const shadowTex = (() => {
       const c = document.createElement("canvas");
       c.width = c.height = 64;
@@ -313,7 +272,6 @@ export async function runGolem(
     shadow.renderOrder = -2;
     root.add(shadow);
 
-    // ---- Shockwave rings for the ground pound: a bright gold one and a slower dust one. ----
     const ringGeo = new THREE.RingGeometry(0.86, 1, 72);
     const ringGold = withPortal(
       new THREE.MeshBasicMaterial({
@@ -344,7 +302,6 @@ export async function runGolem(
       root.add(r);
     }
 
-    // ---- Particles: dust puffs, stone chips, moss bits (one draw call). ----
     const N = 420;
     const pos = new Float32Array(N * 3);
     const vel = new Float32Array(N * 3);
@@ -391,7 +348,6 @@ export async function runGolem(
     let next = 0;
     const rnd = (a: number, b: number) => a + Math.random() * (b - a);
     type Kind = "dust" | "chip" | "moss" | "spark";
-    /** Spawn `count` particles at p (root space). Speeds and sizes are in golem units, so phones and desktops match. */
     function emit(
       kind: Kind,
       count: number,
@@ -475,7 +431,6 @@ export async function runGolem(
     }
     const floorAt = (x: number, z: number) => new THREE.Vector3(x, floorY, z);
 
-    // ---- The card itself reacts: shakes on impacts; its painted window dims while the golem is out. ----
     const cardAnims: Animation[] = [];
     undo.push(() => cardAnims.forEach((a) => a.cancel()));
     const shake = (px: number, ms: number) => {
@@ -520,7 +475,6 @@ export async function runGolem(
           { duration: 260, composite: "replace" },
         ),
       );
-    // ---- The swaps: a gold flash over the art window (above the canvas, so it covers the 3D golem too). ----
     const flash = document.createElement("div");
     flash.setAttribute("aria-hidden", "true");
     Object.assign(flash.style, {
@@ -537,7 +491,6 @@ export async function runGolem(
       zIndex: "61",
     });
     undo.push(() => flash.remove());
-    /** Rise to full, then fall. The painting glows up into it, or back down out of it. */
     const flashUp = () =>
       cardAnims.push(
         flash.animate([{ opacity: 0 }, { opacity: 1 }], {
@@ -570,7 +523,6 @@ export async function runGolem(
         ),
       );
     let fgHidden: Animation | null = null;
-    /** At a flash's peak: show the 3D golem (in) or the painting (out). */
     const swap = (in3d: boolean) => {
       canvas.style.opacity = in3d ? "1" : "0";
       if (in3d) {
@@ -582,11 +534,9 @@ export async function runGolem(
       }
       flashDown();
     };
-    // While it performs, the card holds still (no hover tilt), so the window stays where the portal is.
     host.dataset.performing = "true";
     undo.push(() => delete host.dataset.performing);
 
-    // ---- Effects, fired once each as the clip passes them. ----
     const fired = new Set<string>();
     const once = (name: string, t: number, frame: number, fn: () => void) => {
       if (t >= frame / FPS && !fired.has(name)) {
@@ -642,7 +592,6 @@ export async function runGolem(
           shake(3, 240);
         });
       }
-      // A glint off the fingertip as it points at the lesson text, and again at you.
       for (const [name, frame] of [
         ["pointText", EV.pointText],
         ["pointYou", EV.pointYou],
@@ -698,7 +647,7 @@ export async function runGolem(
     const done = new Promise<void>((r) => (resolveDone = r));
     let resolveStarted!: () => void;
     const started = new Promise<void>((r) => (resolveStarted = r));
-    // If the GPU can't compile a shader, three.js only logs it; catch that and fall back to the card.
+    // three.js only logs shader compile errors; catch that and fall back to the card.
     let shaderFailed = false;
     renderer.debug.onShaderError = () => {
       shaderFailed = true;
@@ -712,14 +661,12 @@ export async function runGolem(
       const dt = Math.min(Math.max(t - lastT, 0), 0.05); // real time, so slow phones don't slow anything down
       lastT = t;
 
-      // Scrub the clip to t. (A play-once action pauses itself for good if it ever reaches an end, so keep it
-      // inside the clip and unpaused.)
+      // A play-once action pauses for good at its end, so keep t inside the clip.
       action.paused = false;
       mixer.setTime(Math.min(t, lastTime));
       gltf.scene.updateMatrixWorld(true);
       effects(t);
 
-      // Eyes: dim behind the card, flare when it wakes, pulse as it looks around, blaze on the roar and the slam.
       const f = t * FPS;
       const glow =
         0.55 +
@@ -737,7 +684,6 @@ export async function runGolem(
         (g.material as THREE.SpriteMaterial).opacity = clamp(glow, 0, 1) * 0.9;
       }
 
-      // Shadow under the golem: softer and smaller as it leaves the floor.
       const r = at(rootNode);
       const lift = clamp((r.y - floorY) / (0.8 * unit), 0, 1);
       shadow.position.set(r.x, floorY + 0.5, r.z);
@@ -748,7 +694,6 @@ export async function runGolem(
       );
       shadowMat.opacity = 0.9 * (1 - 0.6 * lift);
 
-      // Shockwave.
       if (ringStart >= 0) {
         const u = (t - ringStart) / 0.75;
         const ease = 1 - (1 - clamp(u, 0, 1)) ** 3;
@@ -762,7 +707,6 @@ export async function runGolem(
         if (u2 >= 1) for (const ring of rings) ring.visible = false;
       }
 
-      // Particles.
       const floorLocal = floorY;
       for (let i = 0; i < N; i++) {
         if (born[i] < 0) continue;
@@ -780,7 +724,6 @@ export async function runGolem(
         pos[i * 3 + 1] += vel[i * 3 + 1] * dt;
         pos[i * 3 + 2] += vel[i * 3 + 2] * dt;
         if (pos[i * 3 + 1] < floorLocal && vel[i * 3 + 1] < 0) {
-          // chips bounce once and skid; everything else just rests on the floor
           pos[i * 3 + 1] = floorLocal;
           vel[i * 3 + 1] =
             shape[i] > 0.5 && !bounced[i] ? -vel[i * 3 + 1] * 0.3 : 0;
@@ -804,8 +747,7 @@ export async function runGolem(
     function frame(now: number) {
       if (stopped) return;
       if (shaderFailed) return stop(); // a shader didn't compile: keep the painted card instead
-      // rAF's timestamp is when the frame began, which can be a moment before t0: never let time run backwards.
-      // Clip time: the clip starts once the first flash has risen.
+      // rAF's timestamp can be before t0: never let time run backwards.
       const t = (now - t0) / 1000 - FLASH_IN;
       if (t >= END) return stop();
       try {
@@ -845,7 +787,7 @@ export async function runGolem(
       resolveStarted();
       resolveDone();
     }
-    // Phones resize the window's height as the address bar slides; only a width change moves the card.
+    // Phones resize height as the address bar slides; only a width change moves the card.
     const onResize = () =>
       document.documentElement.clientWidth !== width0 && stop();
     const onHidden = () => document.hidden && stop();

@@ -1,22 +1,11 @@
-/**
- * The welcome page's Moss Golem: when to play it, and how to stop it.
- *
- * This file never imports three.js. The scene (./golemScene) is loaded only when
- * the golem actually plays, so the welcome page's first paint and Lighthouse
- * scores don't pay for it.
- */
+// Never import three.js here: the scene loads lazily so first paint doesn't pay for it.
 
 type Running = { stop: () => void; done: Promise<void> };
 
 let running: Running | null = null;
-/** Bumped by every play and stop, so a play that's still loading knows it was cancelled. */
+// Bumped by every play and stop, so a still-loading play knows it was cancelled.
 let token = 0;
 
-/**
- * Should this device play it at all? Only in Full motion (reduced-motion users
- * start in Calm), with WebGL that isn't software-rendered, and not on data
- * saver or low-memory phones. Everyone else keeps the normal painted card.
- */
 export function canLeap(motion: "full" | "calm" | "off"): boolean {
   if (motion !== "full" || typeof window === "undefined") return false;
   const nav = navigator as Navigator & {
@@ -37,17 +26,8 @@ export function canLeap(motion: "full" | "calm" | "off"): boolean {
   }
 }
 
-/** Bumped only by a new play, so a play can tell "a newer play took over" from "it was stopped". */
 let playId = 0;
 
-/**
- * Play the golem from this card wrapper. Resolves when it's over:
- * - "played": it ran (to the end, or until stopped),
- * - "stopped": it was stopped before it started, and the card is unchanged,
- * - "failed": it couldn't start (WebGL or assets), and the card is unchanged,
- * - "superseded": a newer play took over before it started.
- * `onStart` runs once the first frame is on screen.
- */
 export async function playGolemLeap(
   host: HTMLElement,
   onStart?: () => void,
@@ -77,7 +57,6 @@ export async function playGolemLeap(
   }
 }
 
-/** Stop at once and put the card back as it was (e.g. right before a page change). */
 export function stopGolemLeap() {
   token++;
   running?.stop();

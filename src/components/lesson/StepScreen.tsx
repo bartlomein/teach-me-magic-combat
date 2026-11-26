@@ -12,7 +12,6 @@ import { StepHeal } from "./StepHeal";
 import { StepNav } from "./StepNav";
 import { useArrivalFocus } from "./useArrivalFocus";
 
-/** Each step's screen. They all take the same props from the lesson. */
 const BODIES: Record<StepId, typeof StepBlock> = {
   attack: StepAttack,
   block: StepBlock,
@@ -21,12 +20,7 @@ const BODIES: Record<StepId, typeof StepBlock> = {
   final: StepFinal,
 };
 
-/**
- * One lesson step at its own URL. Guards the address: a locked step (typed in
- * or shared) sends you to where you actually are, never past the lock.
- */
 export function StepScreen({ step }: { step: StepId }) {
-  // The page transition wrapper lives in the root layout (one for the whole app).
   return (
     <div className="flex flex-col gap-6">
       <StepNav />
@@ -47,17 +41,14 @@ function KnownStep({ step }: { step: StepId }) {
     if (lesson.experience === null) router.replace("/");
     else if (locked) router.replace(stepHref(resumeStep(lesson)));
     else dispatch({ type: "open", step, at: Date.now() });
-    // Only on arrival: later state changes inside the step must not re-route.
+    // Only on arrival: later state changes must not re-route.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, step]);
 
-  // Saved progress decides what this step shows (locked, easier board, finished),
-  // and it only exists in the browser. Until it's read: the step's outline.
+  // Saved progress only exists in the browser; show the outline until it's read.
   if (!ready || locked || lesson.experience === null) return <StepLoading />;
 
-  // "Next" goes to the next step still to do (skipped steps are passed over).
   const after = nextToDo(lesson, step) ?? nextStep(step);
-  // After the last step: the report card.
   const nextTitle = after ? STEPS.find((s) => s.id === after)!.title : "Your report card";
   const goNext = () => router.push(after ? stepHref(after) : "/report", { transitionTypes: ["nav-forward"] });
 
@@ -73,11 +64,6 @@ function KnownStep({ step }: { step: StepId }) {
   return <Body {...props} />;
 }
 
-/**
- * The step's own layout with nothing in it yet: the blue band, then the board
- * with empty card spaces, so nothing jumps when the step arrives. It fades in
- * only after a moment, so a fast load never flashes it.
- */
 function StepLoading() {
   const space = <div className="aspect-[5/7] w-[clamp(84px,22vw,140px)] border-2 border-dashed border-ink/25" />;
   return (

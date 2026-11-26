@@ -1,10 +1,4 @@
 // @vitest-environment jsdom
-/**
- * Screen tests: click through each step like a learner would, with the real
- * lesson reducer behind it. They check the teaching loop, not the pixels:
- * a miss is logged, two misses swap in the lighter board, and passing it
- * leads back to the full board and on to "Step complete".
- */
 import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe as group, expect, it } from "vitest";
@@ -18,14 +12,12 @@ import { FINAL } from "@/lib/lesson/steps";
 import { reading } from "./useStep";
 
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
-/** A card on the board (the Key's lines can start with a card's name too). */
 const card = (name: string) => {
   const onBoard = screen.getAllByRole("button", { name: new RegExp(`^${name}`) }).filter((b) => b.closest("[data-card-id]"));
   expect(onBoard).toHaveLength(1);
   return onBoard[0];
 };
-// Reading pauses at 2% speed: a 2.8 s pause takes 56 ms. Animations are already
-// instant (the harness turns motion off).
+// Reading pauses at 2% speed (the harness already turns motion off).
 beforeEach(() => {
   reading.scale = 0.02;
 });
@@ -155,7 +147,6 @@ group("Step 5: Final challenge", () => {
     await u.click(await screen.findByRole("button", { name: "Yes" }));
     await u.click(button("Continue"));
 
-    // Your turn starts with no hint showing, and the Hint button back.
     for (const h of FINAL.attackHints) expect(screen.queryByText(h)).toBeNull();
     expect(button(/^Hint/)).toBeTruthy();
     expect(card("Storm Hawk").closest("[data-highlight='true']")).toBeNull();
@@ -165,7 +156,6 @@ group("Step 5: Final challenge", () => {
     const u = userEvent.setup();
     const { lesson, nextClicks } = renderStep("final", StepFinal);
     await u.click(button("Start their turn"));
-    // Blocking opens once both attackers have turned sideways.
     await screen.findByText(/^Turn 1 of 2/, undefined);
 
     await u.click(card("Vine Archer"));

@@ -1,7 +1,3 @@
-/**
- * Plays every lesson board and checks the outcomes the lesson promises.
- * If someone edits a card's stats, these tests catch a lesson that no longer works.
- */
 import { describe as group, expect, it } from "vitest";
 import { CARDS } from "@/lib/cards";
 import { aiChooseAttackers } from "./ai";
@@ -80,7 +76,6 @@ group("Step 4: damage wears off", () => {
 });
 
 group("Step 5: final challenge (the turn rules it relies on)", () => {
-  // The full puzzle (their turn, then win on yours) is tested in lesson/steps.test.ts.
   const start = () =>
     newGame({
       active: "opp",

@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { StepScreen } from "@/components/lesson/StepScreen";
 import { SLUGS, STEPS, stepFromSlug } from "@/lib/lesson/lesson";
 
-// Every step is prebuilt at build time: static, instant, and it arrives in one
-// pass, so page transitions run once and the shared elements can morph.
+// Prebuilt so it arrives in one pass: transitions run once and shared elements morph.
 export function generateStaticParams() {
   return STEPS.map((s) => ({ slug: SLUGS[s.id] }));
 }

@@ -1,5 +1,4 @@
-// Plain on purpose: the page transition wrapper lives in the root layout, so each
-// screen has exactly one (Safari stacks nested ones). The step tabs are in StepScreen.
+// No transition wrapper here: Safari stacks nested ones (it lives in the root layout).
 export default function LearnLayout({ children }: LayoutProps<"/learn">) {
   return children;
 }

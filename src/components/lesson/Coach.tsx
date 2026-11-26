@@ -4,12 +4,6 @@ import { motion } from "motion/react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { BulbIcon, CheckIcon, CrossIcon, InfoIcon, SpeakerIcon } from "../icons";
 
-/**
- * The "coach" side of a step: short text, read-aloud, feedback and hints.
- * Text stays tiny on purpose (Marker: measure the skill, not the reading).
- */
-
-/** Reads text out loud with the browser's own voice. No network, no keys. */
 export function Speak({
   text,
   label = "Read aloud",
@@ -17,11 +11,10 @@ export function Speak({
 }: {
   text: string;
   label?: string;
-  /** Sits on the blue task band. */
   onSpot?: boolean;
 }) {
   const spoke = useRef(false);
-  // Leaving the step stops the voice (only if this button started it).
+  // Only stops the voice if this button started it.
   useEffect(
     () => () => {
       if (spoke.current) window.speechSynthesis?.cancel();
@@ -53,7 +46,6 @@ export function Speak({
   );
 }
 
-/** `n`: set per message, so the same words said twice still show (and are read) again. */
 export type Feedback = { tone: "good" | "bad" | "info"; text: string; n?: number };
 
 const TONE = {
@@ -62,10 +54,7 @@ const TONE = {
   info: { box: "bg-spot-tint", badge: "bg-spot", word: "text-spot", label: "Note", icon: <InfoIcon className="size-3.5" /> },
 };
 
-/**
- * Always mounted, so screen readers announce each new message (aria-live).
- * Tone is shown by a word and an icon, not color alone.
- */
+// Always mounted so aria-live announces each new message.
 export function FeedbackBox({ feedback }: { feedback: Feedback | null }) {
   return (
     <div aria-live="polite" aria-atomic="true">
@@ -90,7 +79,6 @@ export function FeedbackBox({ feedback }: { feedback: Feedback | null }) {
   );
 }
 
-/** Hints come in three levels: nudge, point, then highlight on the board. */
 export function HintButton({ level, total, onMore }: { level: number; total: number; onMore: () => void }) {
   if (level >= total) return null;
   return (
@@ -104,7 +92,6 @@ export function HintButton({ level, total, onMore }: { level: number; total: num
   );
 }
 
-/** The latest hint's text, marked with a highlighter square. */
 export function HintText({ level, hints }: { level: number; hints: readonly string[] }) {
   return (
     <div aria-live="polite">
@@ -120,7 +107,6 @@ export function HintText({ level, hints }: { level: number; hints: readonly stri
   );
 }
 
-/** A pin's letter, as printed on the board and in the Key. */
 export function PinMark({ letter, className = "" }: { letter: string; className?: string }) {
   return (
     <span
@@ -132,11 +118,6 @@ export function PinMark({ letter, className = "" }: { letter: string; className?
   );
 }
 
-/**
- * The Key under the actions: explains each lettered pin on the board. Linked to
- * the board both ways: pointing at a row lights up its card, and pointing at a
- * pinned card sweeps a highlighter across its row.
- */
 export function PinKey({
   pins,
   active = null,
@@ -144,7 +125,6 @@ export function PinKey({
   onTap,
 }: {
   pins: readonly { letter: string; text: string }[];
-  /** Letter of the pin currently in focus, if any. */
   active?: string | null;
   onHover?: (letter: string | null) => void;
   onTap?: (letter: string) => void;
@@ -156,7 +136,6 @@ export function PinKey({
       <ul className="flex flex-col gap-1.5 text-[15px] leading-snug">
         {pins.map((p) => (
           <li key={p.letter} id={`key-${p.letter}`} data-state={active === null ? undefined : active === p.letter ? "active" : "dim"} className="key-row">
-            {/* A button, so keyboard users can light up the card it's about, like a tap does. */}
             <button
               type="button"
               className="flex w-full items-start gap-2.5 text-left"
@@ -181,7 +160,6 @@ type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { children: Reac
 const BTN =
   "inline-flex min-h-12 items-center justify-center gap-2 border-2 px-5 font-bold transition-colors disabled:cursor-not-allowed disabled:border-rule disabled:bg-panel disabled:text-ink-soft/70 disabled:line-through disabled:decoration-1";
 
-/** Primary: solid ink, the one thing to do next. */
 export function Primary({ children, className = "", ...rest }: BtnProps) {
   return (
     <button type="button" {...rest} className={`${BTN} border-ink bg-ink text-panel enabled:hover:border-spot enabled:hover:bg-spot ${className}`}>
@@ -190,7 +168,6 @@ export function Primary({ children, className = "", ...rest }: BtnProps) {
   );
 }
 
-/** Secondary: an outlined, printed box. */
 export function Secondary({ children, className = "", ...rest }: BtnProps) {
   return (
     <button type="button" {...rest} className={`${BTN} border-ink bg-panel text-ink enabled:hover:bg-spot-tint ${className}`}>
@@ -199,7 +176,6 @@ export function Secondary({ children, className = "", ...rest }: BtnProps) {
   );
 }
 
-/** For use on the blue task band. */
 export function OnSpot({ children, className = "", primary = false, ...rest }: BtnProps & { primary?: boolean }) {
   return (
     <button

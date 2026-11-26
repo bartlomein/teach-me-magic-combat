@@ -12,7 +12,6 @@ import { canLeap, playGolemLeap, stopGolemLeap } from "../golem/golemLeap";
 import { OnSpot } from "./Coach";
 import { useArrivalFocus } from "./useArrivalFocus";
 
-/** The first screen. Returning learners get "Continue" instead of the question. */
 export function Welcome() {
   const router = useRouter();
   const { lesson, ready } = useLesson();
@@ -20,13 +19,10 @@ export function Welcome() {
   const started = ready && lesson.experience !== null;
   const resume = resumeStep(lesson);
   const resumeIndex = STEPS.findIndex((s) => s.id === resume);
-  // Finished the whole lesson: "Continue" opens the report card.
   const finished = started && buildReport(lesson).complete;
   const continueHref = finished ? "/report" : stepHref(resume);
   const motion = useMotionMode();
   const cardRef = useRef<HTMLDivElement>(null);
-  // The Moss Golem stepping out of its card (three.js, loaded only when it plays): on its own once per page load,
-  // then on "Watch the golem". It runs about 13 seconds, so there's a Skip button (and Esc) while it plays.
   const [leapReady, setLeapReady] = useState(false);
   const canPlay = leapReady && motion === "full";
   const [playing, setPlaying] = useState(false);
@@ -35,11 +31,9 @@ export function Welcome() {
     if (!cardRef.current || motion !== "full") return;
     setPlaying(true);
     const result = await playGolemLeap(cardRef.current, onStart);
-    // A newer play took over: it owns the button's state now.
     if (result !== "superseded") setPlaying(false);
   }
 
-  // After the page has loaded and gone quiet, so it never slows the first paint. Full motion only.
   useEffect(() => {
     if (motion !== "full") {
       stopGolemLeap();
@@ -50,7 +44,7 @@ export function Welcome() {
     let idle = 0;
     let seen: IntersectionObserver | null = null;
     const begin = () => {
-      // Safari has no requestIdleCallback: a plain timer instead. Each kept in its own handle for cleanup.
+      // Safari has no requestIdleCallback: use a timer.
       if (window.requestIdleCallback) idle = window.requestIdleCallback(() => (timer = window.setTimeout(go, 700)), { timeout: 2000 });
       else timer = window.setTimeout(go, 900);
     };
@@ -59,7 +53,6 @@ export function Welcome() {
       if (cancelled || !el || !canLeap(motion)) return;
       setLeapReady(true);
       if (readSeen()) return;
-      // Only once the card is (almost) fully on screen: on phones it's below the fold until you scroll.
       const threshold = Math.min(0.85, (window.innerHeight * 0.9) / Math.max(1, el.offsetHeight));
       seen = new IntersectionObserver(
         ([e]) => {
@@ -73,7 +66,7 @@ export function Welcome() {
       );
       seen.observe(el);
     };
-    // Leaving by any link or the Back button: put the golem back first, before the page transition snapshots it.
+    // Put the golem back before the page transition snapshots it.
     const onLinkClick = (e: MouseEvent) => (e.target as Element | null)?.closest?.("a[href]") && stopGolemLeap();
     if (document.readyState === "complete") begin();
     else window.addEventListener("load", begin, { once: true });
@@ -89,11 +82,10 @@ export function Welcome() {
       if (idle) window.cancelIdleCallback(idle);
       stopGolemLeap();
     };
-    // playLeap only reads `motion` (a dependency already) and refs; re-running on its identity would restart the timers.
+    // Re-running on playLeap's identity would restart the timers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [motion]);
 
-  // Esc skips it, like the Skip button.
   useEffect(() => {
     if (!playing) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && stopGolemLeap();
@@ -101,22 +93,18 @@ export function Welcome() {
     return () => window.removeEventListener("keydown", onKey);
   }, [playing]);
 
-  /** Leave the page: put the golem back on its card first, so the page transition captures the card. */
   function go(href: string) {
     stopGolemLeap();
     router.push(href, { transitionTypes: ["nav-forward"] });
   }
 
-  // Load the next screen ahead of the click, so it's ready in the same frame and
-  // the blue band and Moss Golem can morph across instead of popping in.
+  // Prefetch so the band and golem can morph across instead of popping in.
   useEffect(() => {
     router.prefetch(continueHref);
     router.prefetch("/basics");
     router.prefetch("/quick-check");
   }, [router, continueHref]);
 
-  // Never played: a 20-second "What's the game?" first. Played a bit: the quick
-  // check, where each right answer skips a step.
   function start(experience: "new" | "some") {
     dispatch({ type: "start", experience, at: Date.now() });
     go(experience === "new" ? "/basics" : "/quick-check");
@@ -127,7 +115,6 @@ export function Welcome() {
       aria-labelledby="welcome-title"
       className="grid grid-cols-[minmax(0,1fr)] border-[3px] border-ink bg-panel md:grid-cols-[minmax(0,1fr)_minmax(0,25rem)]"
     >
-      {/* The blue band morphs into the step's task band on the next screen. */}
       <ViewTransition name="task-band" share="morph" default="none">
         <div className="on-spot flex flex-col justify-between gap-10 bg-spot p-6 text-panel sm:p-10 md:border-r-[3px] md:border-ink">
           <div className="flex flex-col gap-4">
@@ -142,8 +129,7 @@ export function Welcome() {
             <p className="max-w-[34ch] text-xl text-panel/90">
               Magic: The Gathering is a fantasy card game. You battle an opponent using creatures and spells.
             </p>
-            {/* Facts checked Nov 2026: released Aug 5, 1993 (Guinness World Records: first modern trading
-                card game); "played by over 50 million players" (Hasbro investor site). */}
+            {/* Sources: Guinness World Records (first TCG, 1993); Hasbro investor site (50M players). */}
             <p className="max-w-[38ch] text-base text-panel/90">
               It&apos;s been around since 1993. More than 50 million people have played it.
             </p>
@@ -163,8 +149,7 @@ export function Welcome() {
               </div>
             </div>
           ) : (
-            // Held (invisible, but its space kept) until saved progress is read, so a
-            // returning learner never sees or clicks these first.
+            // Hidden until saved progress is read, so returning learners never click these first.
             <div className={`flex flex-col gap-3 ${ready ? "" : "invisible"}`} inert={!ready}>
               <p className="text-lg font-bold">Have you played before?</p>
               <div className="flex flex-wrap gap-3">
@@ -179,12 +164,10 @@ export function Welcome() {
       </ViewTransition>
       <div className="paper flex flex-col items-center justify-center gap-3 border-t-[3px] border-ink p-8 md:border-t-0">
         <div ref={cardRef} className="[--card-w:clamp(190px,52vw,250px)]">
-          {/* Flies onto the Step 1 board as the screen changes. */}
           <Card card={CARDS.mossGolem} foil transitionName="card-mossGolem" />
         </div>
         {canPlay &&
           (playing ? (
-            // Above the golem's canvas, so it can always be reached.
             <button
               type="button"
               onClick={stopGolemLeap}
@@ -213,20 +196,14 @@ export function Welcome() {
   );
 }
 
-/**
- * Played already since this page loaded? Kept in memory, not storage: a reload plays it again,
- * but coming back to Welcome from a lesson step doesn't.
- */
+/** Kept in memory, not storage: a reload plays it again, coming back from a step doesn't. */
 let seenThisLoad = false;
 const readSeen = () => seenThisLoad;
 const markSeen = () => {
   seenThisLoad = true;
 };
 
-/**
- * Wait until the pointer isn't tilting the card. The golem steps out through the
- * card's art window, which has to be where it was measured: only while the card sits flat.
- */
+/** The art window must be where it was measured: only while the card sits flat. */
 function whenStill(el: HTMLElement): Promise<void> {
   const card = el.querySelector<HTMLElement>(".card");
   if (!card || !card.matches(":hover")) return Promise.resolve();

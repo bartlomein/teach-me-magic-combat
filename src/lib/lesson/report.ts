@@ -1,14 +1,6 @@
-/**
- * The report card, worked out from the saved lesson. Pure functions only, so
- * the numbers are tested and the page just draws them.
- *
- * Modeled on Marker's own report: a result per concept, mistakes grouped by
- * type (here: by myth), and strengths and needs.
- */
 import type { Myth } from "@/lib/rules/engine";
 import { resultOf, STEPS, type LessonState, type StepId } from "./lesson";
 
-/** Each myth as the learner believed it, and the rule that fixes it. Plain words. */
 export const MYTHS: Record<Myth, { belief: string; rule: string }> = {
   M1: { belief: "Thought a new creature can attack", rule: "New creatures wait one turn before they attack." },
   M2: { belief: "Thought the attacker picks blockers", rule: "The defender always picks the blockers." },
@@ -21,7 +13,6 @@ export const MYTHS: Record<Myth, { belief: string; rule: string }> = {
   M9: { belief: "Thought blocking taps a creature", rule: "Blocking doesn't tap. Only attacking does." },
 };
 
-/** What each step actually tests, named as a skill (for Strengths / Needs). */
 export const SKILLS: Record<StepId, string> = {
   attack: "Who can attack",
   block: "Blocking math",
@@ -38,7 +29,6 @@ export type ReportRow = {
   result: StepResult;
   hints: number;
   misses: number;
-  /** How the latest practice replay went, if any. */
   practiced?: "clean" | "missed";
 };
 
@@ -47,29 +37,19 @@ export type MythGroup = {
   count: number;
   belief: string;
   rule: string;
-  /** Steps where it happened, in lesson order. */
   steps: StepId[];
-  /**
-   * Fixed: none of its steps is still on the To practice list. Either you
-   * practiced them clean, or it was a quick-check miss you then got right in
-   * the lesson.
-   */
   fixed: boolean;
 };
 
 export type Report = {
-  /** All steps done or skipped. */
   complete: boolean;
   rows: ReportRow[];
-  /** Steps right the first time, or skipped because you knew them. */
   clean: number;
-  /** Steps you missed the first time, then practiced and got right. */
   fixedByPractice: number;
   totalMistakes: number;
   myths: MythGroup[];
   strengths: string[];
   needs: string[];
-  /** Steps to replay for "Practice what you missed", in order. */
   practice: StepId[];
   hintsUsed: number;
 };
@@ -81,8 +61,6 @@ export function buildReport(s: LessonState): Report {
     return {
       id,
       title,
-      // A step that isn't finished shows as "retry" here; the page won't render
-      // the report until `complete` is true anyway.
       result: result ?? "retry",
       hints: p.hints,
       misses: p.misses,
@@ -108,9 +86,6 @@ export function buildReport(s: LessonState): Report {
     groups.set(m.myth, g);
   }
   const practicedClean = (id: StepId) => s.steps[id].practiced === "clean";
-  // Needs: steps you missed during the lesson itself,
-  // unless you've since practiced them and got them right.
-  // A quick-check miss that you then got right first time is a strength: you learned it.
   const missedFirst = rows.filter((r) => r.result !== "skipped" && (r.result === "lighter" || r.misses > 0)).map((r) => r.id);
   const needIds = missedFirst.filter((id) => !practicedClean(id));
   const fixedIds = missedFirst.filter(practicedClean);

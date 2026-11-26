@@ -24,29 +24,18 @@ type Props = {
   card: CardDef;
   status?: CardStatus;
   damage?: number;
-  /** Toggle-button state (selected as blocker, attacker, etc). */
   pressed?: boolean;
   foil?: boolean;
-  /** When set, the card is a real button. Otherwise it's a labelled, non-interactive figure. */
   onSelect?: () => void;
   disabled?: boolean;
-  /** Turned sideways: it attacked (or was used) and can't attack or block until it untaps. */
   tapped?: boolean;
-  /** Hint level 3: highlighter ring so the learner can see which cards to look at. */
   highlight?: boolean;
-  /** A lettered pin printed on the card, explained in the step's Key. */
   pin?: string;
-  /** Linked highlighting with the Key: this pin is the one in focus, or another one is. */
   pinState?: "active" | "dim";
-  /** The pin's Key line, added to the screen-reader label so nobody has to hunt for the Key. */
   pinNote?: string;
-  /** Pointer or keyboard focus entering (true) / leaving (false) a pinned card. */
   onPinHover?: (on: boolean) => void;
-  /** Tapping the pin itself (phones): point at its Key line. */
   onPinTap?: () => void;
-  /** A short highlighter callout above the card (wide screens only; the pin + Key cover phones). */
   callout?: string;
-  /** Same name on two screens = this card flies from one to the other during navigation. */
   transitionName?: string;
   ref?: Ref<HTMLDivElement>;
 };
@@ -77,8 +66,7 @@ export function Card({
   const frame = useRef<number | null>(null);
   const touchTimer = useRef<number | null>(null);
 
-  // For buttons, the accessible name is the card's own visible text (so voice
-  // control can use what's on screen, WCAG 2.5.3) plus these unprinted facts.
+  // Accessible name = visible text plus unprinted facts (WCAG 2.5.3).
   const extras = [
     tapped && status !== "tapped" ? "tapped" : null,
     card.side === "opp" ? "opponent's creature" : null,
@@ -97,7 +85,6 @@ export function Card({
     .filter(Boolean)
     .join(", ");
 
-  // ---- Tilt, glare and parallax follow the pointer (full motion only). ----
   function setTilt(clientX: number, clientY: number) {
     const node = el.current;
     if (!node || mode !== "full") return;
@@ -128,7 +115,6 @@ export function Card({
     if (e.pointerType === "mouse" || e.pointerType === "pen") setTilt(e.clientX, e.clientY);
   }
 
-  // Phones have no hover: a tap gives a short tilt toward the finger, then settles.
   function onPointerDown(e: PointerEvent) {
     if (e.pointerType !== "touch") return;
     setTilt(e.clientX, e.clientY);
@@ -175,7 +161,6 @@ export function Card({
       onPointerLeave={(e) => e.pointerType !== "touch" && onPinHover?.(false)}
     >
       {pin && (
-        // Decorative for screen readers (the note is in the card's label); a tap target for fingers.
         <span aria-hidden className="card-pin" onClick={onPinTap}>
           {pin}
         </span>
@@ -214,14 +199,6 @@ export function Card({
   );
 }
 
-/**
- * The printed face. Sized entirely in container units (cqw) of .card-wrap, so the
- * same markup works from a 112px board card to a 260px inspect card. Below 160px
- * a container query hides the type line and text box.
- * Also reused by the death shatter so shards look like the real card.
- * `readable`: screen readers read it (the card is a button and takes its name
- * from this text); otherwise it's hidden and the card's label speaks.
- */
 export function CardFace({ card, status, damage = 0, readable = false }: { card: CardDef; status?: CardStatus; damage?: number; readable?: boolean }) {
   return (
     <div className="card__face cf" data-side={card.side} aria-hidden={readable ? undefined : true}>
@@ -229,7 +206,6 @@ export function CardFace({ card, status, damage = 0, readable = false }: { card:
         <p className="cf-name">{card.name}</p>
       </div>
 
-      {/* Art: sky clipped to the window; the creature may break out of the right and bottom edges. */}
       <div className="cf-art">
         <div className="cf-window" style={{ background: `radial-gradient(circle at 50% 35%, ${card.art.from}, ${card.art.to})` }}>
           {card.art.layers ? (
@@ -272,7 +248,6 @@ export function CardFace({ card, status, damage = 0, readable = false }: { card:
         ))}
       </div>
 
-      {/* Small cards: keyword icon + word only (always rendered so the footer keeps its height). */}
       <p className="cf-kw-mini" aria-hidden={card.keywords.length ? undefined : true}>
         {card.keywords.map((k) => (
           <span key={k}>

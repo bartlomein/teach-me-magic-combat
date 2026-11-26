@@ -1,8 +1,3 @@
-/**
- * Steps 2-5 and the quick check: boards, words, and answer checks. All checks
- * are pure and run the real rules engine, so the lesson's verdicts always match
- * the rules. Words stay short on purpose (task <= 8 words, feedback <= 20).
- */
 import { cardName, CARDS } from "@/lib/cards";
 import { aiChooseAttackers, aiChooseBlocks } from "@/lib/rules/ai";
 import {
@@ -17,12 +12,7 @@ import {
   type Myth,
 } from "@/lib/rules/engine";
 
-/** A lesson check's answer: always a sentence to show (the engine's own Verdict has none). */
 export type Judged = { ok: true; message: string } | { ok: false; myth?: Myth; message: string };
-
-// ---------------------------------------------------------------------------
-// Step 2: Blocking
-// ---------------------------------------------------------------------------
 
 export const BLOCK = {
   ask: { question: "They're attacking. Who picks blockers?", myth: "M2" as Myth, wrong: "The defender always chooses. That's you." },
@@ -33,13 +23,11 @@ export const BLOCK = {
   hints: ["Compare power to toughness.", "You need 3 damage to kill the Boar.", "This one can do it."],
   hintHighlight: ["mossGolem"],
   pins: [{ id: "mossGolem", letter: "A", text: "Moss Golem is new, but new creatures can still block." }],
-  /** Highlighter tags above cards, as in Step 1 (wide screens; they replace the in-card ribbon there). */
   callouts: { mossGolem: "New this turn" },
   lighter: { question: "Does Moss Golem kill the Boar and live?" },
   win: "Golem dealt 3 and took only 3 of its 4.",
 } as const;
 
-/** Their turn: Thorn Boar attacks. You have Ember Pup and a new Moss Golem. */
 export const blockBoard = (): GameState =>
   declareAttackers(
     newGame({ active: "opp", creatures: [c(CARDS.thornBoar), c(CARDS.emberPup), c(CARDS.mossGolem, { enteredThisTurn: true })] }),
@@ -49,21 +37,15 @@ export const blockBoard = (): GameState =>
 export const blockLighterBoard = (): GameState =>
   declareAttackers(newGame({ active: "opp", creatures: [c(CARDS.thornBoar), c(CARDS.mossGolem)] }), ["thornBoar"]);
 
-/** Judge a block (or no block) by actually resolving it. */
 export function judgeBlock(blocker: string | null): Judged {
   const s = blockBoard();
   const r = resolveCombat(s, ["thornBoar"], blocker ? { [blocker]: "thornBoar" } : {});
-  // Moss Golem is new this turn (pin A). Not blocking with it is the "new creatures can't block" myth.
   if (!blocker) return { ok: false, myth: "M3", message: "You'd take 3. Moss Golem can kill it and live." };
   const blockerDied = r.state.graveyard.includes(blocker);
   const boarDied = r.state.graveyard.includes("thornBoar");
   if (boarDied && !blockerDied) return { ok: true, message: BLOCK.win };
   return { ok: false, myth: "M4", message: "Pup deals 2. Boar has 3 toughness. Pup dies, Boar lives." };
 }
-
-// ---------------------------------------------------------------------------
-// Step 3: Flying + reach
-// ---------------------------------------------------------------------------
 
 export const FLYING = {
   headline: "Only flying or reach can block a flyer.",
@@ -81,7 +63,6 @@ export const FLYING = {
   win: "Archer stopped the Bat, Golem stopped the Boar. You lost nothing.",
 } as const;
 
-/** Their turn: Night Bat (flying) and Thorn Boar attack. */
 export const flyingBoard = (): GameState =>
   declareAttackers(
     newGame({
@@ -94,7 +75,6 @@ export const flyingBoard = (): GameState =>
 export const flyingLighterBoard = (): GameState =>
   declareAttackers(newGame({ active: "opp", creatures: [c(CARDS.nightBat), c(CARDS.mossGolem), c(CARDS.vineArcher)] }), ["nightBat"]);
 
-/** Can this blocker block that attacker? Uses the engine's rule (702.9b, 702.17b). */
 export function checkAssign(state: GameState, blocker: string, attacker: string): Judged {
   const v = canBlock(state, blocker, attacker);
   if (v.ok) return { ok: true, message: "" };
@@ -105,23 +85,17 @@ export function checkAssign(state: GameState, blocker: string, attacker: string)
   return { ok: false, myth: v.myth, message: v.message };
 }
 
-/** Judge a full set of blocks for Step 3 by resolving them. */
 export function judgeFlying(blocks: Blocks): Judged {
   const s = flyingBoard();
   const r = resolveCombat(s, ["nightBat", "thornBoar"], blocks);
   const lost = 20 - r.state.life.you;
   const yoursDied = r.state.graveyard.filter((id) => s.creatures[id].controller === "you");
   if (lost === 0 && yoursDied.length === 0) return { ok: true, message: FLYING.win };
-  // A blocker that dies: its toughness wasn't enough (M4). Not blocking: a choice, not a myth.
   if (blocks.skyFinch === "nightBat") return { ok: false, myth: "M4", message: "That works, but Finch dies too. Vine Archer survives it." };
   if (blocks.skyFinch === "thornBoar") return { ok: false, myth: "M4", message: "Legal! Flyers can block ground creatures. But Finch dies." };
   if (lost > 0) return { ok: false, message: `You'd take ${lost}. Block both attackers.` };
   return { ok: false, myth: "M4", message: `${s.creatures[yoursDied[0]].name} dies. Pick a blocker that survives.` };
 }
-
-// ---------------------------------------------------------------------------
-// Step 4: Damage wears off
-// ---------------------------------------------------------------------------
 
 export const HEAL = {
   headline: "Damage lasts only this turn.",
@@ -132,18 +106,8 @@ export const HEAL = {
   win: "Healed, Golem survives the next 3/3 too.",
 } as const;
 
-/** Moss Golem took 3 from the Boar this turn. */
 export const healBoard = (): GameState =>
   newGame({ active: "opp", creatures: [c(CARDS.thornBoar), c(CARDS.mossGolem, { damage: 3 })] });
-
-// ---------------------------------------------------------------------------
-// Step 5: Final challenge (two connected turns, everything visible)
-//
-// Their turn: Night Bat and Thorn Boar attack; you block.
-// Your turn: they have 4 life and one untapped blocker (Cliff Spider). Win.
-// Every answer is checked by trying all the options on the real engine, so
-// there is never a hidden "right" move the learner couldn't see.
-// ---------------------------------------------------------------------------
 
 export const FINAL_LIFE = { you: 5, opp: 4 } as const;
 
@@ -158,7 +122,6 @@ export const FINAL = {
   attackHints: ["Cliff Spider can block one attacker.", "They have 4 life. Spider will block your biggest attacker.", "Attack with all three."],
 } as const;
 
-/** Their turn, before attacks are declared. */
 export const finalBoard = (): GameState =>
   newGame({
     active: "opp",
@@ -166,47 +129,39 @@ export const finalBoard = (): GameState =>
     creatures: [c(CARDS.stormHawk), c(CARDS.mossGolem), c(CARDS.vineArcher), c(CARDS.cliffSpider), c(CARDS.nightBat), c(CARDS.thornBoar)],
   });
 
-/** Their turn with Bat and Boar attacking (Spider, with reach, stays home to guard). */
 export const finalTheirAttack = (): { state: GameState; attackers: string[] } => {
   const s = finalBoard();
   const attackers = aiChooseAttackers(s);
   return { state: declareAttackers(s, attackers), attackers };
 };
 
-/** Every way to choose a subset of ids (small boards only). */
 function subsets<T>(xs: T[]): T[][] {
   return xs.reduce<T[][]>((acc, x) => acc.concat(acc.map((set) => [...set, x])), [[]]);
 }
 
-/** Your attackers that can legally attack right now. */
 export const readyAttackers = (s: GameState) =>
   Object.values(s.creatures)
     .filter((x) => x.controller === s.active && !x.tapped && !x.enteredThisTurn)
     .map((x) => x.id);
 
-/** Does this attack win against their best defense? */
 export function judgeAttack(s: GameState, attack: string[]) {
   const blocks = aiChooseBlocks(s, attack);
   const end = resolveCombat(declareAttackers(s, attack), attack, blocks).state;
   return { win: end.life.opp <= 0, lifeLeft: end.life.opp, blocks };
 }
 
-/** Is there any attack that wins this turn? */
 export const canWinNow = (s: GameState) => subsets(readyAttackers(s)).some((set) => set.length > 0 && judgeAttack(s, set).win);
 
 const list = (ids: string[]) => (ids.length <= 1 ? ids.map(cardName).join("") : `${ids.slice(0, -1).map(cardName).join(", ")} and ${cardName(ids[ids.length - 1])}`);
 
 export type TheirTurnResult = {
-  /** Your turn has started: damage is gone, their attackers that lived are still tapped. */
   next: GameState;
   ok: boolean;
   myth?: Myth;
   message: string;
-  /** Yours that blocked and lived: they can still attack (blocking doesn't tap). */
   blockedAndLived: string[];
 };
 
-/** Their turn, judged by what it leaves you for yours. */
 export function judgeTheirTurn(declared: GameState, attackers: string[], blocks: Blocks): TheirTurnResult {
   const after = resolveCombat(declared, attackers, blocks).state;
   const yoursBefore = Object.values(declared.creatures).filter((x) => x.controller === "you").map((x) => x.id);
@@ -233,17 +188,12 @@ export function judgeTheirTurn(declared: GameState, attackers: string[], blocks:
   return { next, ok: true, message, blockedAndLived };
 }
 
-/** Your turn: feedback for an attack that didn't win. */
 export function missedWinMessage(s: GameState, attack: string[], lifeLeft: number, blocks: Blocks) {
   const blocked = Object.entries(blocks).map(([b, a]) => `${cardName(b)} blocked ${cardName(a)}.`).join(" ");
   const missing = readyAttackers(s).filter((id) => !attack.includes(id));
   const add = missing.length ? ` Attack with ${list(missing)} too.` : "";
   return `They're at ${lifeLeft}. ${blocked}${add}`.replace(/\s+/g, " ").trim();
 }
-
-// ---------------------------------------------------------------------------
-// Quick check ("Played a bit"): three questions; a right answer skips a step.
-// ---------------------------------------------------------------------------
 
 export const QUICK = [
   { step: "attack", card: "emberPup", newThisTurn: true, question: "This creature was played this turn. Can it attack?", options: ["Yes", "No"], answer: "No", myth: "M1" as Myth },

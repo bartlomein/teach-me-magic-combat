@@ -4,12 +4,6 @@ import { motion } from "motion/react";
 import type { CardDef } from "@/lib/cards";
 import { CardFace } from "./Card";
 
-/* ------------------------------------------------------------------
- * All effects here are decorative (aria-hidden). Every one of them has
- * a text twin announced through the live region by the parent.
- * ------------------------------------------------------------------ */
-
-// Six shards that tile the card. Each flies outward from the center.
 const SHARDS: { clip: string; dx: number; dy: number; rot: number }[] = [
   { clip: "polygon(0 0, 55% 0, 40% 35%, 0 45%)", dx: -60, dy: -50, rot: -28 },
   { clip: "polygon(55% 0, 100% 0, 100% 30%, 40% 35%)", dx: 60, dy: -60, rot: 24 },
@@ -19,7 +13,6 @@ const SHARDS: { clip: string; dx: number; dy: number; rot: number }[] = [
   { clip: "polygon(50% 65%, 100% 60%, 100% 100%, 45% 100%)", dx: 55, dy: 75, rot: 30 },
 ];
 
-/** Death: the card cracks into shards that drift apart and fade. */
 export function Shatter({ card, calm }: { card: CardDef; calm: boolean }) {
   return (
     <div className="card-wrap" aria-hidden>
@@ -60,14 +53,13 @@ export function Shatter({ card, calm }: { card: CardDef; calm: boolean }) {
 
 export type Burst = { id: number; x: number; y: number; color: string };
 
-// Fixed spray pattern (no randomness during render; looks organic enough).
+// Fixed pattern: no randomness during render.
 const SPARKS = Array.from({ length: 14 }, (_, i) => {
   const angle = (i / 14) * Math.PI * 2 + (i % 2 ? 0.2 : -0.1);
   const dist = 38 + ((i * 37) % 34);
   return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, size: 4 + (i % 3) * 2 };
 });
 
-/** Impact sparks at a point inside the board. */
 export function ImpactBurst({ burst }: { burst: Burst }) {
   return (
     <div aria-hidden className="pointer-events-none absolute" style={{ left: burst.x, top: burst.y }}>
@@ -94,7 +86,6 @@ export function ImpactBurst({ burst }: { burst: Burst }) {
 
 export type Float = { id: number; x: number; y: number; text: string };
 
-/** A damage number that pops and floats up. In calm mode it just fades in place. */
 export function DamageFloat({ f }: { f: Float }) {
   return (
     <motion.span

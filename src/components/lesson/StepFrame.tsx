@@ -5,19 +5,8 @@ import { ViewTransition, type ReactNode, type Ref } from "react";
 import { CheckIcon, CrossIcon } from "../icons";
 import { FeedbackBox, Primary, Speak, type Feedback } from "./Coach";
 
-/** The headline of a finished step, unless the step has its own (the final challenge: "You win!"). */
 const STEP_COMPLETE = "Step complete";
 
-/**
- * The frame every lesson step shares: one ink-ruled panel with the blue task
- * band (step number, one sentence, read-aloud), the board as a diagram, and the
- * actions + feedback + Key. Desktop: band and actions on the left, board right.
- * Phone: band, board, then actions right under the board.
- *
- * The frame also owns the finished state (`done`), so it is the same in every
- * step: the headline, one primary button ("Next: <next step>") and the feedback
- * right under it. No how-to line, no second button, no hints or Key.
- */
 export function StepFrame({
   n,
   title,
@@ -40,29 +29,18 @@ export function StepFrame({
   n: number;
   title: string;
   headingRef: Ref<HTMLHeadingElement>;
-  /** The one sentence: the rule while explaining, the task while trying. */
   headline: ReactNode;
-  /** Focused when the task changes, so keyboard and screen-reader users land on it. */
   headlineRef?: Ref<HTMLHeadingElement>;
   speak: string;
-  /** One short how-to line under the headline (optional). */
   howTo?: ReactNode;
-  /** Buttons inside the blue band (Watch it / Try it). */
   bandActions?: ReactNode;
   board: ReactNode;
-  /** Main buttons under the board / in the left column. */
   actions?: ReactNode;
-  /** The latest feedback. Always mounted, right under the buttons, in every step and phase. */
   feedback: Feedback | null;
-  /** Hint text and the Key, under the feedback. */
   below?: ReactNode;
-  /** Text twin of the latest animation, for screen readers. */
   announce?: string;
-  /** The step is passed: show the finished state instead of the task. */
   done?: boolean;
-  /** Finished-state headline, when it isn't "Step complete". */
   doneHeadline?: string;
-  /** Finished state: where "Next" goes, and the name of what comes next. */
   onNext: () => void;
   nextTitle: string | null;
 }) {
@@ -100,7 +78,6 @@ export function StepFrame({
 
       <div className="flex flex-col gap-5 p-5 [grid-area:act] sm:p-6 lg:border-r-[3px] lg:border-ink">
         {done ? (
-          // Finished: the one thing to do next.
           nextTitle && (
             <div className="flex flex-wrap gap-3">
               <Primary onClick={onNext}>Next: {nextTitle}</Primary>
@@ -120,10 +97,6 @@ export function StepFrame({
   );
 }
 
-/**
- * A quick either/or question (Me / Them, Yes / No). After an answer the right
- * option is marked with a check and a wrong pick with a cross, both in words.
- */
 export function Choice<T extends string>({
   options,
   answered,
@@ -131,7 +104,6 @@ export function Choice<T extends string>({
   onAnswer,
 }: {
   options: readonly { value: T; label: string }[];
-  /** The option the learner picked, once answered. */
   answered: T | null;
   correct: T;
   onAnswer: (v: T) => void;

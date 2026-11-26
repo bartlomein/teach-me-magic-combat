@@ -1,17 +1,6 @@
-/**
- * The opponent's decisions, kept predictable so the final challenge has one
- * clear answer a learner can work out from the board:
- * - Attacking: everything that can, except reach creatures, which stay home to guard.
- * - Blocking: the exact best defense (it tries every legal block), so a "win
- *   this turn" answer is only right if it beats a careful opponent.
- */
 import { canAttack, canBlock, has, other, resolveCombat, type Blocks, type GameState } from "./engine";
 
-/**
- * The defender's best blocks: least damage to the player first (chump-blocking
- * if it has to), then lose as few creatures as possible, then kill the most.
- * Tries every legal assignment, so it's exact on boards this size.
- */
+/** Least damage to the player first, then fewest losses, then most kills. */
 export function aiChooseBlocks(s: GameState, attackers: string[]): Blocks {
   const defender = other(s.active);
   const blockers = Object.values(s.creatures).filter((x) => x.controller === defender && !x.tapped);
@@ -42,7 +31,6 @@ export function aiChooseBlocks(s: GameState, attackers: string[]): Blocks {
   return best;
 }
 
-/** Attack with every creature that can, except reach creatures, which stay home to guard against flyers. */
 export function aiChooseAttackers(state: GameState): string[] {
   return Object.values(state.creatures)
     .filter((c) => c.controller === state.active && canAttack(state, c.id).ok && !has(c, "reach"))

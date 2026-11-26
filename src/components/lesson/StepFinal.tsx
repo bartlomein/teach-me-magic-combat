@@ -37,20 +37,12 @@ const YOURS = ["stormHawk", "mossGolem", "vineArcher"] as const;
 const THEIRS = ["cliffSpider", "thornBoar", "nightBat"] as const;
 const name = cardName;
 
-/**
- * Step 5: the final challenge, with everything visible. Their turn first: Bat
- * and Boar attack and you block. Then your turn: they have 4 life and one
- * untapped blocker, so you can work out the win from the board. Every answer is
- * checked by trying all the options on the real engine. Two misses switch on
- * the lighter version: the last hint and highlights show by themselves.
- */
 export function StepFinal(props: StepProps) {
   const { onNext, nextTitle, headingRef } = props;
   const step = useStep<Phase>("final", props, "intro", ["block", "ask", "attack", "won"]);
   const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
   const combat = useCombat(fx, FINAL_LIFE);
 
-  // Before Start nobody has attacked yet, so every creature is untapped.
   const [game, setGame] = useState<GameState>(finalBoard);
   const [theirAttackers, setTheirAttackers] = useState<string[]>([]);
   const [pick, setPick] = useState<string | null>(null);
@@ -60,8 +52,7 @@ export function StepFinal(props: StepProps) {
   const [yourTurnStart, setYourTurnStart] = useState<GameState | null>(null);
   const [askAbout, setAskAbout] = useState<string | null>(null);
   const [asked, setAsked] = useState<"yes" | "no" | null>(null);
-  // Each turn has its own hints: block hints must never reveal the attack answer.
-  // The lesson still counts every hint for the report card.
+  // Separate hints per turn: block hints must never reveal the attack answer.
   const [turnHints, setTurnHints] = useState({ block: 0, attack: 0 });
   const moreHint = (turn: "block" | "attack") => {
     setTurnHints((h) => ({ ...h, [turn]: h[turn] + 1 }));
@@ -78,7 +69,6 @@ export function StepFinal(props: StepProps) {
     fx.clearFx();
   }
 
-  /** Their turn: Bat and Boar attack. They tap on screen as they attack (508.1f), then you block. */
   function start() {
     clearBoard();
     const { state, attackers } = finalTheirAttack();
@@ -98,7 +88,6 @@ export function StepFinal(props: StepProps) {
     });
   }
 
-  /** Back to the start of your turn (their turn's result stays). */
   function retryYourTurn() {
     if (!yourTurnStart) return start();
     step.run.cancel();
@@ -109,14 +98,12 @@ export function StepFinal(props: StepProps) {
     setPhase("attack");
   }
 
-  /** Animate one combat, then say it for screen readers. Returns the new state. */
   async function fight(state: GameState, attackers: string[], b: Blocks, defender: "you" | "opp") {
     const r = await combat.play(state, attackers, b, defender);
     step.setAnnounce(r.text);
     return r.state;
   }
 
-  // ---- Their turn: you block ----
   function onYours(id: string) {
     if (phase !== "block") return;
     if (blocks[id]) {
@@ -158,7 +145,6 @@ export function StepFinal(props: StepProps) {
       setFeedback({ tone: "good", text: r.message });
       await beat(2800);
 
-      // Your turn. Damage wears off; their attackers that lived stay tapped.
       clearBoard();
       setGame(r.next);
       combat.setLife({ ...r.next.life });
@@ -173,7 +159,6 @@ export function StepFinal(props: StepProps) {
     });
   }
 
-  // ---- Your turn: a quick check, then attack ----
   function answerAsk(v: "yes" | "no") {
     if (asked) return;
     setAsked(v);
@@ -211,7 +196,6 @@ export function StepFinal(props: StepProps) {
         step.complete();
         setPhase("won");
       } else {
-        // Not a rules mistake: a plan that didn't win. Logged without a myth.
         step.miss(`Attacked with ${attackers.map(name).join(", ")}`);
         setFeedback({ tone: "bad", text: missedWinMessage(before, attackers, j.lifeLeft, j.blocks) });
         setPhase("fail2");
@@ -219,7 +203,6 @@ export function StepFinal(props: StepProps) {
     });
   }
 
-  // ---- What the board shows ----
   const intro = phase === "intro";
   const theirTurn = phase === "declaring" || phase === "block" || phase === "resolving1" || phase === "fail1";
   const yourTurn = !intro && !theirTurn;
@@ -425,7 +408,6 @@ export function StepFinal(props: StepProps) {
         </>
       }
       announce={step.announce}
-      // Same finished state as every step; only the headline is its own.
       done={phase === "won"}
       doneHeadline="You win!"
       onNext={onNext}

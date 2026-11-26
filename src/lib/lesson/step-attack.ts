@@ -1,8 +1,3 @@
-/**
- * Step 1, "Attacking": boards, words, and the answer checks.
- * The checks are pure and lean on the rules engine, so the lesson can never
- * call something legal that the rules say isn't.
- */
 import { CARDS } from "@/lib/cards";
 import {
   canAttack,
@@ -26,21 +21,15 @@ export const ATTACK = {
     "Read the Key below.",
     "These two can attack.",
   ],
-  /** Lettered pins printed on the board, explained in the Key. */
   pins: [
     { id: "stormHawk", letter: "A", text: "Storm Hawk is new. It can't attack yet.", when: ["explain", "pick-hint"] as string[] },
   ],
-  /** Highlighter tags above cards (wide screens; they replace the in-card ribbon there). */
   callouts: { stormHawk: "New this turn" },
-  /** Hint 3 lights these cards up on the board. */
   hintHighlight: ["emberPup", "mossGolem"],
-  /** Attacks always go at the player here (no planeswalkers or battles in this lesson). */
   win: "5 damage! Attackers hit the player. Their creatures choose whether to block.",
-  /** Shown after the win line, in the same feedback. */
   after: "Your attackers stay tapped until your next turn.",
 } as const;
 
-/** Full board: your turn. Storm Hawk arrived this turn. */
 export const attackBoard = (): GameState =>
   newGame({
     active: "you",
@@ -51,7 +40,6 @@ export const attackBoard = (): GameState =>
     ],
   });
 
-/** Lighter board: one creature that can attack, one that can't. */
 export const attackLighterBoard = (): GameState =>
   newGame({
     active: "you",
@@ -63,13 +51,11 @@ export const attackLighterBoard = (): GameState =>
 
 export type Check = { ok: true } | { ok: false; myth?: Myth; message: string };
 
-/** Tapping a card while choosing attackers. Illegal picks are explained right away. */
 export function checkPick(state: GameState, id: string): Check {
   const v = canAttack(state, id);
   return v.ok ? v : { ok: false, myth: v.myth, message: v.message };
 }
 
-/** Pressing "Attack". Every creature that can attack should be in. */
 export function checkAttackers(state: GameState, selected: string[]): Check {
   for (const id of selected) {
     const v = checkPick(state, id);

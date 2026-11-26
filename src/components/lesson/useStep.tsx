@@ -1,15 +1,5 @@
 "use client";
 
-/**
- * What every lesson step shares, so each step file is only its own board and words:
- *
- * - `useStep`: the phase, feedback and screen-reader line, focus on the task when
- *   it changes, and the lesson actions (miss, hint, complete).
- * - `useCombat`: damage marks, deaths and life totals, animated exactly as the
- *   rules engine resolves a combat.
- * - `useDemo`: the Explain → Watch → Try loop, with Watch it / Try it buttons and
- *   the lighter board's way back to the full one.
- */
 import { useEffect, useRef, useState, type Dispatch, type Ref } from "react";
 import type { LessonAction, StepId, StepProgress } from "@/lib/lesson/lesson";
 import {
@@ -24,58 +14,46 @@ import { useBoardFx } from "../board/Board";
 import { OnSpot, type Feedback } from "./Coach";
 import { useRun } from "./useRun";
 
-/** What every step screen gets from the lesson (see StepScreen). */
 export type StepProps = {
   progress: StepProgress;
-  /** True when one more miss switches on the lighter board (from the lesson reducer). */
   lighterNext: boolean;
   dispatch: Dispatch<LessonAction>;
   onNext: () => void;
   nextTitle: string | null;
-  /** The lesson focuses this heading when the step opens. */
   headingRef: Ref<HTMLHeadingElement>;
 };
 
-/** Clock for the mistake log. Only called from event handlers, never during render. */
+/** Only called from event handlers, never during render. */
 export const now = () => Date.now();
 
-/**
- * Reading time. Not scaled by the motion setting: reading speed isn't motion.
- * Tests speed it up through `reading.scale`; the app never changes it.
- */
+/** Not scaled by the motion setting; tests speed it up via `reading.scale`. */
 export const reading = { scale: 1 };
 export const readPause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms * reading.scale));
 
-/** Thrown inside a sequence when a newer one starts or the learner moves on. */
 const STOPPED = Symbol("sequence stopped");
-/** One beat of a sequence: wait (a reading pause in ms, or an animation), then stop if it was cancelled. */
 export type Beat = (wait: number | Promise<unknown>) => Promise<void>;
 
 export type Fate = "alive" | "dying" | "gone";
 
-/** A check's answer, as the step files return it. */
 type Wrong = { message: string; myth?: Myth };
 
 export function useStep<P extends string>(
   step: StepId,
   { progress, lighterNext, dispatch }: StepProps,
   initial: P | (() => P),
-  /** Phases that move focus to the headline when they start (a new task to read). */
   focusOn: readonly P[],
 ) {
   const fx = useBoardFx();
   const run = useRun();
   const [phase, setPhase] = useState<P>(initial);
   const [feedback, showFeedback] = useState<Feedback | null>(null);
-  // Every message gets its own number: repeating a wrong answer shows (and reads) it again.
+  // Each message gets its own number so a repeated answer is announced again.
   const said = useRef(0);
   const setFeedback = (f: Feedback | null) => showFeedback(f && { ...f, n: ++said.current });
   const [announce, setAnnounce] = useState("");
   const lighter = progress.lighter === "active";
 
-  // Move focus to the headline whenever the task changes, so keyboard and
-  // screen-reader users always land on "what to do next". Not on arrival: the
-  // lesson focuses the step heading then.
+  // Not on arrival: the lesson focuses the step heading then.
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const arrived = useRef(false);
   const focusNow = focusOn.includes(phase);
@@ -87,8 +65,7 @@ export function useStep<P extends string>(
     if (focusNow) headlineRef.current?.focus();
   }, [phase, lighter, focusNow]);
 
-  // A combat or pause can still be running when the learner leaves the step (a step tab,
-  // Back). Once the screen is gone, its late results must not reach the lesson.
+  // A combat may still run after leaving the step; its late results must not reach the lesson.
   const here = useRef(true);
   useEffect(() => {
     here.current = true;
@@ -98,24 +75,18 @@ export function useStep<P extends string>(
   }, []);
   const send = (a: LessonAction) => here.current && dispatch(a);
 
-  /** Logs a mistake. Returns true when it switches on the lighter board. */
   function miss(note: string, myth?: Myth, soft = false) {
     if (!here.current) return false;
     send({ type: "miss", step, myth, note, at: now(), soft });
     return !soft && lighterNext;
   }
 
-  /** A miss plus its correction. Says so when it switches on the lighter board. */
   function wrong(note: string, v: Wrong) {
     const toLighter = miss(note, v.myth);
     setFeedback({ tone: "bad", text: toLighter ? `${v.message} Let's try a simpler board.` : v.message });
     return toLighter;
   }
 
-  /**
-   * Runs a timed sequence (a demo, a combat with reading pauses). A newer one, or
-   * leaving the step, stops it at its next beat. Resolves true if it finished.
-   */
   async function sequence(script: (beat: Beat) => Promise<void>) {
     const live = run.begin();
     const beat: Beat = async (wait) => {
@@ -156,7 +127,6 @@ export type StepCore<P extends string> = ReturnType<typeof useStep<P>>;
 type Lives = Record<PlayerId, number>;
 const FULL_LIFE: Lives = { you: 20, opp: 20 };
 
-/** Damage marks, deaths and life totals, animated exactly as the engine resolves a combat. */
 export function useCombat(fx: StepCore<string>["fx"], startLife: Lives = FULL_LIFE) {
   const [damage, setDamage] = useState<Record<string, number>>({});
   const [fates, setFates] = useState<Record<string, Fate>>({});
@@ -168,14 +138,8 @@ export function useCombat(fx: StepCore<string>["fx"], startLife: Lives = FULL_LI
     setLife(startLife);
   }
 
-  /**
-   * One combat: clashes and unblocked hits at once, then deaths. Returns the new
-   * state and its plain-text version for screen readers.
-   */
   async function play(state: GameState, attackers: string[], blocks: Blocks, defender: PlayerId = "you") {
     const r = resolveCombat(state, attackers, blocks);
-    // Every number shown comes from the engine's damage events, so the picture
-    // matches the rules even when damage is split (double blocks, first strike).
     const dealt = (from: string, to: string) =>
       r.events.reduce((n, e) => (e.type === "damage" && e.source === from && e.target === to ? n + e.amount : n), 0);
     const fights = Object.entries(blocks).map(([blocker, attacker]) => ({
@@ -207,11 +171,6 @@ export function useCombat(fx: StepCore<string>["fx"], startLife: Lives = FULL_LI
 
 type DemoPhase = "explain" | "watch" | "pick";
 
-/**
- * The Explain → Watch → Try loop. `reset` puts the board back; `script` is the
- * demo, one `beat` per pause, and it's cancelled cleanly on Try it, Watch again
- * or leaving the step.
- */
 export function useDemo<P extends string>(
   core: StepCore<P> & (DemoPhase extends P ? unknown : never),
   reset: () => void,
@@ -225,7 +184,6 @@ export function useDemo<P extends string>(
     core.setFeedback(null);
     to("watch");
     if (!(await core.sequence(script))) return;
-    // The result stays on the board until Try it or Watch again (both reset it).
     setWatched(true);
     to("explain");
   }
@@ -237,7 +195,6 @@ export function useDemo<P extends string>(
     to("pick");
   }
 
-  /** Passed the lighter board: back to the full one. */
   function backToFull() {
     core.clearLighter();
     reset();
@@ -248,7 +205,6 @@ export function useDemo<P extends string>(
   const watching = core.phase === "watch";
   const explaining = core.phase === "explain" || watching;
   const label = watching ? "Watching…" : watched ? "Watch again" : "Watch it";
-  // Before the first watch: Watch it leads. After it: Try it leads. Both lock while it plays.
   const bandActions = explaining ? (
     watched ? (
       <>
@@ -274,7 +230,6 @@ export function useDemo<P extends string>(
   return { watch, startTry, backToFull, explaining, bandActions };
 }
 
-/** Their creatures and yours, in board order. */
 export function sides(board: GameState) {
   const all = Object.values(board.creatures);
   return { theirs: all.filter((c) => c.controller === "opp"), yours: all.filter((c) => c.controller === "you") };

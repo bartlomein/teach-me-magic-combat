@@ -12,12 +12,6 @@ import { sides, useCombat, useDemo, useStep, type StepProps } from "./useStep";
 
 type Phase = "explain" | "watch" | "pick" | "resolving" | "missed" | "follow" | "done";
 
-/**
- * Step 3: Flying + reach. Two attackers (Night Bat flies, Thorn Boar doesn't).
- * Assign blockers by tapping your creature, then the attacker it blocks; a line
- * joins them. A ground creature on a flyer bounces off (myth M5). After a
- * perfect block, one follow-up question checks myth M7.
- */
 export function StepFlying(props: StepProps) {
   const { progress, onNext, nextTitle, headingRef } = props;
   const step = useStep<Phase>("flying", props, "explain", ["pick", "done", "follow"]);
@@ -40,14 +34,12 @@ export function StepFlying(props: StepProps) {
     fx.clearFx();
   }
 
-  /** Animate a set of blocks exactly as the engine resolves them. */
   async function play(b: Blocks, atk: string[]) {
     step.setAnnounce((await combat.play(board, atk, b)).text);
   }
 
   const demo = useDemo(step, reset, async (beat) => {
-    // Five beats, each held long enough to read twice. Reading pauses are real
-    // time in every motion mode (Off speeds up animation, not reading).
+    // Reading pauses are real time in every motion mode.
     setFeedback({ tone: "info", text: "Night Bat flies at you." });
     await beat(2200);
     setBlocks({ mossGolem: "nightBat" });
@@ -69,12 +61,10 @@ export function StepFlying(props: StepProps) {
   const pinShown = (id: string) => !lighter && (explaining || (phase === "pick" && progress.hints >= 2)) && FLYING.pins.some((p) => p.id === id);
   const { cardProps, keyProps } = usePinLinks(FLYING.pins, pinShown, fx.mode === "full");
 
-  // ---- Assigning blockers: your creature, then the attacker it blocks ----
   function onYours(id: string) {
     if (phase !== "pick") return;
     setFeedback(null);
     if (lighter) {
-      // Lighter version: one tap answers "Who can block the Bat?"
       const v = checkAssign(board, id, "nightBat");
       if (v.ok) {
         setBlocks({ [id]: "nightBat" });
@@ -88,7 +78,6 @@ export function StepFlying(props: StepProps) {
       return;
     }
     if (blocks[id]) {
-      // Tap an assigned blocker again: unassign it.
       setBlocks((cur) => Object.fromEntries(Object.entries(cur).filter(([b]) => b !== id)));
       setSelected(null);
       return;
@@ -106,7 +95,6 @@ export function StepFlying(props: StepProps) {
       if (toLighter) reset();
       return;
     }
-    // One blocker per attacker in this lesson (double blocks come in Lesson 2).
     setBlocks((cur) => ({ ...Object.fromEntries(Object.entries(cur).filter(([, a]) => a !== id)), [selected]: id }));
     setSelected(null);
   }
@@ -119,8 +107,6 @@ export function StepFlying(props: StepProps) {
     const v = judgeFlying(blocks);
     if (v.ok) {
       setFeedback({ tone: "good", text: v.message });
-      // The follow-up question only names cards you can see: clear the board
-      // down to the two it's about (a question figure).
       if (!(await step.sequence((beat) => beat(2600)))) return;
       reset();
       setFeedback(null);
@@ -147,7 +133,6 @@ export function StepFlying(props: StepProps) {
     }
   }
 
-  // The follow-up question gets its own figure: just the two cards it asks about.
   const figure = phase === "follow" || (phase === "done" && follow === "yes");
   const theirs = sides(board).theirs.filter((c) => !figure || c.id === "thornBoar");
   const yours = sides(board).yours.filter((c) => !figure || c.id === "skyFinch");
@@ -156,7 +141,6 @@ export function StepFlying(props: StepProps) {
   const pairs = Object.entries(blocks).map(([from, to]) => ({ from, to }));
   const nBlocks = pairs.length;
 
-  // The finished state (headline, Next button) comes from StepFrame.
   const headline = explaining
     ? FLYING.headline
     : lighter && canPick

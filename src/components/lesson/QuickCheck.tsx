@@ -16,14 +16,9 @@ import { useArrivalFocus } from "./useArrivalFocus";
 
 type Answer = { step: StepId; correct: boolean };
 
-/** Clock for the mistake log. Only called from event handlers. */
+// Only called from event handlers.
 const now = () => Date.now();
 
-/**
- * "Played a bit": three quick questions, one at a time. Each right answer skips
- * that step (it stays reviewable). Wrong answers are logged by myth for the
- * report card. Marker's selective testing: don't re-teach what's known.
- */
 export function QuickCheck() {
   const router = useRouter();
   const mode = useMotionMode();
@@ -41,8 +36,7 @@ export function QuickCheck() {
     router.prefetch(stepHref("attack"));
   }, [router]);
 
-  // Already past it (Back button, an old link): offer to carry on instead of retaking it.
-  // Not a redirect, so Back from Step 1 isn't trapped. `submitted` hides it after our own Start.
+  // Not a redirect, so Back from Step 1 isn't trapped.
   const [submitted, setSubmitted] = useState(false);
   const taken = ready && hasProgress(lesson) && !submitted;
 
@@ -177,12 +171,10 @@ function wrongLine(step: StepId) {
   return "Ground creatures can't block flyers.";
 }
 
-/** The picture for each question: the cards it's about. */
 function QuickPicture({ n }: { n: number }) {
   const wrap = "[--card-w:clamp(130px,34vw,170px)]";
   if (n === 0)
     return (
-      // Room above the card for the yellow "New this turn" tag (desktop).
       <div className={`${wrap} min-[901px]:pt-9`}>
         <Card card={CARDS.emberPup as CardDef} status="new" callout="New this turn" />
       </div>

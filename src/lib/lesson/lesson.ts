@@ -1,11 +1,4 @@
-/**
- * Lesson flow: which screen you're on, which steps are open, and every
- * mistake and hint (for the report card later).
- *
- * A plain reducer, not a library: the flow is a short line of screens, and a
- * pure function is easy to test and easy to explain. Time comes in through the
- * action (`at`) so the reducer stays pure.
- */
+// Time comes in through the action (`at`) so the reducer stays pure.
 import type { Myth } from "@/lib/rules/engine";
 
 export const STEPS = [
@@ -18,24 +11,15 @@ export const STEPS = [
 
 export type StepId = (typeof STEPS)[number]["id"];
 
-/** After this many misses on a step, offer the lighter version. */
 export const LIGHTER_AFTER = 2;
 
 export type StepProgress = {
   status: "locked" | "open" | "done" | "skipped";
   misses: number;
-  /** Highest hint level used (0 = none, max 3). */
   hints: number;
-  /** "active" = the lighter board is showing; "cleared" = learner passed it and is back on the full one. */
   lighter: "no" | "active" | "cleared";
   startedAt?: number;
   finishedAt?: number;
-  /**
-   * Replays after the step is done. The first try stays the record (like a
-   * test score); these show practice on top of it.
-   * `replayMisses`: misses in the replay in progress. `practiced`: how the latest
-   * finished replay went ("clean" = no misses).
-   */
   replayMisses?: number;
   practiced?: "clean" | "missed";
 };
@@ -57,7 +41,6 @@ export type LessonState = {
 export type LessonAction =
   | { type: "start"; experience: "new" | "some"; at: number }
   | { type: "open"; step: StepId; at: number }
-  /** `soft`: logged and graded, but doesn't switch on the lighter version (e.g. a quick either/or question). */
   | {
       type: "miss";
       step: StepId;
@@ -70,10 +53,6 @@ export type LessonAction =
   | { type: "lighter-cleared"; step: StepId }
   | { type: "complete"; step: StepId; at: number }
   | { type: "restart" }
-  /**
-   * The quick check ("Played a bit"): each step whose question was answered
-   * right is skipped (still reviewable). Wrong answers are logged with their myth.
-   */
   | {
       type: "quick-check";
       results: { step: StepId; correct: boolean; myth: Myth; note: string }[];
@@ -101,7 +80,6 @@ export function initialLesson(): LessonState {
 const STATUSES = ["locked", "open", "done", "skipped"];
 const LIGHTER = ["no", "active", "cleared"];
 
-/** Checks a saved lesson before trusting it: an old or hand-edited save must not crash a step. */
 export function isLessonState(x: unknown): x is LessonState {
   if (!x || typeof x !== "object") return false;
   const s = x as Partial<LessonState>;
@@ -132,18 +110,12 @@ function patchStep(
   return { ...s, steps: { ...s.steps, [id]: { ...s.steps[id], ...change } } };
 }
 
-/**
- * Done or skipped by the quick check. Opening it again is practice: misses and
- * finishing go to the practice record, never the first-try one.
- */
 export const isFinished = (p: StepProgress) => p.status === "done" || p.status === "skipped";
 
-/** Anything done, skipped or missed yet? The quick check only counts before this. */
 export function hasProgress(s: LessonState) {
   return s.mistakes.length > 0 || STEPS.some((x) => isFinished(s.steps[x.id]));
 }
 
-/** Would one more (non-soft) miss on this step switch on the lighter version? */
 export function nextMissGoesLighter(s: LessonState, id: StepId) {
   const p = s.steps[id];
   if (isFinished(p) || p.lighter !== "no") return false;
@@ -165,9 +137,8 @@ export function canOpen(s: LessonState, id: StepId) {
 export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
   switch (a.type) {
     case "start": {
-      // Once only: a second start (a stale button, another tab) must not reset Step 1.
+      // Once only: a second start (stale button, another tab) must not reset Step 1.
       if (s.experience !== null) return s;
-      // Both paths open Step 1. "Some" then takes the quick check, which may skip ahead.
       const next = patchStep({ ...s, experience: a.experience }, "attack", {
         status: "open",
         startedAt: a.at,
@@ -178,13 +149,11 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       if (!canOpen(s, a.step)) return s; // locked steps can't be opened
       const p = s.steps[a.step];
       let next = p.startedAt ? s : patchStep(s, a.step, { startedAt: a.at });
-      // Opening a finished step starts a fresh practice attempt.
       if (isFinished(p)) next = patchStep(next, a.step, { replayMisses: 0 });
       return next;
     }
     case "miss": {
       const p = s.steps[a.step];
-      // Replaying a finished step doesn't change the first-try record; it only counts toward this practice attempt.
       if (isFinished(p)) return patchStep(s, a.step, { replayMisses: (p.replayMisses ?? 0) + 1 });
       const misses = p.misses + 1;
       const hardMisses =
@@ -219,12 +188,11 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
         return patchStep(s, a.step, { practiced: clean ? "clean" : "missed", replayMisses: 0 });
       }
       const next = patchStep(s, a.step, { status: "done", finishedAt: a.at });
-      // Unlock the next step that still needs doing (skipped ones are passed over).
       const after = nextToDo(next, a.step);
       return after && next.steps[after].status === "locked" ? patchStep(next, after, { status: "open" }) : next;
     }
     case "quick-check": {
-      // Only before any real progress: retaking it (Back button) must not undo finished steps or log misses twice.
+      // Only before real progress: retaking must not undo finished steps or log misses twice.
       if (hasProgress(s)) return s;
       let next: LessonState = { ...s, experience: "some" };
       for (const r of a.results) {
@@ -244,7 +212,6 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
   }
 }
 
-/** How a finished step went, for the progress bar now and the report card later. */
 export function resultOf(
   p: StepProgress,
 ): "first-try" | "hint" | "lighter" | "retry" | "skipped" | null {
@@ -255,10 +222,6 @@ export function resultOf(
   if (p.misses > 0) return "retry";
   return "first-try";
 }
-
-// ---------------------------------------------------------------------------
-// URLs: one readable address per step, so Back, refresh and sharing work.
-// ---------------------------------------------------------------------------
 
 export const SLUGS: Record<StepId, string> = {
   attack: "attacking",
@@ -273,13 +236,11 @@ export const stepFromSlug = (slug: string): StepId | null =>
 
 export const stepHref = (id: StepId) => `/learn/${SLUGS[id]}`;
 
-/** The next step after `id` that still needs doing (not done, not skipped), if any. */
 export function nextToDo(s: LessonState, id: StepId): StepId | null {
   const i = STEPS.findIndex((x) => x.id === id);
   return STEPS.slice(i + 1).find((x) => s.steps[x.id].status !== "skipped" && s.steps[x.id].status !== "done")?.id ?? null;
 }
 
-/** Where "Continue" should go: the first open step that isn't done, else the last done one. */
 export function resumeStep(s: LessonState): StepId {
   const open = STEPS.find((x) => s.steps[x.id].status === "open");
   if (open) return open.id;
@@ -287,7 +248,6 @@ export function resumeStep(s: LessonState): StepId {
   return done?.id ?? "attack";
 }
 
-/** Moving to `to` from `from`: forward or back, for the slide direction. */
 export function direction(from: StepId | "welcome", to: StepId | "welcome"): "nav-forward" | "nav-back" {
   const i = (v: StepId | "welcome") => (v === "welcome" ? -1 : STEPS.findIndex((x) => x.id === v));
   return i(to) >= i(from) ? "nav-forward" : "nav-back";

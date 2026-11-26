@@ -4,11 +4,6 @@ import { useState } from "react";
 
 type Pin = { readonly id: string; readonly letter: string; readonly text: string };
 
-/**
- * Linked highlighting between lettered pins on the board and their Key lines
- * (see DESIGN.md). Give it the step's pins and which ones are showing; it hands
- * back props for each Card and for the PinKey.
- */
 export function usePinLinks(pins: readonly Pin[], isVisible: (id: string) => boolean, smoothScroll: boolean) {
   const [active, setActive] = useState<string | null>(null);
   const letterFor = (id: string) => (isVisible(id) ? pins.find((p) => p.id === id)?.letter : undefined);

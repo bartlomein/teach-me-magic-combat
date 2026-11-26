@@ -11,11 +11,6 @@ import { Lesson2Demo } from "./Lesson2Demo";
 import { useArrivalFocus } from "./useArrivalFocus";
 
 
-/**
- * The report card, modeled on Marker's own report: a result per step, mistakes
- * grouped by myth with the rule that fixes each one, strengths and needs, how
- * you got there. Then a look at what comes next.
- */
 export function Report() {
   const router = useRouter();
   const { lesson, ready } = useLesson();
@@ -87,7 +82,6 @@ export function Report() {
         </ViewTransition>
 
         <div className="grid grid-cols-[minmax(0,1fr)] border-t-[3px] border-ink lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-          {/* Results by step */}
           <figure className="flex flex-col gap-3 p-5 sm:p-6 lg:border-r-[3px] lg:border-ink">
             <h2 className="text-xl font-bold tracking-[-0.01em]">Results by step</h2>
             <div className="overflow-x-auto">
@@ -117,7 +111,6 @@ export function Report() {
             </div>
           </figure>
 
-          {/* Mistakes by myth */}
           <section aria-labelledby="myths-title" className="flex flex-col gap-3 border-t-[3px] border-ink p-5 sm:p-6 lg:border-t-0">
             <h2 id="myths-title" className="text-xl font-bold tracking-[-0.01em]">
               Mistakes by type
@@ -133,7 +126,6 @@ export function Report() {
               </p>
             ) : (
               <>
-                {/* Still open: the step is still on the To practice list. Shown in full: this is what's left to learn. */}
                 {open.length > 0 && (
                   <ul className="flex flex-col">
                     {open.map((g) => (
@@ -149,7 +141,6 @@ export function Report() {
                     ))}
                   </ul>
                 )}
-                {/* Fixed since: one line, details on request. */}
                 {fixed.length > 0 && (
                   <details className="group">
                     <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2.5 bg-ok-tint px-3.5 font-bold [&::-webkit-details-marker]:hidden">
@@ -177,7 +168,6 @@ export function Report() {
           </section>
         </div>
 
-        {/* Strengths and needs */}
         <div className="grid grid-cols-[minmax(0,1fr)] border-t-[3px] border-ink md:grid-cols-2">
           <Column title="Strengths">
             {r.strengths.length ? <List items={r.strengths} mark={<CheckIcon className="size-3.5" />} tone="bg-ok text-panel" /> : <Empty>Keep going. These build up.</Empty>}
@@ -201,7 +191,6 @@ const FIRST_TRY = {
   skipped: { icon: <CheckIcon className="size-3.5" />, tone: "bg-ink text-panel", word: "Skipped, you knew it" },
 } as const;
 
-/** The grey history line under a practiced step: what happened before practice. */
 const AT_FIRST: Record<ReportRow["result"], string> = {
   "first-try": "Right at first",
   hint: "Needed a hint at first",
@@ -210,10 +199,6 @@ const AT_FIRST: Record<ReportRow["result"], string> = {
   skipped: "Skipped at first",
 };
 
-/**
- * The mark shows where you are now; the first try stays underneath as history.
- * Practiced clean: a green check and "Got it". Practiced with a miss: "Still practicing".
- */
 function ResultMark({ row }: { row: ReportRow }) {
   const first = FIRST_TRY[row.result];
   const now =
@@ -269,7 +254,6 @@ function Empty({ children }: { children: ReactNode }) {
   return <p className="text-base text-ink-soft">{children}</p>;
 }
 
-/** What comes next: Lesson 2 with a short demo, Lesson 3 named. Both locked. */
 function NextLessons() {
   return (
     <section aria-labelledby="next-title" className="border-[3px] border-ink bg-panel">

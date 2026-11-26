@@ -1,6 +1,5 @@
 export type Keyword = "flying" | "reach";
 
-/** Reminder text as printed on current cards (checked on Scryfall, Nov 2026). */
 export const KEYWORDS: Record<Keyword, { label: string; reminder: string }> = {
   flying: { label: "Flying", reminder: "This creature can't be blocked except by creatures with flying or reach." },
   reach: { label: "Reach", reminder: "This creature can block creatures with flying." },
@@ -9,16 +8,11 @@ export const KEYWORDS: Record<Keyword, { label: string; reminder: string }> = {
 export type CardDef = {
   id: string;
   name: string;
-  /** e.g. "Creature — Hawk" */
   type: string;
   power: number;
   toughness: number;
   keywords: Keyword[];
   side: "you" | "opp";
-  /**
-   * Art: painted layers when available (background + transparent creature that
-   * breaks out of the frame); otherwise a glyph placeholder.
-   */
   art: { glyph: string; from: string; to: string; layers?: { bg: string; fg: string } };
 };
 
@@ -112,11 +106,9 @@ export const CARDS = {
 
 export type CardId = keyof typeof CARDS;
 
-/** Screen-reader description, e.g. "power 3, toughness 2, flying". */
 export function describeStats(card: CardDef) {
   const kw = card.keywords.length ? `, ${card.keywords.join(", ")}` : "";
   return `power ${card.power}, toughness ${card.toughness}${kw}`;
 }
 
-/** A card's name from its id (falls back to the id). */
 export const cardName = (id: string) => (CARDS as Record<string, { name: string }>)[id]?.name ?? id;

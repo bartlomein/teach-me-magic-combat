@@ -8,7 +8,6 @@ import { Card } from "../Card";
 import { ShieldIcon } from "../icons";
 import { Secondary } from "./Coach";
 
-/** Reading time per beat. Not scaled by motion mode: it's for reading. */
 const BEAT_MS = 2600;
 
 const BEATS = [
@@ -22,11 +21,6 @@ const PUP = CARDS.emberPup as CardDef;
 const BOAR = CARDS.thornBoar as CardDef;
 const BIG_PUP: CardDef = { ...PUP, power: PUP.power + 3, toughness: PUP.toughness + 3 };
 
-/**
- * A ten-second look at Lesson 2: a spell flips a fight after blocks. Plays only
- * when asked (a button, never on its own), one beat at a time, with the text
- * of each beat on screen and in a live region.
- */
 export function Lesson2Demo() {
   const mode = useMotionMode();
   const [beat, setBeat] = useState(-1); // -1 = not started

@@ -1,14 +1,4 @@
-/**
- * Combat rules engine.
- *
- * Pure functions only: every function takes a GameState and returns a new one
- * (or a verdict). No React, no DOM, no randomness. That makes the rules easy
- * to test on their own and lets the UI stay a thin layer that animates results.
- *
- * Scope is deliberately small: exactly what Lesson 1 teaches (attacking,
- * blocking, simultaneous damage, flying/reach, damage wearing off, untapping).
- * Rule numbers refer to the Comprehensive Rules effective Nov 6, 2026.
- */
+// Rule numbers: Comprehensive Rules effective Nov 6, 2026.
 import type { CardDef, Keyword } from "@/lib/cards";
 
 export type PlayerId = "you" | "opp";
@@ -21,9 +11,9 @@ export type Creature = {
   keywords: Keyword[];
   controller: PlayerId;
   tapped: boolean;
-  /** Came under its controller's control this turn ("summoning sick"). 302.6 */
+  /** Summoning sick. 302.6 */
   enteredThisTurn: boolean;
-  /** Damage marked this turn. Toughness itself never changes. 120.6 */
+  /** Toughness never changes. 120.6 */
   damage: number;
 };
 
@@ -35,10 +25,9 @@ export type GameState = {
   graveyard: string[];
 };
 
-/** blockerId -> attackerId. One attacker can have several blockers. 509.1a */
+/** blockerId -> attackerId. 509.1a */
 export type Blocks = Record<string, string>;
 
-/** Beginner myths. Rules mistakes are tagged so the report can group them (names in lesson/report.ts). */
 export type Myth = "M1" | "M2" | "M3" | "M4" | "M5" | "M6" | "M7" | "M8" | "M9";
 
 export type Verdict =
@@ -47,7 +36,6 @@ export type Verdict =
       ok: false;
       reason: "not-yours" | "tapped" | "new-this-turn" | "needs-flying-or-reach" | "not-attacking" | "not-defender";
       myth?: Myth;
-      /** Short, plain feedback for the learner (20 words or fewer). */
       message: string;
     };
 
@@ -59,10 +47,6 @@ export type CombatEvent =
 
 export const other = (p: PlayerId): PlayerId => (p === "you" ? "opp" : "you");
 export const has = (c: Creature, k: Keyword) => c.keywords.includes(k);
-
-// ---------------------------------------------------------------------------
-// Setup
-// ---------------------------------------------------------------------------
 
 export function creatureFrom(
   def: CardDef,
@@ -105,11 +89,7 @@ function get(state: GameState, id: string): Creature {
   return c;
 }
 
-// ---------------------------------------------------------------------------
-// Who can attack / block
-// ---------------------------------------------------------------------------
-
-/** 508.1a: an attacker must be untapped and controlled since the turn began (unless haste, not in this lesson). */
+/** 508.1a: untapped and controlled since the turn began. */
 export function canAttack(state: GameState, id: string): Verdict {
   const c = get(state, id);
   if (c.controller !== state.active)
@@ -125,11 +105,7 @@ export function canAttack(state: GameState, id: string): Verdict {
   return { ok: true };
 }
 
-/**
- * 509.1a: the defending player chooses blockers from their untapped creatures.
- * Being new this turn does NOT stop blocking (302.6 only limits attacking).
- * 702.9b: a creature with flying can only be blocked by creatures with flying or reach.
- */
+/** 509.1a: untapped creatures block (302.6 limits attacking only). 702.9b: flyers need flying/reach. */
 export function canBlock(state: GameState, blockerId: string, attackerId: string): Verdict {
   const b = get(state, blockerId);
   const a = get(state, attackerId);
@@ -152,11 +128,7 @@ export function canBlock(state: GameState, blockerId: string, attackerId: string
   return { ok: true };
 }
 
-// ---------------------------------------------------------------------------
-// Steps of combat (506.1)
-// ---------------------------------------------------------------------------
-
-/** 508.1f: declaring attackers taps them (no vigilance in this lesson). Throws on an illegal attack. */
+/** 508.1f: declaring attackers taps them. Throws on an illegal attack. */
 export function declareAttackers(state: GameState, ids: string[]): GameState {
   let next = state;
   for (const id of ids) {
@@ -167,7 +139,6 @@ export function declareAttackers(state: GameState, ids: string[]): GameState {
   return next;
 }
 
-/** Checks a whole set of blocks. Returns the first problem, or ok. */
 export function validateBlocks(state: GameState, attackers: string[], blocks: Blocks): Verdict {
   for (const [blockerId, attackerId] of Object.entries(blocks)) {
     if (!attackers.includes(attackerId))
@@ -178,17 +149,7 @@ export function validateBlocks(state: GameState, attackers: string[], blocks: Bl
   return { ok: true };
 }
 
-/**
- * Combat damage step (510). All combat damage is dealt at the same time (510.2).
- * - Unblocked attackers hit the defending player for their power (510.1a).
- * - A blocked attacker deals its damage to its blockers, never to the player (510.1c).
- *   With several blockers, the attacking player divides it freely. Damage
- *   assignment order no longer exists. Pass `split` to choose; by default we
- *   kill blockers in the order given, then put the rest on the last one.
- * - Each blocker deals its power to the attacker it blocks.
- * Then state-based actions: creatures with damage >= toughness die (704.5g),
- * players at 0 or less life lose (704.5a).
- */
+/** 510: simultaneous (510.2); unblocked hit the player (510.1a), blocked hit blockers (510.1c). SBA: 704.5g, 704.5a. */
 export function resolveCombat(
   state: GameState,
   attackers: string[],
@@ -215,7 +176,6 @@ export function resolveCombat(
       continue;
     }
 
-    // Attacker -> blockers
     const plan = split[attackerId] ?? defaultSplit(state, a.power, blockers);
     const total = Object.values(plan).reduce((s, n) => s + n, 0);
     if (total !== a.power) throw new Error(`${a.name} must assign exactly ${a.power} damage`);
@@ -226,7 +186,6 @@ export function resolveCombat(
       }
     }
 
-    // Blockers -> attacker
     for (const b of blockers) {
       const blocker = get(state, b);
       if (blocker.power > 0) {
@@ -236,7 +195,7 @@ export function resolveCombat(
     }
   }
 
-  // Apply everything at once (510.2).
+  // All at once (510.2).
   let next: GameState = { ...state, life: { ...state.life, [defender]: state.life[defender] - toPlayer } };
   for (const [id, amount] of Object.entries(dmg)) next = patch(next, id, { damage: get(next, id).damage + amount });
 
@@ -273,17 +232,7 @@ export function stateBasedActions(state: GameState): { state: GameState; events:
   return { state: { ...state, creatures, graveyard }, events };
 }
 
-// ---------------------------------------------------------------------------
-// Turn structure
-// ---------------------------------------------------------------------------
-
-/**
- * End the current turn and start the next player's:
- * 1. Cleanup (514.2): all damage is removed.
- * 2. The other player becomes active and untaps only THEIR permanents (502.3).
- *    So creatures that attacked last turn stay tapped through the opponent's turn.
- * 3. The new active player's creatures are no longer "new this turn".
- */
+/** Cleanup removes damage (514.2); the new active player untaps only theirs (502.3). */
 export function endTurn(state: GameState): GameState {
   const nextActive = other(state.active);
   const creatures = Object.fromEntries(
@@ -299,10 +248,6 @@ export function endTurn(state: GameState): GameState {
   );
   return { ...state, turn: state.turn + 1, active: nextActive, creatures };
 }
-
-// ---------------------------------------------------------------------------
-// Text twin: one plain sentence per combat, for the screen-reader live region
-// ---------------------------------------------------------------------------
 
 export function describe(before: GameState, events: CombatEvent[]): string {
   const name = (id: string) => before.creatures[id]?.name ?? id;

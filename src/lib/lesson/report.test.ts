@@ -4,7 +4,6 @@ import { buildReport } from "./report";
 
 const run = (actions: LessonAction[], s: LessonState = initialLesson()) => actions.reduce(lessonReducer, s);
 
-/** Play every step to done at 30 s each, with optional extra actions mixed in per step. */
 function playAll(extra: Partial<Record<string, LessonAction[]>> = {}) {
   let s = run([{ type: "start", experience: "new", at: 0 }]);
   const ids = ["attack", "block", "flying", "heal", "final"] as const;
@@ -57,7 +56,6 @@ describe("report card", () => {
     const r = buildReport(s);
     expect(r.complete).toBe(true);
     expect(r.rows.map((x) => x.result)).toEqual(["skipped", "first-try", "skipped", "first-try", "first-try"]);
-    // Missed in the quick check, then right in the lesson: learned, so fixed.
     expect(r.myths).toEqual([expect.objectContaining({ myth: "M2", count: 1, fixed: true })]);
     expect(r.needs).toEqual([]);
   });

@@ -6,11 +6,6 @@ import { direction, stepFromSlug, stepHref, STEPS } from "@/lib/lesson/lesson";
 import { useLesson } from "@/lib/lesson/store";
 import { CheckIcon, LockIcon } from "../icons";
 
-/**
- * The five steps as printed tabs, each a real link. Finished steps can be
- * reviewed; later ones stay locked. On a phone only the current step keeps its
- * name; the rest show numbers. Rendered by StepScreen above each step.
- */
 export function StepNav() {
   const { lesson } = useLesson();
   const slug = usePathname().split("/")[2] ?? "";
@@ -52,7 +47,6 @@ export function StepNav() {
           return (
             <li key={s.id} className={`flex ${current ? "min-w-0 flex-1" : "max-md:w-11 max-md:shrink-0"}`}>
               {locked ? (
-                // A locked step is not a link: nothing to follow yet.
                 <span role="link" aria-disabled="true" className={className}>
                   {inner}
                 </span>

@@ -6,24 +6,20 @@ import { PageTransition } from "@/components/PageTransition";
 import { MotionProvider } from "@/lib/motion-pref";
 import "./globals.css";
 
-// Lexend: the UI face. Designed to reduce visual stress and improve reading
-// fluency (wider letter shapes and spacing), which suits learners with dyslexia.
 const ui = Lexend({
   variable: "--font-ui",
   subsets: ["latin"],
 });
 
-// Atkinson Hyperlegible: card text and power/toughness numbers (cards keep their design).
 const cardText = Atkinson_Hyperlegible_Next({
   variable: "--font-card",
   subsets: ["latin"],
-  // Next has no fallback metrics for this newer font yet; skip instead of warning on every build.
+  // No fallback metrics for this font yet; skip to avoid a warning on every build.
   adjustFontFallback: false,
-  // Only cards use it: don't hold up the first paint for it.
+  // Only cards use it: don't block first paint.
   preload: false,
 });
 
-// Fraunces: card names only (part of the card design).
 const display = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
@@ -45,7 +41,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <MotionProvider>
           <div className="mx-auto flex w-full max-w-[74rem] flex-1 flex-col gap-6 px-3.5 pt-5 pb-10 sm:px-7">
-            {/* Named so it stays still while pages slide underneath. */}
             <header
               style={{ viewTransitionName: "site-header" }}
               className="flex items-center justify-between gap-3 border-b-4 border-ink pb-2.5"
@@ -58,7 +53,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <main className="flex flex-col">
               <PageTransition>{children}</PageTransition>
             </main>
-            {/* Named so it glides to its new spot when the page height changes, instead of fading over content. */}
             <footer
               style={{ viewTransitionName: "site-footer" }}
               className="mt-auto border-t border-rule pt-4 text-xs leading-relaxed text-ink-soft"

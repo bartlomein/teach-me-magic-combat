@@ -9,14 +9,8 @@ import { Card } from "../Card";
 import { DamageFloat, ImpactBurst, Shatter, type Burst, type Float } from "../effects";
 import { ArrowUpIcon, HeartIcon } from "../icons";
 
-/**
- * Shared board pieces for every lesson step. The board only shows and animates;
- * rules decisions come from the engine before any of this runs.
- */
-
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Animations on the board: lunges, impact sparks, floating damage numbers. */
 export function useBoardFx() {
   const mode = useMotionMode();
   const [scope, animate] = useAnimate<HTMLDivElement>();
@@ -39,7 +33,6 @@ export function useBoardFx() {
     };
   }
 
-  /** Attackers rush the player's life total together, deal damage, and go home. */
   async function hitPlayer(
     attackers: { id: string; amount: number }[],
     player: PlayerId,
@@ -108,12 +101,6 @@ export function useBoardFx() {
     }
   }
 
-  /**
-   * Blocked attackers clash with their blockers, all at once (damage is
-   * simultaneous). Each attacker rushes its blocker, sparks fly at the meeting
-   * point, both damage numbers float up, and everyone goes home. `onImpact`
-   * fires at the moment of contact so the step can mark damage right then.
-   */
   async function clash(
     fights: { attacker: string; blocker: string; toBlocker: number; toAttacker: number }[],
     onImpact: () => void,
@@ -136,7 +123,6 @@ export function useBoardFx() {
         ]);
     };
     if (full) {
-      // Measure where each attacker should stop before anything moves.
       const moves = pairs.map(({ a, b }) => {
         const ra = a.getBoundingClientRect();
         const rb = b.getBoundingClientRect();
@@ -159,7 +145,6 @@ export function useBoardFx() {
     }
   }
 
-  /** "Not that one": a small headshake on a card (a gentle pulse in calm mode). */
   function nope(id: string) {
     const el = cardEl(id);
     if (!el || mode === "off") return;
@@ -197,10 +182,6 @@ export function useBoardFx() {
   };
 }
 
-/**
- * The battlefield, drawn like a diagram in a rules sheet: plain paper, opponent
- * on top, you below, an optional printed mark between (an arrow), and a caption for screen readers.
- */
 export function Board({
   scope,
   opp,
@@ -221,20 +202,16 @@ export function Board({
   return (
     <figure ref={scope} className={`paper relative m-0 flex flex-col gap-2 overflow-visible px-3 pt-6 sm:px-6 ${className}`}>
       {opp}
-      {/* The middle of the table: a printed dashed line, with the turn tag or attack arrow
-          sitting on it, centered in line with both players. */}
       <div aria-hidden className="table-midline relative flex min-h-12 items-center justify-center">
         {between && <span className="relative bg-panel px-3">{between}</span>}
       </div>
       {you}
-      {/* Screen readers only: the task panel already says this on screen. */}
       {caption && <figcaption className="sr-only">{caption}</figcaption>}
       {layer}
     </figure>
   );
 }
 
-/** The printed red arrow: who attacks whom. */
 export function AttackArrow({ label }: { label: string }) {
   return (
     <span className="inline-flex items-center gap-2 text-sm font-bold text-miss">
@@ -244,7 +221,6 @@ export function AttackArrow({ label }: { label: string }) {
   );
 }
 
-/** Card spots per side of the table (the most any step uses). */
 const TABLE_SPOTS = 3;
 
 export function Row({
@@ -257,11 +233,8 @@ export function Row({
   children: ReactNode;
 }) {
   const label = side === "you" ? "You" : "Opponent";
-  // Like a real table: each player sits at their own edge, the opponent above
-  // their cards and you below yours. Both plates are centered on the cards.
   const plate = (
     <div className="flex items-center justify-center gap-2.5">
-      {/* Avatar: tells the sides apart at a glance, no reading needed. Decorative: the name says it. */}
       <Image
         src={side === "you" ? "/art/avatar-you.png" : "/art/avatar-opp.png"}
         alt=""
@@ -275,17 +248,13 @@ export function Row({
       </div>
     </div>
   );
-  // Every side shows the same three card spots, so an empty side reads as "no
-  // creatures here" instead of a blank gap.
   const spots = Math.max(0, TABLE_SPOTS - Children.toArray(children).length);
   return (
-    // Each half of the table: a faint tint and a faded edge painting (see .table-side).
     <div
       data-side={side}
       className={`table-side -mx-3 flex flex-col gap-5 px-3 sm:-mx-6 sm:px-6 ${side === "opp" ? "-mt-6 pt-6 pb-3" : "pt-3 pb-6"}`}
     >
       {side === "opp" && plate}
-      {/* One row per side, like a real table: cards shrink to fit instead of wrapping. */}
       <div className="board-row flex min-h-[8rem] items-center justify-center gap-2.5 sm:gap-5">
         {children}
         {Array.from({ length: spots }, (_, i) => (
@@ -307,7 +276,6 @@ function Life({ side, life }: { side: PlayerId; life: number }) {
       <span className="tabular-nums">{life}</span>
     </motion.span>
   );
-  // Named so the life boxes on the basics screen fly into these spots.
   return (
     <ViewTransition name={`life-${side}`} share="morph" default="none">
       <span data-life={side} className="inline-flex min-w-[4.25rem] justify-center border-2 border-ink bg-panel px-2 py-0.5 text-[15px] font-bold" role="img" aria-label={`${who} life: ${life}`}>
@@ -317,11 +285,6 @@ function Life({ side, life }: { side: PlayerId; life: number }) {
   );
 }
 
-/**
- * One card's place on the table. Alive: the card. Dying: it cracks apart (or
- * fades, in calm mode). Gone: an empty grave slot that keeps the row from
- * jumping.
- */
 export function CardSlot({
   fate = "alive",
   ...card
@@ -346,11 +309,6 @@ function GraveSlot({ name }: { name: string }) {
   );
 }
 
-/**
- * Printed leader lines from each blocker to the attacker it blocks, measured
- * from the live layout (and re-measured on resize). Decorative: each blocker's
- * card label already says what it blocks.
- */
 export function BlockLines({
   scope,
   pairs,

@@ -1,7 +1,3 @@
-/**
- * Our own drawn icons (no emoji: they render differently on every OS, and no
- * official game symbols). All decorative: the word next to them carries meaning.
- */
 type P = { className?: string };
 const base = {
   viewBox: "0 0 24 24",
@@ -53,7 +49,6 @@ export const CheckIcon = ({ className }: P) => (
   </svg>
 );
 
-/** Tapped: a card turning sideways. */
 export const TapIcon = ({ className }: P) => (
   <svg {...base} className={className}>
     <path d="M7 4h6a1.5 1.5 0 0 1 1.5 1.5V9" />
@@ -105,7 +100,6 @@ export const InfoIcon = ({ className }: P) => (
   </svg>
 );
 
-/** Printed diagram arrow: straight shaft, open head. Points up. */
 export const ArrowUpIcon = ({ className }: P) => (
   <svg viewBox="0 0 24 46" fill="none" stroke="currentColor" strokeWidth={3} className={className} aria-hidden>
     <path d="M12 44V5M3 14 12 3l9 11" />

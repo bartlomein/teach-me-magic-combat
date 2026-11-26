@@ -123,7 +123,6 @@ group("lesson flow", () => {
     s = r(s, { type: "miss", step: "attack", note: "x", at: 7 });
     s = r(s, { type: "complete", step: "attack", at: 8 });
     expect(s.steps.attack.practiced).toBe("missed");
-    // Next attempt starts fresh: a clean replay upgrades it.
     s = r(s, { type: "complete", step: "attack", at: 9 });
     expect(s.steps.attack.practiced).toBe("clean");
     expect(s.steps.attack.finishedAt).toBe(5); // the first-try record is untouched

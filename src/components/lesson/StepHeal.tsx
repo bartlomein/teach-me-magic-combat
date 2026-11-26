@@ -13,12 +13,6 @@ import { useStep, type Fate, type StepProps } from "./useStep";
 
 type Phase = "q1" | "healing" | "q2" | "playing" | "done";
 
-/**
- * Step 4: Damage wears off. Predict first, then watch: does Golem keep its 3
- * damage into next turn? (myth M7). The turn ends, the damage fades, and Golem
- * blocks another 3/3 and survives. The lighter version plays the heal first,
- * then asks again.
- */
 export function StepHeal(props: StepProps) {
   const { onNext, nextTitle, headingRef } = props;
   const step = useStep<Phase>("heal", props, "q1", ["q2", "done"]);
@@ -31,12 +25,9 @@ export function StepHeal(props: StepProps) {
   const [boarFate, setBoarFate] = useState<Fate>("alive");
   const [turnEnded, setTurnEnded] = useState(false);
 
-  // The pin is about the first turn's damage. It goes away with that damage and
-  // stays away for the second fight, so the finished state has no Key (like every step).
   const pinShown = (id: string) => id === "mossGolem" && golemDamage > 0 && phase !== "playing" && phase !== "done";
   const { cardProps, keyProps } = usePinLinks(HEAL.pins, pinShown, fx.mode === "full");
 
-  /** The turn ends: a clock mark, then the damage fades away (514.2). */
   async function heal() {
     setPhase("healing");
     setTurnEnded(true);
@@ -58,7 +49,6 @@ export function StepHeal(props: StepProps) {
     const toLighter = step.miss("Thought damage stays", HEAL.q1.myth);
     setFeedback({ tone: "bad", text: HEAL.q1.wrong });
     if (toLighter) {
-      // Lighter version: show the heal, then ask the first question again.
       await heal();
       setGolemDamage(3);
       setTurnEnded(false);
@@ -71,11 +61,9 @@ export function StepHeal(props: StepProps) {
   async function answerQ2(v: "yes" | "no") {
     setQ2(v);
     if (v === "no") {
-      // Thinking it dies means thinking last turn's damage is still there.
       step.miss("Thought healed Golem dies to a 3/3", HEAL.q1.myth, true);
       setFeedback({ tone: "bad", text: HEAL.q2.wrong });
     } else setFeedback({ tone: "good", text: "Let's see it." });
-    // Either way, play it out so the learner sees it.
     setPhase("playing");
     const s = declareAttackers(endTurn(endTurn(board)), ["thornBoar"]);
     const r = resolveCombat(s, ["thornBoar"], { mossGolem: "thornBoar" });
@@ -92,7 +80,6 @@ export function StepHeal(props: StepProps) {
     setPhase("done");
   }
 
-  // The finished state (headline, Next button) comes from StepFrame.
   const headline = phase === "q1" ? HEAL.q1.question : phase === "q2" || phase === "playing" ? HEAL.q2.question : HEAL.headline;
 
   return (

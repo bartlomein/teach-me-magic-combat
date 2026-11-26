@@ -12,15 +12,9 @@ import { HeartIcon } from "../icons";
 import { Primary } from "./Coach";
 import { useArrivalFocus } from "./useArrivalFocus";
 
-/** Seconds: when panel 1 appears, and the gap before each next one. */
 const PANEL_START = 0.6;
 const PANEL_GAP = 1.1;
 
-/**
- * "What's the game?" A 20-second primer for people who have never played,
- * before Step 1. Three printed panels, one idea each, pictures first:
- * life, creatures (and what 2/1 means), and how you win.
- */
 export function Basics() {
   const router = useRouter();
   const { lesson, ready } = useLesson();
@@ -32,16 +26,12 @@ export function Basics() {
   }, [router]);
 
   function start() {
-    // Arriving here by a link (not the welcome buttons) still starts the lesson.
+    // Arriving by a link (not the welcome buttons) still starts the lesson.
     if (ready && lesson.experience === null) dispatch({ type: "start", experience: "new", at: Date.now() });
-    // "assemble": the primer's pieces fly into place and the board deals in
-    // around them (see globals.css and the deal-in in StepAttack).
     markArrival("assemble");
     router.push(stepHref("attack"), { transitionTypes: ["assemble"] });
   }
 
-  // A guided sequence, slow enough to read along: each panel gets its own moment
-  // (about a second apart), starting once the page has finished sliding in.
   const reveal = (i: number) =>
     mode === "off"
       ? {}
@@ -73,7 +63,6 @@ export function Basics() {
       <ol className="m-0 grid list-none gap-[2px] border-y-[3px] border-ink bg-ink p-0 [grid-area:panels] sm:grid-cols-3 lg:border-y-0">
         <Panel n={1} caption="You each start with 20 life." motionProps={reveal(0)}>
           <div className="flex flex-col items-center gap-2.5">
-            {/* These two fly onto the board's life totals when Step 1 opens. */}
             <LifeChip who="Opponent" life={20} transitionName="life-opp" />
             <span aria-hidden className="text-sm font-bold text-ink-soft">
               vs
@@ -85,10 +74,8 @@ export function Basics() {
         <Panel n={2} caption="Creatures fight for you." motionProps={reveal(1)}>
           <div className="flex flex-col items-center gap-3">
             <div className="[--card-w:clamp(120px,30vw,150px)]">
-              {/* Flies into its spot on the Step 1 board. */}
               <Card card={CARDS.emberPup} transitionName="card-emberPup" />
             </div>
-            {/* The one card fact the lesson needs: the two numbers. */}
             <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-1.5 text-[15px]">
               <Legend n="2" text="hits for 2" delay={PANEL_START + PANEL_GAP + 0.6} mode={mode} />
               <Legend n="1" text="dies after 1 damage" delay={PANEL_START + PANEL_GAP + 1.0} mode={mode} />
@@ -123,11 +110,9 @@ function Panel({
   motionProps: object;
 }) {
   return (
-    // The paper is always there; only what's printed on it arrives. (Fading the
-    // whole panel would show the ink behind the divider lines as a dark block.)
+    // Fading the whole panel would show the divider ink as a dark block.
     <li className="paper flex">
       <motion.div {...motionProps} className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
-        {/* The line first (scan 1, 2, 3), then the picture that shows it. */}
         <p className="flex items-start gap-2.5 text-[17px] leading-snug font-bold">
           <span aria-hidden className="grid size-[26px] shrink-0 place-items-center rounded-full border-2 border-ink text-xs">
             {n}
@@ -140,7 +125,6 @@ function Panel({
   );
 }
 
-/** One line of the 2/1 legend; follows its panel in, one after the other. */
 function Legend({ n, text, delay, mode }: { n: string; text: string; delay: number; mode: "full" | "calm" | "off" }) {
   const anim =
     mode === "off"
@@ -177,7 +161,6 @@ function LifeChip({ who, life, transitionName }: { who: string; life: number | s
   );
 }
 
-/** Their life ticks down from 20 to 0, then "You win". Decorative; the caption says it in words. */
 function WinCountdown({ mode }: { mode: "full" | "calm" | "off" }) {
   const life = useMotionValue(mode === "full" ? 20 : 0);
   const shown = useTransform(life, (v) => Math.round(v));
@@ -185,7 +168,6 @@ function WinCountdown({ mode }: { mode: "full" | "calm" | "off" }) {
 
   useEffect(() => {
     if (mode !== "full") return;
-    // Starts once panel 3 has settled; slow enough to watch every hit land.
     const controls = animate(life, 0, {
       delay: PANEL_START + 2 * PANEL_GAP + 0.9,
       duration: 2.6,

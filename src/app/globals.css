@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-/* ---------- Theme: the printed rules sheet ----------
-   A cool white sheet, ink rules, two spot inks (blue for the task and
-   selection, red only for mistakes and attack arrows), and a highlighter
-   yellow for callouts and hints. Flat: no gradients, glow, blur or glass. */
 :root {
   --sheet: #eef1f6; /* page */
   --panel: #ffffff; /* framed panels */
@@ -18,7 +14,6 @@
   --ok-tint: #e6f2ea;
   --ok: #1f6b43;
 
-  /* Card-face inks. Cards keep their original design; only cards use these. */
   --night: #0d1530;
   --lav: #c9c3f0;
   --mist: #f1f3fb;
@@ -65,7 +60,6 @@ body {
 a {
   text-underline-offset: 0.2em;
 }
-/* Tailwind v4 resets buttons to the default arrow; anything clickable gets the hand. */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 label:has(> input:not(:disabled)),
@@ -77,28 +71,20 @@ button:disabled,
   cursor: not-allowed;
 }
 
-/* Two-tone focus: a white gap then a blue ring, visible on white, blue and ink. */
 :focus-visible {
   outline: 3px solid var(--spot);
   outline-offset: 2px;
   box-shadow: 0 0 0 2px var(--panel);
 }
-/* On the blue band: a highlighter-yellow ring, visible against blue and white buttons. */
 .on-spot :focus-visible {
   outline-color: var(--hi);
   box-shadow: 0 0 0 2px var(--spot);
 }
 
-/* Prototype page only (old style test). */
 .aurora {
   display: none;
 }
 
-/* ==========================================================================
-   Card
-   Everything inside is sized in cqw (1% of the card's width), so one design
-   scales from a 112px board card to a 280px inspect card.
-   ========================================================================== */
 .card-wrap {
   perspective: 900px;
   width: var(--card-w, clamp(112px, 27vw, 176px));
@@ -136,7 +122,6 @@ button:disabled,
     scale 0.5s,
     box-shadow 0.3s;
 }
-/* Tapped: turned sideways, the real-game cue. Scaled so it still fits its slot. */
 .card[data-tapped="true"] {
   rotate: 90deg;
   scale: 0.72;
@@ -144,7 +129,6 @@ button:disabled,
 .card[data-tapped="true"]:not([data-status="attacking"]) {
   filter: saturate(0.6) brightness(0.85);
 }
-/* Hint level 3: a highlighter ring around the cards to look at. */
 .card-wrap[data-highlight="true"] .card {
   animation: hint-glow 1.6s ease-in-out infinite;
 }
@@ -168,7 +152,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
 .card:disabled {
   cursor: default;
 }
-/* Two-tone ring so focus shows on the sheet and on the gold rim. */
 .card:focus-visible {
   outline: none;
   box-shadow:
@@ -176,7 +159,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
     0 0 0 6px var(--spot),
     0 12px 22px #121d3840;
 }
-/* Selected: a blue ring + a check badge (shape), never color alone. */
 .card[aria-pressed="true"] {
   box-shadow:
     0 0 0 3px var(--panel),
@@ -206,9 +188,7 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   border-radius: inherit;
   overflow: hidden;
 }
-/* ---------- Printed face ---------- */
 .cf {
-  /* Metal for your side: gilt. */
   --metal: #e9c46a;
   --metal-lo: #8a6424;
   --metal-hi: #fff3c4;
@@ -236,14 +216,12 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
     inset 0 1px 0 #ffffff22;
   color: var(--mist);
 }
-/* Opponent: moon-silver frame (board side also tells you whose it is). */
 .cf[data-side="opp"] {
   --metal: #b9cbe8;
   --metal-lo: #4a5f8a;
   --metal-hi: #f1f6ff;
 }
 
-/* Title bar: name */
 .cf-title {
   display: flex;
   align-items: center;
@@ -264,7 +242,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   line-height: 1.1;
   letter-spacing: -0.005em;
 }
-/* Art */
 .cf-art {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -288,7 +265,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   filter: saturate(0.55) brightness(0.9); /* "still settling in" */
 }
 
-/* Status ribbon across the bottom of the art: icon + word + colored edge. */
 .cf-status {
   position: absolute;
   inset: auto 0 0 0;
@@ -320,7 +296,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   --st: var(--muted);
 }
 
-/* Damage marker on the art. Toughness itself never changes; damage is marked. */
 .cf-damage {
   position: absolute;
   top: 2cqw;
@@ -328,14 +303,12 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   z-index: 2;
   display: grid;
   place-items: center;
-  /* Equal width and height so it's a true circle, never an oval. */
   --d: max(22px, 13cqw);
   width: var(--d);
   height: var(--d);
   padding: 0;
   border-radius: 50%;
   font-variant-numeric: tabular-nums;
-  /* Trim the font's extra space above and below the digit so it sits dead center. */
   text-box: trim-both cap alphabetic;
   background: var(--bad);
   color: #3a0b0b;
@@ -346,7 +319,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   line-height: 1;
 }
 
-/* Type line */
 .cf-type {
   padding: 0 0.6cqw 1.6cqw;
   border-bottom: 1px solid color-mix(in srgb, var(--metal-lo) 70%, transparent);
@@ -355,7 +327,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   line-height: 1.2;
 }
 
-/* Text box: keyword + reminder. Leaves room for the P/T badge. */
 .cf-text {
   display: flex;
   flex-direction: column;
@@ -383,7 +354,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   display: none;
 }
 
-/* Power / toughness: a metal lozenge inside the frame, with breathing room above the rim. */
 .cf-pt {
   position: absolute;
   right: 4cqw;
@@ -411,7 +381,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   opacity: 0.55;
 }
 
-/* ---------- Small cards (board size) ---------- */
 @container (width < 160px) {
   .cf {
     grid-template-rows: auto 1fr auto;
@@ -424,7 +393,7 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   .cf-text {
     display: none;
   }
-  /* Too small to print, but still read aloud (screen readers need the status). */
+  /* Still read aloud by screen readers. */
   .cf-status-word {
     position: absolute;
     width: 1px;
@@ -460,8 +429,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   }
 }
 
-/* ---------- Foil + glare ---------- */
-/* Foil lives on the art only, so it never sits on top of text. */
 .card__foil {
   position: absolute;
   inset: 0;
@@ -472,8 +439,7 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   background: repeating-linear-gradient(115deg, #ff7eb3 0%, #ffd36e 8%, #8fe0ad 16%, #8fb7e8 24%, #c9a7ff 32%, #ff7eb3 40%);
   background-size: 260% 260%;
   background-position: var(--mx) var(--my);
-  /* soft-light, not color-dodge: Safari renders color-dodge as a blown-out
-     red/blue wash; soft-light gives the same gentle shimmer in every browser. */
+  /* soft-light, not color-dodge: Safari renders color-dodge as a red/blue wash. */
   mix-blend-mode: soft-light;
   mask-image: linear-gradient(transparent 12%, #000 16% 56%, transparent 62%);
 }
@@ -498,11 +464,7 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   opacity: 1;
 }
 
-/* ---------- Parallax art ----------
-   2D transforms only, and no will-change. A 3D transform or will-change gives the
-   art its own GPU layer inside a card that rotates in 3D with its back face hidden;
-   browsers can cull that child layer mid-tilt, so the creature vanishes. Keeping
-   the art flat makes it paint as part of the card face, on every card. */
+/* 2D transforms only, no will-change: a 3D layer gets culled mid-tilt and the art vanishes. */
 .art-layer {
   transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -513,8 +475,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   transform: translate(calc(var(--px, 0) * -6px), calc(var(--py, 0) * -5px)) scale(1.08);
   mask-image: radial-gradient(120% 100% at 50% 40%, #000 70%, #0008);
 }
-/* Break-out: clipped top and left like the sky, but may spill past the right
-   edge onto the rim. Never past the bottom: the type line sits there and must stay readable. */
 .art-breakout {
   position: absolute;
   inset: 0;
@@ -527,7 +487,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   transform: translate(calc(var(--px, 0) * 10px + 8%), calc(var(--py, 0) * 8px + 3%)) scale(1.14);
   filter: drop-shadow(0 6px 8px #0d1530aa);
 }
-/* While the Moss Golem steps out of its card, the card holds still: its art window is the golem's portal. */
 [data-performing] .card {
   --rx: 0deg !important;
   --ry: 0deg !important;
@@ -542,7 +501,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   --py: 0;
 }
 
-/* Calm / Off: no tilt, no moving foil. */
 [data-motion="calm"] .card,
 [data-motion="off"] .card {
   --rx: 0deg !important;
@@ -563,20 +521,18 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   animation: none;
 }
 
-/* Belt and braces: if the OS asks for reduced motion and JS hasn't run yet. */
+/* Fallback for OS reduced motion before JS has run. */
 @media (prefers-reduced-motion: reduce) {
   .aurora {
     animation: none;
   }
 }
 
-/* Board rows: cards share the row and shrink to fit (never wrap). */
 .board-row > .card-wrap {
   flex: 0 1 var(--card-w, clamp(112px, 27vw, 176px));
   min-width: 0;
 }
 
-/* Printed diagram marks on the board: a lettered pin and a highlighter callout. */
 .card-pin {
   position: absolute;
   z-index: 6;
@@ -595,7 +551,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
 .card-callout {
   position: absolute;
   z-index: 6;
-  /* Centered over the card; clears the lettered pin in the top-left corner. */
   left: 50%;
   translate: -50% 0;
   top: -34px;
@@ -611,10 +566,8 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
     display: none;
   }
 }
-/* Wide screens: the yellow tag above the card says it, so the card's own status
-   ribbon steps aside. Phones keep the ribbon (the tag is hidden there). */
 @media (min-width: 901px) {
-  /* Hidden from sight, still read aloud: screen readers don't see the yellow tag. */
+  /* Still read aloud: screen readers don't see the yellow tag. */
   .card-wrap:has(> .card-callout) .cf-status {
     position: absolute;
     width: 1px;
@@ -625,22 +578,14 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   }
 }
 
-/* Diagram paper: the plain white the board and figures are drawn on. */
 .paper {
   background-color: var(--panel);
 }
-/* A tapped card is turned and scaled, so its pin follows the turned card's corner. */
 .card-wrap:has(> .card[data-tapped="true"]) > .card-pin {
   top: calc(34cqw - 11px);
   left: -11px;
 }
 
-/* ==========================================================================
-   Page transitions (browser View Transitions, driven by React <ViewTransition>)
-   Forward slides left, back slides right, untagged navigations crossfade.
-   The header and step tabs hold still; the task band and Storm Hawk morph.
-   Old content leaves fast, new content arrives a touch slower.
-   ========================================================================== */
 ::view-transition {
   pointer-events: none; /* clicks during an animation reach the live page */
 }
@@ -674,12 +619,7 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
 ::view-transition-new(.fade) {
   animation: 360ms ease-out 160ms both vt-fade;
 }
-/* Shared elements: one object moving, not two swapping. Drawn above the page
-   snapshots, which otherwise paint their empty slot (white panel) over them. */
-/* "assemble" (Basics -> Step 1): the primer turns into the board. Its pieces are
-   the stars (the band, both life totals and Ember Pup fly to their spots, a beat
-   apart), so the rest of the old screen just steps back and the board's frame
-   fades in under them. The remaining cards are dealt in by StepAttack. */
+/* Drawn above the page snapshots, which otherwise paint their empty slot over them. */
 ::view-transition-old(.assemble) {
   animation: 260ms ease-in both vt-fade reverse;
 }
@@ -713,9 +653,6 @@ html:active-view-transition-type(assemble)::view-transition-group(life-you) {
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* The task band changes shape (tall on welcome, short on a step). Instead of
-   stretching its text, morph a solid blue box and crossfade the text inside it
-   at its real size, pinned top-left. */
 ::view-transition-group(task-band) {
   background: var(--spot);
   overflow: clip;
@@ -728,17 +665,13 @@ html:active-view-transition-type(assemble)::view-transition-group(life-you) {
   object-position: left top;
   inset: 0 auto auto 0;
 }
-/* Old words leave fast, then the new words arrive: never two texts on top of each other. */
 ::view-transition-old(task-band) {
   animation: 200ms ease-in both vt-fade reverse;
 }
 ::view-transition-new(task-band) {
   animation: 380ms ease-out 190ms both vt-fade;
 }
-/* Anchor: the header never moves during a page change. (The step tabs are not
-   named on purpose: they ride inside the lesson area, so arriving from the
-   welcome or basics screen they slide in with it, in every browser, and between
-   steps they sit in the still background.) */
+/* Step tabs deliberately not named: they slide in with the lesson area in every browser. */
 ::view-transition-group(site-header) {
   animation: none;
   z-index: 100;
@@ -749,9 +682,6 @@ html:active-view-transition-type(assemble)::view-transition-group(life-you) {
 ::view-transition-new(site-header) {
   animation: none;
 }
-/* Step tabs: between two steps both snapshots exist, so they hold perfectly
-   still. Arriving from a screen without tabs (welcome, basics) only the new one
-   exists, so it fades in with the page; leaving, the old one fades out. */
 ::view-transition-group(step-nav) {
   animation: none;
   z-index: 90;
@@ -779,7 +709,6 @@ html:active-view-transition-type(assemble)::view-transition-group(life-you) {
   }
 }
 
-/* Calm: fades only. Nothing slides or flies. */
 html[data-motion="calm"]::view-transition-group(*) {
   animation-duration: 0s;
 }
@@ -789,7 +718,6 @@ html[data-motion="calm"]::view-transition-old(*) {
 html[data-motion="calm"]::view-transition-new(*) {
   animation: 200ms ease-out both vt-fade;
 }
-/* Off: instant swap, like a normal page change. */
 html[data-motion="off"]::view-transition-group(*),
 html[data-motion="off"]::view-transition-old(*),
 html[data-motion="off"]::view-transition-new(*),
@@ -804,17 +732,11 @@ html[data-motion="off"]::view-transition-image-pair(*) {
     animation-delay: 0s !important;
   }
 }
-/* The header (and the step tabs between steps) stay still in every motion mode. */
 html[data-motion]::view-transition-new(site-header),
 html[data-motion]::view-transition-new(step-nav):not(:only-child) {
   animation: none;
 }
 
-/* ==========================================================================
-   Linked highlighting: a pin on the board and its line in the Key light up
-   together. The Key line gets a highlighter swept across it, the card a yellow
-   ring, and its pin grows; other pins step back. Ease-out expo, under 0.35s.
-   ========================================================================== */
 .card-pin {
   cursor: pointer;
   transform-origin: 80% 80%; /* grows outward, away from the card's name */
@@ -843,7 +765,6 @@ html[data-motion]::view-transition-new(step-nav):not(:only-child) {
   margin: 0 -8px;
   padding: 5px 8px;
   cursor: default;
-  /* The highlighter: a yellow band that sweeps in from the left. */
   background: linear-gradient(var(--hi), var(--hi)) no-repeat left center / 0% 100%;
   transition:
     background-size 0.34s cubic-bezier(0.16, 1, 0.3, 1),
@@ -866,7 +787,6 @@ html[data-motion]::view-transition-new(step-nav):not(:only-child) {
     cursor: pointer;
   }
 }
-/* Calm: the highlighter fades in instead of sweeping; pins don't grow. */
 html[data-motion="calm"] .key-row {
   background-image: none;
   transition:
@@ -880,7 +800,6 @@ html[data-motion="calm"] .card-wrap[data-pin-state="active"] > .card-pin,
 html[data-motion="calm"] .key-row[data-state="active"] .key-pin {
   scale: 1;
 }
-/* ---- Report card ---- */
 .report-table th,
 .report-table td {
   padding: 0.7rem 0.75rem;
@@ -899,11 +818,6 @@ html[data-motion="calm"] .key-row[data-state="active"] .key-pin {
   border-bottom: 0;
 }
 
-/* ---- The game table ----
-   Each half gets a faint tint and a faded edge painting: night mountains
-   behind the opponent (top), warm hills behind you (bottom). They're
-   atmosphere, kept low and faded toward the middle, so the cards stay the
-   brightest thing on the table. Phones see the center of each painting. */
 .table-side {
   position: relative;
   isolation: isolate;
@@ -929,13 +843,11 @@ html[data-motion="calm"] .key-row[data-state="active"] .key-pin {
   background-position: center bottom;
   mask-image: linear-gradient(to top, #000 0%, #000 25%, transparent 85%);
 }
-/* A printed card spot: where a card sits (or sat). */
 .table-spot {
   border: 1.5px dashed color-mix(in oklab, var(--rule) 85%, var(--panel) 15%);
   border-radius: 6%/4.3%;
   background: color-mix(in oklab, var(--panel) 35%, transparent);
 }
-/* The middle of the table: one dashed line across. */
 .table-midline::before {
   content: "";
   position: absolute;
@@ -943,9 +855,7 @@ html[data-motion="calm"] .key-row[data-state="active"] .key-pin {
   border-top: 2px dashed color-mix(in oklab, var(--rule) 70%, var(--ink) 30%);
 }
 
-/* Step outline while saved progress loads: fades in late (fast loads never see
-   it), then breathes gently unless motion is reduced. Runs before the app's own
-   motion setting is known, so it also checks the OS setting. */
+/* Runs before the app's motion setting is known, so it also checks the OS setting. */
 .step-loading {
   animation: step-loading-in 0.25s ease-out 0.3s both;
 }

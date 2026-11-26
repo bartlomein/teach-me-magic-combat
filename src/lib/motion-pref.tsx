@@ -3,17 +3,11 @@
 import { MotionConfig } from "motion/react";
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 
-/**
- * Motion preference: "full" (all effects), "calm" (fades only, no movement,
- * shake or particles), "off" (no animation at all).
- * Default follows the OS "reduce motion" setting; the in-app choice overrides it.
- */
 export type MotionMode = "full" | "calm" | "off";
 
 const KEY = "teachme.motion";
 const EVENT = "teachme:motion";
 
-/** Used when storage is blocked (some private modes): the choice still holds for this visit. */
 let memory: string | null = null;
 
 function read(): MotionMode {
@@ -53,7 +47,6 @@ export function setMotionMode(mode: MotionMode) {
 export function MotionProvider({ children }: { children: ReactNode }) {
   const mode = useMotionMode();
 
-  // Expose the mode to CSS so stylesheet-only effects (tilt, foil) can opt out.
   useEffect(() => {
     document.documentElement.dataset.motion = mode;
   }, [mode]);

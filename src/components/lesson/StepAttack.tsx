@@ -19,11 +19,6 @@ import { StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
 import { sides, useDemo, useStep, type StepProps } from "./useStep";
 
-/**
- * Step 1: Attacking. Loop: Explain → Watch → Try (pick attackers, press
- * Attack) → Feedback. Two misses swap in the lighter board, then back.
- */
-
 type Phase = "explain" | "watch" | "pick" | "resolving" | "done";
 
 export function StepAttack(props: StepProps) {
@@ -31,10 +26,7 @@ export function StepAttack(props: StepProps) {
   const step = useStep<Phase>("attack", props, "explain", ["pick", "done"]);
   const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
 
-  // Arriving from the basics screen: Ember Pup and both life totals fly in from
-  // the primer (shared elements), and the rest of the table is dealt around them,
-  // one card at a time. Runs before paint so the cards never flash in first; no
-  // cleanup on purpose, so React's dev double-run can't freeze them mid-deal.
+  // Before paint so cards never flash in; no cleanup on purpose (dev double-run would freeze them mid-deal).
   useLayoutEffect(() => {
     if (takeArrival() !== "assemble" || fx.mode === "off") return;
     const els = ["mossGolem", "stormHawk"]
@@ -57,14 +49,12 @@ export function StepAttack(props: StepProps) {
   const [tapped, setTapped] = useState<string[]>([]);
   const [attacking, setAttacking] = useState<string[]>([]);
   const [oppLife, setOppLife] = useState(20);
-  /** The card the current correction is about: its pin and Key line stay visible. */
   const [flagged, setFlagged] = useState<string | null>(null);
   const [lighterPassed, setLighterPassed] = useState(false);
 
   const { theirs, yours } = sides(board);
   const hintOn = progress.hints >= 3 && phase === "pick" && !lighter;
 
-  /** Ties a correction to the board: "Storm Hawk" becomes "Storm Hawk (B)" when it has a pin. */
   function namePin(message: string, c: Creature) {
     const pin = lighter ? undefined : ATTACK.pins.find((p) => p.id === c.id)?.letter;
     return pin ? message.replace(c.name, `${c.name} (${pin})`) : message;
@@ -80,7 +70,6 @@ export function StepAttack(props: StepProps) {
     fx.clearFx();
   }
 
-  // ---- Watch: Ember Pup taps and rushes their life total, 20 → 18. The result stays on the board. ----
   const demo = useDemo(step, resetBoard, async (beat) => {
     step.setAnnounce("");
     await beat(fx.wait(300));
@@ -93,7 +82,6 @@ export function StepAttack(props: StepProps) {
   });
   const { explaining } = demo;
 
-  // ---- Pick attackers ----
   function onCard(c: Creature) {
     if (phase === "pick") {
       const v = checkPick(board, c.id);
@@ -106,7 +94,6 @@ export function StepAttack(props: StepProps) {
         return;
       }
       if (lighter) {
-        // Lighter version: one tap answers "Which one can attack?"
         setSelected([c.id]);
         setLighterPassed(true);
         setFeedback({
@@ -130,8 +117,6 @@ export function StepAttack(props: StepProps) {
       if (step.wrong(`Attacked with ${selected.length} of 2`, v)) resetBoard();
       return;
     }
-    // Declaring attackers taps them (508.1f): they turn sideways. With no
-    // planeswalkers or battles in this lesson, attacks always go at the player.
     setTapped(selected);
     setAttacking(selected);
     setFlagged(null);
@@ -153,13 +138,10 @@ export function StepAttack(props: StepProps) {
     setPhase("done");
   }
 
-  // The finished state (headline, Next button) comes from StepFrame.
   const prompt = phase === "pick" ? (lighter ? ATTACK.prompts.pickLighter : ATTACK.prompts.pick) : "Attack!";
 
   const n = selected.length;
 
-  // Pins mark only what matters right now: A (new this turn) while explaining and
-  // from hint 2; any card a correction names.
   const pinVisible = (id: string) => {
     if (lighter) return false;
     if (id === flagged) return true;
@@ -177,8 +159,6 @@ export function StepAttack(props: StepProps) {
       n={1}
       title={ATTACK.title}
       headingRef={headingRef}
-      // One sentence while explaining. The Watch demo shows the rest (attackers
-      // turn sideways), and the board marks the exception (pin A: new this turn).
       headline={explaining ? ATTACK.headline : prompt}
       headlineRef={step.headlineRef}
       speak={explaining ? ATTACK.explain : prompt}

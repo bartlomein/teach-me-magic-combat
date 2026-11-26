@@ -12,18 +12,11 @@ import { sides, useCombat, useDemo, useStep, type StepProps } from "./useStep";
 
 type Phase = "ask" | "explain" | "watch" | "pick" | "resolving" | "missed" | "done";
 
-/** Lighter version: the math, pinned to both cards. */
 const LIGHTER_PINS = [
   { id: "mossGolem", letter: "A", text: "Moss Golem hits for 3. The Boar has 3 toughness." },
   { id: "thornBoar", letter: "B", text: "The Boar hits for 3. Moss Golem has 4 toughness." },
 ] as const;
 
-/**
- * Step 2: Blocking. A quick "who picks blockers?" first (myth M2), then the rule,
- * a Watch demo (Pup blocks and dies), and the try: block so the Boar dies and
- * yours lives. Two misses swap in the lighter version (one blocker, the math
- * shown in the Key, a yes/no question).
- */
 export function StepBlock(props: StepProps) {
   const { progress, onNext, nextTitle, headingRef } = props;
   const step = useStep<Phase>("block", props, isFinished(progress) ? "explain" : "ask", ["pick", "done", "explain"]);
@@ -42,14 +35,13 @@ export function StepBlock(props: StepProps) {
     fx.clearFx();
   }
 
-  /** Animate a block (or none) exactly as the engine resolves it. */
   async function play(blockId: string | null) {
     const r = await combat.play(board, ["thornBoar"], blockId ? { [blockId]: "thornBoar" } : {});
     step.setAnnounce((blockId ? `${board.creatures[blockId].name} blocks Thorn Boar. ` : "No block. ") + r.text);
   }
 
   const demo = useDemo(step, reset, async (beat) => {
-    // Beats held long enough to read twice (real time in every motion mode).
+    // Reading pauses are real time in every motion mode.
     setFeedback({ tone: "info", text: "Thorn Boar attacks you." });
     await beat(2000);
     setBlocker("emberPup");
@@ -90,7 +82,6 @@ export function StepBlock(props: StepProps) {
       return;
     }
     if (step.wrong(blockId ? `Blocked with ${board.creatures[blockId].name}` : "Didn't block", v)) {
-      // Straight to the simpler question: no extra click.
       await fx.wait(900);
       reset();
       setPhase("pick");
@@ -110,7 +101,6 @@ export function StepBlock(props: StepProps) {
   const hintOn = progress.hints >= 3 && phase === "pick" && !lighter;
   const canPick = phase === "pick" && !lighter;
 
-  // The finished state (headline, Next button) comes from StepFrame.
   const headline =
     phase === "ask"
       ? BLOCK.ask.question
@@ -164,7 +154,6 @@ export function StepBlock(props: StepProps) {
                   fate={combat.fates[c.id]}
                   card={CARDS[c.id as keyof typeof CARDS] as CardDef}
                   status={blocker === c.id ? "blocking" : c.enteredThisTurn ? "new" : null}
-                  // "New this turn" goes above the card, like Step 1. Not while it blocks: then the card says "Blocking".
                   callout={c.enteredThisTurn && blocker !== c.id ? BLOCK.callouts[c.id as keyof typeof BLOCK.callouts] : undefined}
                   damage={combat.damage[c.id]}
                   pressed={canPick ? blocker === c.id : undefined}
