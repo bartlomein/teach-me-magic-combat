@@ -51,8 +51,9 @@ function KnownStep({ step }: { step: StepId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, step]);
 
-  // Before the saved lesson is read, hold the space so nothing jumps.
-  if (!ready || locked || lesson.experience === null) return <div aria-hidden className="min-h-[70vh]" />;
+  // Saved progress decides what this step shows (locked, easier board, finished),
+  // and it only exists in the browser. Until it's read: the step's outline.
+  if (!ready || locked || lesson.experience === null) return <StepLoading />;
 
   // "Next" goes to the next step still to do (skipped steps are passed over).
   const after = nextToDo(lesson, step) ?? nextStep(step);
@@ -70,4 +71,30 @@ function KnownStep({ step }: { step: StepId }) {
   };
   const Body = BODIES[step];
   return <Body {...props} />;
+}
+
+/**
+ * The step's own layout with nothing in it yet: the blue band, then the board
+ * with empty card spaces, so nothing jumps when the step arrives. It fades in
+ * only after a moment, so a fast load never flashes it.
+ */
+function StepLoading() {
+  const space = <div className="aspect-[5/7] w-[clamp(84px,22vw,140px)] border-2 border-dashed border-ink/25" />;
+  return (
+    <div
+      role="status"
+      className="step-loading grid min-h-[70vh] grid-cols-[minmax(0,1fr)] border-[3px] border-ink bg-panel lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)]"
+    >
+      <span className="sr-only">Loading your lesson</span>
+      <div aria-hidden className="flex flex-col gap-4 bg-spot p-5 sm:p-6 lg:border-r-[3px] lg:border-ink">
+        <div className="h-10 w-8 bg-panel/35" />
+        <div className="h-7 w-4/5 bg-panel/25" />
+        <div className="h-7 w-3/5 bg-panel/25" />
+      </div>
+      <div aria-hidden className="paper flex flex-col justify-center gap-10 border-t-[3px] border-ink p-6 lg:border-t-0">
+        <div className="flex justify-center gap-4">{space}{space}</div>
+        <div className="flex justify-center gap-4">{space}{space}</div>
+      </div>
+    </div>
+  );
 }

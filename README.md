@@ -82,7 +82,7 @@ The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2
 ## Known limitations
 
 - Progress only lives in this browser. Clearing site data starts you over.
-- Step pages wait for saved progress before they show, so locked steps stay locked. On a slow phone that's about 3.7 seconds (Lighthouse mobile score 90). Desktop scores 100.
+- Step pages wait for saved progress before they show, so locked steps stay locked. Until then you see the step's outline. On a slow phone that's about 3.7 seconds (Lighthouse mobile score 90). Desktop scores 100. Next step: draw the board on the server and only wait for progress before it becomes clickable.
 - The opponent is predictable on purpose, so the final challenge has one clear answer. It doesn't play like a real person.
 - Read-aloud uses the browser's built-in speech, so the voice depends on the device.
 - I checked phone sizes in Chrome and Safari on my laptop, not on a real phone.

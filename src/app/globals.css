@@ -999,3 +999,21 @@ html[data-motion="calm"] .key-row[data-state="active"] .key-pin {
   inset: 50% 0 auto;
   border-top: 2px dashed color-mix(in oklab, var(--rule) 70%, var(--ink) 30%);
 }
+
+/* Step outline while saved progress loads: fades in late (fast loads never see
+   it), then breathes gently unless motion is reduced. Runs before the app's own
+   motion setting is known, so it also checks the OS setting. */
+.step-loading {
+  animation: step-loading-in 0.25s ease-out 0.3s both;
+}
+@keyframes step-loading-in {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="calm"]):not([data-motion="off"]) .step-loading [aria-hidden] > div {
+    animation: step-loading-breathe 1.6s ease-in-out 0.6s infinite alternate;
+  }
+}
+@keyframes step-loading-breathe {
+  to { opacity: 0.55; }
+}
