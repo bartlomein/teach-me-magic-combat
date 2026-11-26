@@ -1,10 +1,8 @@
 "use client";
 
 import { animate, stagger } from "motion/react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type Ref } from "react";
-import { useRun } from "./useRun";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { CARDS } from "@/lib/cards";
-import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { takeArrival } from "@/lib/lesson/store";
 import {
   ATTACK,
@@ -13,45 +11,24 @@ import {
   checkAttackers,
   checkPick,
 } from "@/lib/lesson/step-attack";
-import {
-  declareAttackers,
-  resolveCombat,
-  type Creature,
-  type Myth,
-} from "@/lib/rules/engine";
-import { AttackArrow, Board, Row, useBoardFx } from "../board/Board";
+import { declareAttackers, resolveCombat, type Creature } from "@/lib/rules/engine";
+import { AttackArrow, Board, Row } from "../board/Board";
 import { Card } from "../Card";
-import { HintButton, HintText, OnSpot, PinKey, Primary, type Feedback } from "./Coach";
+import { HintButton, HintText, PinKey, Primary } from "./Coach";
 import { StepFrame } from "./StepFrame";
+import { sides, useDemo, useStep, type StepProps } from "./useStep";
 
 /**
  * Step 1: Attacking. Loop: Explain → Watch → Try (pick attackers, then pick a
  * target) → Feedback. Two misses swap in the lighter board, then back.
  */
 
-/** Clock for the mistake log. Only called from event handlers, never during render. */
-const now = () => Date.now();
-
 type Phase = "explain" | "watch" | "pick" | "resolving" | "done";
 
-export function StepAttack({
-  progress,
-  lighterNext,
-  dispatch,
-  onNext,
-  nextTitle,
-  headingRef,
-}: {
-  progress: StepProgress;
-  /** The lesson focuses this heading when the step opens. */
-  headingRef: Ref<HTMLHeadingElement>;
-  /** True when one more miss switches on the lighter board (from the lesson reducer). */
-  lighterNext: boolean;
-  dispatch: Dispatch<LessonAction>;
-  onNext: () => void;
-  nextTitle: string | null;
-}) {
-  const fx = useBoardFx();
+export function StepAttack(props: StepProps) {
+  const { progress, onNext, nextTitle, headingRef } = props;
+  const step = useStep<Phase>("attack", props, "explain", ["pick", "done"]);
+  const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
 
   // Arriving from the basics screen: Ember Pup and both life totals fly in from
   // the primer (shared elements), and the rest of the table is dealt around them,
@@ -73,46 +50,19 @@ export function StepAttack({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const lighter = progress.lighter === "active";
-  const board = useMemo(
-    () => (lighter ? attackLighterBoard() : attackBoard()),
-    [lighter],
-  );
+  const board = useMemo(() => (lighter ? attackLighterBoard() : attackBoard()), [lighter]);
 
-  const [phase, setPhase] = useState<Phase>("explain");
-  const run = useRun();
-  const [watched, setWatched] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [tapped, setTapped] = useState<string[]>([]);
   const [attacking, setAttacking] = useState<string[]>([]);
   const [oppLife, setOppLife] = useState(20);
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
   /** The card the current correction is about: its pin and Key line stay visible. */
   const [flagged, setFlagged] = useState<string | null>(null);
   /** The pinned card in focus (hover, keyboard focus or tap), shared by the board and the Key. */
   const [activePin, setActivePin] = useState<string | null>(null);
   const [lighterPassed, setLighterPassed] = useState(false);
-  const [announce, setAnnounce] = useState("");
 
-  // Move focus to the prompt whenever the task changes, so keyboard and
-  // screen-reader users always land on "what to do next".
-  const promptRef = useRef<HTMLHeadingElement>(null);
-  const firstRender = useRef(true);
-  useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
-    }
-    if (phase === "pick" || phase === "done")
-      promptRef.current?.focus();
-  }, [phase, lighter]);
-
-  const yours = Object.values(board.creatures).filter(
-    (c) => c.controller === "you",
-  );
-  const theirs = Object.values(board.creatures).filter(
-    (c) => c.controller === "opp",
-  );
+  const { theirs, yours } = sides(board);
   const hintOn = progress.hints >= 3 && phase === "pick" && !lighter;
 
   /** Ties a correction to the board: "Storm Hawk" becomes "Storm Hawk (B)" when it has a pin. */
@@ -121,56 +71,28 @@ export function StepAttack({
     return pin ? message.replace(c.name, `${c.name} (${pin})`) : message;
   }
 
-  /** Records a mistake. Returns true when it switches on the lighter board. */
-  function recordMiss(note: string, myth?: Myth, soft = false) {
-    dispatch({ type: "miss", step: "attack", myth, note, at: now(), soft });
-    return !soft && lighterNext;
-  }
-
   function resetBoard() {
     setFlagged(null);
     setSelected([]);
     setTapped([]);
     setAttacking([]);
     setOppLife(20);
+    setLighterPassed(false);
     fx.clearFx();
   }
 
-  // ---- Watch: Ember Pup taps, rushes their life total, 20 → 18. Then the board resets. ----
-  async function watch() {
-    const live = run.begin();
-    resetBoard();
-    setFeedback(null);
-    setPhase("watch");
-    setAnnounce("");
-    await fx.wait(300);
-    if (!live()) return;
+  // ---- Watch: Ember Pup taps and rushes their life total, 20 → 18. The result stays on the board. ----
+  const demo = useDemo(step, resetBoard, async (beat) => {
+    step.setAnnounce("");
+    await beat(fx.wait(300));
     setTapped(["emberPup"]);
     setAttacking(["emberPup"]);
-    await fx.wait(650);
-    if (!live()) return;
-    await fx.hitPlayer([{ id: "emberPup", amount: 2 }], "opp", () =>
-      setOppLife(18),
-    );
-    if (!live()) return;
-    setAnnounce(
-      "Ember Pup turns sideways to attack, and hits your opponent for 2. Their life goes from 20 to 18.",
-    );
-    await fx.wait(1200);
-    if (!live()) return;
-    // Leave the result on the board (Pup tapped, opponent at 18) so it can be
-    // studied. "Try it" and "Watch again" both reset it.
-    setWatched(true);
-    setPhase("explain");
-  }
-
-  function startTry() {
-    run.cancel();
-    resetBoard();
-    setFlagged(null);
-    setFeedback(null);
-    setPhase("pick");
-  }
+    await beat(fx.wait(650));
+    await beat(fx.hitPlayer([{ id: "emberPup", amount: 2 }], "opp", () => setOppLife(18)));
+    step.setAnnounce("Ember Pup turns sideways to attack, and hits your opponent for 2. Their life goes from 20 to 18.");
+    await beat(fx.wait(1200));
+  });
+  const { explaining } = demo;
 
   // ---- Pick attackers ----
   function onCard(c: Creature) {
@@ -184,8 +106,7 @@ export function StepAttack({
           setFeedback({ tone: "info", text }); // just a pointer, not a mistake
           return;
         }
-        const toLighter = recordMiss(`Tried to attack with ${c.name}`, v.myth);
-        setFeedback({ tone: "bad", text: toLighter ? `${text} Let's try a smaller board.` : text });
+        const toLighter = step.wrong(`Tried to attack with ${c.name}`, { message: text, myth: v.myth });
         if (toLighter) resetBoard();
         else setFlagged(c.id);
         return;
@@ -209,26 +130,10 @@ export function StepAttack({
     }
   }
 
-  function backToFull() {
-    dispatch({ type: "lighter-cleared", step: "attack" });
-    setLighterPassed(false);
-    resetBoard();
-    setFeedback({ tone: "info", text: "Now the full board. Same idea." });
-    setPhase("pick");
-  }
-
   async function confirmAttackers() {
     const v = checkAttackers(board, selected);
     if (!v.ok) {
-      const toLighter = recordMiss(
-        `Attacked with ${selected.length} of 2`,
-        v.myth,
-      );
-      setFeedback({
-        tone: "bad",
-        text: toLighter ? `${v.message} Let's try a smaller board.` : v.message,
-      });
-      if (toLighter) resetBoard();
+      if (step.wrong(`Attacked with ${selected.length} of 2`, v)) resetBoard();
       return;
     }
     // Declaring attackers taps them (508.1f): they turn sideways. With no
@@ -246,10 +151,10 @@ export function StepAttack({
       "opp",
       () => setOppLife(result.state.life.opp),
     );
-    setAnnounce(
+    step.setAnnounce(
       `Ember Pup and Moss Golem attack your opponent and hit for 5. Their life goes from 20 to ${result.state.life.opp}.`,
     );
-    dispatch({ type: "complete", step: "attack", at: now() });
+    step.complete();
     setFeedback({ tone: "good", text: `${ATTACK.win} ${ATTACK.after}` });
     setPhase("done");
   }
@@ -259,7 +164,6 @@ export function StepAttack({
 
   const n = selected.length;
 
-  const explaining = phase === "explain" || phase === "watch";
   // Pins mark only what matters right now: B (new this turn) while explaining and
   // from hint 2; any card a correction names.
   const pinVisible = (id: string) => {
@@ -305,7 +209,7 @@ export function StepAttack({
       // One sentence while explaining. The Watch demo shows the rest (attackers
       // turn sideways), and the board marks the exception (pin A: new this turn).
       headline={explaining ? ATTACK.headline : prompt}
-      headlineRef={promptRef}
+      headlineRef={step.headlineRef}
       speak={explaining ? ATTACK.explain : prompt}
       howTo={
         phase === "pick"
@@ -316,29 +220,7 @@ export function StepAttack({
             ? "Attackers go at the player."
             : undefined
       }
-      bandActions={
-        explaining ? (
-          watched ? (
-            <>
-              <OnSpot primary onClick={startTry} disabled={phase === "watch"}>
-                Try it
-              </OnSpot>
-              <OnSpot onClick={watch} disabled={phase === "watch"}>
-                {phase === "watch" ? "Watching…" : "Watch again"}
-              </OnSpot>
-            </>
-          ) : (
-            <>
-              <OnSpot primary onClick={watch} disabled={phase === "watch"}>
-                {phase === "watch" ? "Watching…" : "Watch it"}
-              </OnSpot>
-              <OnSpot onClick={startTry} disabled={phase === "watch"}>
-                Skip to try
-              </OnSpot>
-            </>
-          )
-        ) : undefined
-      }
+      bandActions={demo.bandActions}
       board={
         <Board
           scope={fx.scope}
@@ -398,10 +280,10 @@ export function StepAttack({
                 <Primary onClick={confirmAttackers} disabled={n === 0}>
                   {n === 0 ? "Pick attackers" : `Attack with ${n}`}
                 </Primary>
-                <HintButton level={progress.hints} total={ATTACK.hints.length} onMore={() => dispatch({ type: "hint", step: "attack" })} />
+                <HintButton level={progress.hints} total={ATTACK.hints.length} onMore={step.hint} />
               </>
             )}
-            {phase === "pick" && lighter && lighterPassed && <Primary onClick={backToFull}>Back to the full board</Primary>}
+            {phase === "pick" && lighter && lighterPassed && <Primary onClick={demo.backToFull}>Back to the full board</Primary>}
           </>
         )
       }
@@ -421,7 +303,7 @@ export function StepAttack({
           />
         </>
       }
-      announce={announce}
+      announce={step.announce}
       done={phase === "done"}
       onNext={onNext}
       nextTitle={nextTitle}

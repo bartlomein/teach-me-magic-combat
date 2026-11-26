@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useEffect, useRef, useState, type Dispatch, type Ref } from "react";
+import { useState } from "react";
 import { CARDS, type CardDef } from "@/lib/cards";
-import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import {
   checkAssign,
   FINAL,
@@ -15,15 +14,11 @@ import {
   missedWinMessage,
   readyAttackers,
 } from "@/lib/lesson/steps";
-import { declareAttackers, describe as describeCombat, resolveCombat, type Blocks, type GameState } from "@/lib/rules/engine";
-import { Board, BlockLines, CardSlot, Row, useBoardFx } from "../board/Board";
-import { HintButton, HintText, OnSpot, Primary, Secondary, type Feedback } from "./Coach";
+import { declareAttackers, type Blocks, type GameState } from "@/lib/rules/engine";
+import { Board, BlockLines, CardSlot, Row } from "../board/Board";
+import { HintButton, HintText, OnSpot, Primary, Secondary } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
-
-const now = () => Date.now();
-
-/** Reading time between beats. Not scaled by motion mode: it is for reading, not animation. */
-const readPause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+import { readPause, useCombat, useStep, type Fate, type StepProps } from "./useStep";
 
 type Phase =
   | "intro"
@@ -37,7 +32,6 @@ type Phase =
   | "resolving2"
   | "fail2" // the attack didn't win
   | "won";
-type Fate = "alive" | "dying" | "gone";
 
 const YOURS = ["stormHawk", "mossGolem", "vineArcher"] as const;
 const THEIRS = ["cliffSpider", "thornBoar", "nightBat"] as const;
@@ -50,57 +44,29 @@ const name = (id: string) => (CARDS as Record<string, CardDef>)[id]?.name ?? id;
  * checked by trying all the options on the real engine. Two misses switch on
  * the lighter version: the last hint and highlights show by themselves.
  */
-export function StepFinal({
-  progress,
-  dispatch,
-  onNext,
-  nextTitle,
-  headingRef,
-}: {
-  progress: StepProgress;
-  lighterNext: boolean;
-  dispatch: Dispatch<LessonAction>;
-  onNext: () => void;
-  nextTitle: string | null;
-  headingRef: Ref<HTMLHeadingElement>;
-}) {
-  const fx = useBoardFx();
-  const lighter = progress.lighter === "active";
+export function StepFinal(props: StepProps) {
+  const { progress, onNext, nextTitle, headingRef } = props;
+  const step = useStep<Phase>("final", props, "intro", ["block", "ask", "attack", "won"]);
+  const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
+  const combat = useCombat(fx, FINAL_LIFE);
 
-  const [phase, setPhase] = useState<Phase>("intro");
   // Before Start nobody has attacked yet, so every creature is untapped.
   const [game, setGame] = useState<GameState>(finalBoard);
   const [theirAttackers, setTheirAttackers] = useState<string[]>([]);
   const [pick, setPick] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<Blocks>({});
   const [selected, setSelected] = useState<string[]>([]);
-  const [combat, setCombat] = useState<{ attackers: string[]; blocks: Blocks }>({ attackers: [], blocks: {} });
+  const [shown, setShown] = useState<{ attackers: string[]; blocks: Blocks }>({ attackers: [], blocks: {} });
   const [yourTurnStart, setYourTurnStart] = useState<GameState | null>(null);
   const [askAbout, setAskAbout] = useState<string | null>(null);
   const [asked, setAsked] = useState<"yes" | "no" | null>(null);
-  const [dmg, setDmg] = useState<Record<string, number>>({});
-  const [fates, setFates] = useState<Record<string, Fate>>({});
-  const [lives, setLives] = useState<{ you: number; opp: number }>({ ...FINAL_LIFE });
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [announce, setAnnounce] = useState("");
-
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    if (phase === "block" || phase === "ask" || phase === "attack" || phase === "won") headlineRef.current?.focus();
-  }, [phase]);
 
   function clearBoard() {
     setPick(null);
     setBlocks({});
     setSelected([]);
-    setCombat({ attackers: [], blocks: {} });
-    setDmg({});
-    setFates({});
+    setShown({ attackers: [], blocks: {} });
+    combat.clear();
     setFeedback(null);
     fx.clearFx();
   }
@@ -111,7 +77,6 @@ export function StepFinal({
     const { state, attackers } = finalTheirAttack();
     setGame(finalBoard());
     setTheirAttackers(attackers);
-    setLives({ ...FINAL_LIFE });
     setYourTurnStart(null);
     setAskAbout(null);
     setAsked(null);
@@ -119,7 +84,7 @@ export function StepFinal({
     setFeedback({ tone: "info", text: `Their turn. ${attackers.map(name).join(" and ")} attack you.` });
     await readPause(700);
     setGame(state); // attackers turn sideways
-    setCombat({ attackers, blocks: {} });
+    setShown({ attackers, blocks: {} });
     await readPause(1100);
     setPhase("block");
   }
@@ -129,38 +94,15 @@ export function StepFinal({
     if (!yourTurnStart) return start();
     clearBoard();
     setGame(yourTurnStart);
-    setLives({ ...yourTurnStart.life });
+    combat.setLife({ ...yourTurnStart.life });
     setFeedback({ tone: "info", text: `Your turn again. They have ${yourTurnStart.life.opp} life.` });
     setPhase("attack");
   }
 
-  /** Animate one combat (clashes + unblocked hits at once), then deaths. Returns the new state. */
+  /** Animate one combat, then say it for screen readers. Returns the new state. */
   async function fight(state: GameState, attackers: string[], b: Blocks, defender: "you" | "opp") {
-    const r = resolveCombat(state, attackers, b);
-    const fights = Object.entries(b).map(([blocker, attacker]) => ({
-      attacker,
-      blocker,
-      toBlocker: state.creatures[attacker].power,
-      toAttacker: state.creatures[blocker].power,
-    }));
-    const unblocked = attackers.filter((a) => !Object.values(b).includes(a)).map((id) => ({ id, amount: state.creatures[id].power }));
-    const marks: Record<string, number> = {};
-    for (const f of fights) {
-      marks[f.blocker] = (marks[f.blocker] ?? 0) + f.toBlocker;
-      marks[f.attacker] = (marks[f.attacker] ?? 0) + f.toAttacker;
-    }
-    await Promise.all([
-      fights.length ? fx.clash(fights, () => setDmg(marks)) : Promise.resolve(),
-      unblocked.length ? fx.hitPlayer(unblocked, defender, () => setLives({ ...r.state.life })) : Promise.resolve(),
-    ]);
-    setLives({ ...r.state.life });
-    const dead = r.state.graveyard.filter((id) => !state.graveyard.includes(id));
-    if (dead.length) {
-      setFates((f) => ({ ...f, ...Object.fromEntries(dead.map((id) => [id, "dying" as Fate])) }));
-      await fx.wait(fx.mode === "full" ? 900 : 600);
-      setFates((f) => ({ ...f, ...Object.fromEntries(dead.map((id) => [id, "gone" as Fate])) }));
-    }
-    setAnnounce(describeCombat(state, r.events));
+    const r = await combat.play(state, attackers, b, defender);
+    step.setAnnounce(r.text);
     return r.state;
   }
 
@@ -181,7 +123,7 @@ export function StepFinal({
     const v = checkAssign(game, pick, id);
     if (!v.ok) {
       fx.nope(pick);
-      dispatch({ type: "miss", step: "final", myth: v.myth, note: `Tried ${name(pick)} on ${name(id)}`, at: now(), soft: true });
+      step.miss(`Tried ${name(pick)} on ${name(id)}`, v.myth, true);
       setFeedback({ tone: "bad", text: v.message });
       setPick(null);
       return;
@@ -193,11 +135,11 @@ export function StepFinal({
   async function confirmBlocks() {
     setPhase("resolving1");
     setFeedback(null);
-    setCombat({ attackers: theirAttackers, blocks });
+    setShown({ attackers: theirAttackers, blocks });
     await fight(game, theirAttackers, blocks, "you");
     const r = judgeTheirTurn(game, theirAttackers, blocks);
     if (!r.ok) {
-      dispatch({ type: "miss", step: "final", myth: r.myth, note: `Blocked: ${Object.keys(blocks).map(name).join(", ") || "nothing"}`, at: now() });
+      step.miss(`Blocked: ${Object.keys(blocks).map(name).join(", ") || "nothing"}`, r.myth);
       setFeedback({ tone: "bad", text: r.message });
       setPhase("fail1");
       return;
@@ -208,7 +150,7 @@ export function StepFinal({
     // Your turn. Damage wears off; their attackers that lived stay tapped.
     clearBoard();
     setGame(r.next);
-    setLives({ ...r.next.life });
+    combat.setLife({ ...r.next.life });
     setYourTurnStart(r.next);
     setFeedback({ tone: "info", text: `Your turn. They have ${r.next.life.opp} life.` });
     setPhase("handoff");
@@ -225,7 +167,7 @@ export function StepFinal({
     setAsked(v);
     if (v === "yes") setFeedback({ tone: "good", text: "Right. Blocking doesn't tap. Only attacking does." });
     else {
-      dispatch({ type: "miss", step: "final", myth: "M10", note: `Thought ${name(askAbout!)} was tapped from blocking`, at: now(), soft: true });
+      step.miss(`Thought ${name(askAbout!)} was tapped from blocking`, "M10", true);
       setFeedback({ tone: "bad", text: "It can. Blocking doesn't tap. Only attacking does." });
     }
   }
@@ -243,7 +185,7 @@ export function StepFinal({
     const declared = declareAttackers(before, attackers); // attackers tap (508.1f)
     setGame(declared);
     const j = judgeAttack(before, attackers);
-    setCombat({ attackers, blocks: j.blocks });
+    setShown({ attackers, blocks: j.blocks });
     const blocked = Object.entries(j.blocks).map(([b, a]) => `${name(b)} blocks ${name(a)}.`);
     setFeedback({ tone: "info", text: blocked.length ? blocked.join(" ") : "They don't block." });
     await fx.wait(1200);
@@ -251,11 +193,11 @@ export function StepFinal({
     setGame(end);
     if (j.win) {
       setFeedback({ tone: "good", text: "You win! Spider could only block one of your three." });
-      if (lighter) dispatch({ type: "lighter-cleared", step: "final" });
-      dispatch({ type: "complete", step: "final", at: now() });
+      if (lighter) step.clearLighter();
+      step.complete();
       setPhase("won");
     } else {
-      dispatch({ type: "miss", step: "final", note: `Attacked with ${attackers.map(name).join(", ")}`, at: now() });
+      step.miss(`Attacked with ${attackers.map(name).join(", ")}`);
       setFeedback({ tone: "bad", text: missedWinMessage(before, attackers, j.lifeLeft, j.blocks) });
       setPhase("fail2");
     }
@@ -267,9 +209,9 @@ export function StepFinal({
   const yourTurn = !intro && !theirTurn;
   const status = (id: string): "attacking" | "blocking" | "tapped" | null => {
     if (phase === "attack" && selected.includes(id)) return "attacking";
-    if (combat.attackers.includes(id)) return "attacking";
+    if (shown.attackers.includes(id)) return "attacking";
     if (phase === "block" && blocks[id]) return "blocking";
-    if (Object.keys(combat.blocks).includes(id)) return "blocking";
+    if (Object.keys(shown.blocks).includes(id)) return "blocking";
     if (yourTurn && game.creatures[id]?.tapped) return "tapped";
     return null;
   };
@@ -277,7 +219,7 @@ export function StepFinal({
     phase === "block"
       ? Object.entries(blocks).map(([from, to]) => ({ from, to }))
       : phase === "resolving1" || phase === "resolving2"
-        ? Object.entries(combat.blocks).map(([from, to]) => ({ from, to }))
+        ? Object.entries(shown.blocks).map(([from, to]) => ({ from, to }))
         : [];
   const hintLevel = lighter ? 3 : progress.hints;
   const hints = theirTurn ? FINAL.blockHints : FINAL.attackHints;
@@ -287,7 +229,7 @@ export function StepFinal({
 
   const slot = (id: string) => {
     const c = game.creatures[id];
-    const fate: Fate = fates[id] ?? (c ? "alive" : "gone");
+    const fate: Fate = combat.fates[id] ?? (c ? "alive" : "gone");
     return { fate, c };
   };
 
@@ -312,7 +254,7 @@ export function StepFinal({
       title="Final challenge"
       headingRef={headingRef}
       headline={headline}
-      headlineRef={headlineRef}
+      headlineRef={step.headlineRef}
       speak={intro ? FINAL.speak : headline}
       howTo={
         intro
@@ -370,7 +312,7 @@ export function StepFinal({
             </>
           }
           opp={
-            <Row side="opp" life={lives.opp}>
+            <Row side="opp" life={combat.life.opp}>
               {THEIRS.map((id) => {
                 const { fate, c } = slot(id);
                 return (
@@ -380,7 +322,7 @@ export function StepFinal({
                     card={CARDS[id] as CardDef}
                     status={status(id)}
                     tapped={c?.tapped}
-                    damage={dmg[id]}
+                    damage={combat.damage[id]}
                     onSelect={phase === "block" && pick ? () => onAttacker(id) : undefined}
                     disabled={phase !== "block"}
                   />
@@ -389,7 +331,7 @@ export function StepFinal({
             </Row>
           }
           you={
-            <Row side="you" life={lives.you}>
+            <Row side="you" life={combat.life.you}>
               {YOURS.map((id) => {
                 const { fate, c } = slot(id);
                 return (
@@ -399,7 +341,7 @@ export function StepFinal({
                     card={CARDS[id] as CardDef}
                     status={status(id)}
                     tapped={c?.tapped}
-                    damage={dmg[id]}
+                    damage={combat.damage[id]}
                     pressed={phase === "attack" ? selected.includes(id) : phase === "block" ? pick === id || !!blocks[id] : undefined}
                     highlight={highlightIds.includes(id)}
                     onSelect={() => (phase === "attack" ? toggleAttacker(id) : onYours(id))}
@@ -416,7 +358,7 @@ export function StepFinal({
           {phase === "block" && (
             <>
               <Primary onClick={confirmBlocks}>{Object.keys(blocks).length ? `Block with ${Object.keys(blocks).length}` : "Don't block"}</Primary>
-              {!lighter && <HintButton level={progress.hints} total={FINAL.blockHints.length} onMore={() => dispatch({ type: "hint", step: "final" })} />}
+              {!lighter && <HintButton level={progress.hints} total={FINAL.blockHints.length} onMore={step.hint} />}
             </>
           )}
           {phase === "fail1" && <Primary onClick={start}>Try their turn again</Primary>}
@@ -449,7 +391,7 @@ export function StepFinal({
               <Primary onClick={attack} disabled={selected.length === 0}>
                 {selected.length ? `Attack with ${selected.length}` : "Pick attackers"}
               </Primary>
-              {!lighter && <HintButton level={progress.hints} total={FINAL.attackHints.length} onMore={() => dispatch({ type: "hint", step: "final" })} />}
+              {!lighter && <HintButton level={progress.hints} total={FINAL.attackHints.length} onMore={step.hint} />}
             </>
           )}
           {phase === "fail2" && (
@@ -467,7 +409,7 @@ export function StepFinal({
           {lighter && (phase === "block" || phase === "attack") && <p className="text-sm text-ink-soft">Extra help is on: the highlighted cards are the answer.</p>}
         </>
       }
-      announce={announce}
+      announce={step.announce}
       // Same finished state as every step; only the headline is its own.
       done={phase === "won"}
       doneHeadline="You win!"

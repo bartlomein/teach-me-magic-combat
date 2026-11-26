@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type Dispatch, type Ref } from "react";
-import { useRun } from "./useRun";
+import { useMemo, useState } from "react";
 import { CARDS, type CardDef } from "@/lib/cards";
-import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { BLOCK, blockBoard, blockLighterBoard, judgeBlock } from "@/lib/lesson/steps";
-import { describe as describeCombat, resolveCombat, type Myth } from "@/lib/rules/engine";
-import { Board, BlockLines, CardSlot, Row, useBoardFx } from "../board/Board";
-import { HintButton, HintText, OnSpot, PinKey, Primary, Secondary, type Feedback } from "./Coach";
+import { Board, BlockLines, CardSlot, Row } from "../board/Board";
+import { HintButton, HintText, PinKey, Primary, Secondary } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
+import { sides, useCombat, useDemo, useStep, type StepProps } from "./useStep";
 
-const now = () => Date.now();
-/** Time to read a caption. Not scaled by the motion setting: reading speed isn't motion. */
-const readPause = (ms: number) => new Promise((r) => setTimeout(r, ms));
 type Phase = "ask" | "explain" | "watch" | "pick" | "resolving" | "missed" | "done";
-type Fate = "alive" | "dying" | "gone";
+
+/** Lighter version: the math, pinned to both cards. */
+const LIGHTER_PINS = [
+  { id: "mossGolem", letter: "A", text: "Moss Golem hits for 3. The Boar has 3 toughness." },
+  { id: "thornBoar", letter: "B", text: "The Boar hits for 3. Moss Golem has 4 toughness." },
+] as const;
 
 /**
  * Step 2: Blocking. A quick "who picks blockers?" first (myth M3), then the rule,
@@ -23,122 +23,48 @@ type Fate = "alive" | "dying" | "gone";
  * yours lives. Two misses swap in the lighter version (one blocker, the math
  * shown in the Key, a yes/no question).
  */
-export function StepBlock({
-  progress,
-  lighterNext,
-  dispatch,
-  onNext,
-  nextTitle,
-  headingRef,
-}: {
-  progress: StepProgress;
-  lighterNext: boolean;
-  dispatch: Dispatch<LessonAction>;
-  onNext: () => void;
-  nextTitle: string | null;
-  headingRef: Ref<HTMLHeadingElement>;
-}) {
-  const fx = useBoardFx();
-  const lighter = progress.lighter === "active";
+export function StepBlock(props: StepProps) {
+  const { progress, onNext, nextTitle, headingRef } = props;
+  const step = useStep<Phase>("block", props, progress.status === "done" ? "explain" : "ask", ["pick", "done", "explain"]);
+  const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
   const board = useMemo(() => (lighter ? blockLighterBoard() : blockBoard()), [lighter]);
+  const combat = useCombat(fx);
 
-  const [phase, setPhase] = useState<Phase>(progress.status === "done" ? "explain" : "ask");
-  const run = useRun();
   const [asked, setAsked] = useState<"me" | "them" | null>(null);
-  const [watched, setWatched] = useState(false);
   const [blocker, setBlocker] = useState<string | null>(null);
-  const [damage, setDamage] = useState<Record<string, number>>({});
-  const [fates, setFates] = useState<Record<string, Fate>>({});
-  const [youLife, setYouLife] = useState(20);
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [lighterAnswer, setLighterAnswer] = useState<"yes" | "no" | null>(null);
-  const [announce, setAnnounce] = useState("");
-
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    if (phase === "pick" || phase === "done" || phase === "explain") headlineRef.current?.focus();
-  }, [phase, lighter]);
-
-  const explaining = phase === "explain" || phase === "watch";
-  const pinShown = (id: string) => !lighter && id === "mossGolem" && (explaining || (phase === "pick" && progress.hints >= 2));
-  const { cardProps, keyProps } = usePinLinks(BLOCK.pins, pinShown, fx.mode === "full");
-  // Lighter version: the math, pinned to both cards.
-  const lighterPins = [
-    { id: "mossGolem", letter: "A", text: "Moss Golem hits for 3. The Boar has 3 toughness." },
-    { id: "thornBoar", letter: "B", text: "The Boar hits for 3. Moss Golem has 4 toughness." },
-  ] as const;
-  const lighterLinks = usePinLinks(lighterPins, () => lighter, fx.mode === "full");
-  const pinsFor = (id: string) => (lighter ? lighterLinks.cardProps(id) : cardProps(id));
-
-  function miss(note: string, myth?: Myth, soft = false) {
-    dispatch({ type: "miss", step: "block", myth, note, at: now(), soft });
-    return !soft && lighterNext;
-  }
 
   function reset() {
     setBlocker(null);
-    setDamage({});
-    setFates({});
-    setYouLife(20);
+    setLighterAnswer(null);
+    combat.clear();
     fx.clearFx();
   }
 
   /** Animate a block (or none) exactly as the engine resolves it. */
   async function play(blockId: string | null) {
-    const s = lighter ? blockLighterBoard() : blockBoard();
-    const r = resolveCombat(s, ["thornBoar"], blockId ? { [blockId]: "thornBoar" } : {});
-    if (blockId) {
-      await fx.clash(
-        [{ attacker: "thornBoar", blocker: blockId, toBlocker: s.creatures.thornBoar.power, toAttacker: s.creatures[blockId].power }],
-        () => setDamage({ [blockId]: s.creatures.thornBoar.power, thornBoar: s.creatures[blockId].power }),
-      );
-    } else {
-      await fx.hitPlayer([{ id: "thornBoar", amount: 3 }], "you", () => setYouLife(r.state.life.you));
-    }
-    const dead = r.state.graveyard;
-    if (dead.length) {
-      setFates(Object.fromEntries(dead.map((id) => [id, "dying" as Fate])));
-      await fx.wait(fx.mode === "full" ? 900 : 600);
-      setFates(Object.fromEntries(dead.map((id) => [id, "gone" as Fate])));
-    }
-    setAnnounce((blockId ? `${s.creatures[blockId].name} blocks Thorn Boar. ` : "No block. ") + describeCombat(s, r.events));
+    const r = await combat.play(board, ["thornBoar"], blockId ? { [blockId]: "thornBoar" } : {});
+    step.setAnnounce((blockId ? `${board.creatures[blockId].name} blocks Thorn Boar. ` : "No block. ") + r.text);
   }
 
-  async function watch() {
-    const live = run.begin();
-    reset();
-    setFeedback(null);
-    setPhase("watch");
+  const demo = useDemo(step, reset, async (beat) => {
     // Beats held long enough to read twice (real time in every motion mode).
     setFeedback({ tone: "info", text: "Thorn Boar attacks you." });
-    await readPause(2000);
-    if (!live()) return;
+    await beat(2000);
     setBlocker("emberPup");
     setFeedback({ tone: "info", text: "You block with Ember Pup." });
-    await readPause(2200);
-    if (!live()) return;
+    await beat(2200);
     setFeedback(null);
-    await play("emberPup");
-    if (!live()) return;
+    await beat(play("emberPup"));
     setFeedback({ tone: "info", text: `Both hit at once. ${BLOCK.watchCaption}` });
-    await readPause(3200);
-    if (!live()) return;
-    // The result stays on the board until "Try it" or "Watch again" (both reset it).
-    setWatched(true);
-    setPhase("explain");
-  }
+    await beat(3200);
+  });
+  const { explaining } = demo;
 
-  function startTry() {
-    run.cancel();
-    reset();
-    setFeedback(null);
-    setPhase("pick");
-  }
+  const pinShown = (id: string) => !lighter && id === "mossGolem" && (explaining || (phase === "pick" && progress.hints >= 2));
+  const { cardProps, keyProps } = usePinLinks(BLOCK.pins, pinShown, fx.mode === "full");
+  const lighterLinks = usePinLinks(LIGHTER_PINS, () => lighter, fx.mode === "full");
+  const pinsFor = (id: string) => (lighter ? lighterLinks.cardProps(id) : cardProps(id));
 
   function answerAsk(v: "me" | "them") {
     setAsked(v);
@@ -146,7 +72,7 @@ export function StepBlock({
       setFeedback({ tone: "good", text: "The defender chooses. That's you." });
       setPhase("explain");
     } else {
-      miss("Thought the attacker picks blockers", BLOCK.ask.myth, true);
+      step.miss("Thought the attacker picks blockers", BLOCK.ask.myth, true);
       setFeedback({ tone: "bad", text: BLOCK.ask.wrong });
     }
   }
@@ -157,14 +83,12 @@ export function StepBlock({
     await play(blockId);
     const v = judgeBlock(blockId);
     if (v.ok) {
-      dispatch({ type: "complete", step: "block", at: now() });
+      step.complete();
       setFeedback({ tone: "good", text: v.message });
       setPhase("done");
       return;
     }
-    const toLighter = miss(blockId ? `Blocked with ${board.creatures[blockId].name}` : "Didn't block", v.myth);
-    setFeedback({ tone: "bad", text: toLighter ? `${v.message} Let's try a simpler board.` : v.message });
-    if (toLighter) {
+    if (step.wrong(blockId ? `Blocked with ${board.creatures[blockId].name}` : "Didn't block", v)) {
       // Straight to the simpler question: no extra click.
       await fx.wait(900);
       reset();
@@ -176,21 +100,12 @@ export function StepBlock({
     setLighterAnswer(v);
     if (v === "yes") setFeedback({ tone: "good", text: "Yes: Golem deals 3 (Boar dies) and takes 3 of its 4 (lives)." });
     else {
-      miss("Lighter: thought Golem dies or misses", "M5", true);
+      step.miss("Lighter: thought Golem dies or misses", "M5", true);
       setFeedback({ tone: "bad", text: "Golem deals 3: enough for the Boar. It takes 3, but has 4." });
     }
   }
 
-  function backToFull() {
-    dispatch({ type: "lighter-cleared", step: "block" });
-    setLighterAnswer(null);
-    reset();
-    setFeedback({ tone: "info", text: "Now the full board. Same idea." });
-    setPhase("pick");
-  }
-
-  const theirs = Object.values(board.creatures).filter((c) => c.controller === "opp");
-  const yours = Object.values(board.creatures).filter((c) => c.controller === "you");
+  const { theirs, yours } = sides(board);
   const hintOn = progress.hints >= 3 && phase === "pick" && !lighter;
   const canPick = phase === "pick" && !lighter;
 
@@ -210,34 +125,12 @@ export function StepBlock({
       title="Blocking"
       headingRef={headingRef}
       headline={headline}
-      headlineRef={headlineRef}
+      headlineRef={step.headlineRef}
       speak={explaining ? BLOCK.speak : headline}
       howTo={
         canPick ? "Tap one of your creatures, then press Block." : phase === "missed" ? "Watch what happened, then try again." : undefined
       }
-      bandActions={
-        explaining ? (
-          watched ? (
-            <>
-              <OnSpot primary onClick={startTry} disabled={phase === "watch"}>
-                Try it
-              </OnSpot>
-              <OnSpot onClick={watch} disabled={phase === "watch"}>
-                {phase === "watch" ? "Watching…" : "Watch again"}
-              </OnSpot>
-            </>
-          ) : (
-            <>
-              <OnSpot primary onClick={watch} disabled={phase === "watch"}>
-                {phase === "watch" ? "Watching…" : "Watch it"}
-              </OnSpot>
-              <OnSpot onClick={startTry} disabled={phase === "watch"}>
-                Skip to try
-              </OnSpot>
-            </>
-          )
-        ) : undefined
-      }
+      bandActions={demo.bandActions}
       board={
         <Board
           scope={fx.scope}
@@ -258,21 +151,21 @@ export function StepBlock({
           opp={
             <Row side="opp" life={20}>
               {theirs.map((c) => (
-                <CardSlot key={c.id} fate={fates[c.id]} card={CARDS[c.id as keyof typeof CARDS] as CardDef} status="attacking" tapped={c.tapped} damage={damage[c.id]} {...pinsFor(c.id)} />
+                <CardSlot key={c.id} fate={combat.fates[c.id]} card={CARDS[c.id as keyof typeof CARDS] as CardDef} status="attacking" tapped={c.tapped} damage={combat.damage[c.id]} {...pinsFor(c.id)} />
               ))}
             </Row>
           }
           you={
-            <Row side="you" life={youLife}>
+            <Row side="you" life={combat.life.you}>
               {yours.map((c) => (
                 <CardSlot
                   key={c.id}
-                  fate={fates[c.id]}
+                  fate={combat.fates[c.id]}
                   card={CARDS[c.id as keyof typeof CARDS] as CardDef}
                   status={blocker === c.id ? "blocking" : c.enteredThisTurn ? "new" : null}
                   // "New this turn" goes above the card, like Step 1. Not while it blocks: then the card says "Blocking".
                   callout={c.enteredThisTurn && blocker !== c.id ? BLOCK.callouts[c.id as keyof typeof BLOCK.callouts] : undefined}
-                  damage={damage[c.id]}
+                  damage={combat.damage[c.id]}
                   pressed={canPick ? blocker === c.id : undefined}
                   highlight={hintOn && (BLOCK.hintHighlight as readonly string[]).includes(c.id)}
                   {...pinsFor(c.id)}
@@ -307,7 +200,7 @@ export function StepBlock({
                 {blocker ? `Block with ${board.creatures[blocker].name}` : "Pick a blocker"}
               </Primary>
               <Secondary onClick={() => confirm(null)}>Don&apos;t block</Secondary>
-              <HintButton level={progress.hints} total={BLOCK.hints.length} onMore={() => dispatch({ type: "hint", step: "block" })} />
+              <HintButton level={progress.hints} total={BLOCK.hints.length} onMore={step.hint} />
             </>
           )}
           {lighter && phase === "pick" && (
@@ -321,8 +214,8 @@ export function StepBlock({
               onAnswer={answerLighter}
             />
           )}
-          {lighter && lighterAnswer === "yes" && <Primary onClick={backToFull}>Back to the full board</Primary>}
-          {phase === "missed" && <Primary onClick={startTry}>Try again</Primary>}
+          {lighter && lighterAnswer === "yes" && <Primary onClick={demo.backToFull}>Back to the full board</Primary>}
+          {phase === "missed" && <Primary onClick={demo.startTry}>Try again</Primary>}
         </>
       }
       feedback={feedback}
@@ -332,7 +225,7 @@ export function StepBlock({
           {lighter ? <PinKey {...lighterLinks.keyProps} /> : <PinKey {...keyProps} />}
         </>
       }
-      announce={announce}
+      announce={step.announce}
       done={phase === "done"}
       onNext={onNext}
       nextTitle={nextTitle}

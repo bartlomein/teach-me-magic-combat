@@ -1,19 +1,17 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useEffect, useRef, useState, type Dispatch, type Ref } from "react";
+import { useState } from "react";
 import { CARDS, type CardDef } from "@/lib/cards";
-import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { HEAL, healBoard } from "@/lib/lesson/steps";
-import { endTurn, resolveCombat, declareAttackers, type Myth } from "@/lib/rules/engine";
-import { Board, CardSlot, Row, useBoardFx } from "../board/Board";
-import { PinKey, type Feedback } from "./Coach";
+import { declareAttackers, endTurn, resolveCombat } from "@/lib/rules/engine";
+import { Board, CardSlot, Row } from "../board/Board";
+import { PinKey } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
+import { useStep, type Fate, type StepProps } from "./useStep";
 
-const now = () => Date.now();
 type Phase = "q1" | "healing" | "q2" | "playing" | "done";
-type Fate = "alive" | "dying" | "gone";
 
 /**
  * Step 4: Damage wears off. Predict first, then watch: does Golem keep its 3
@@ -21,51 +19,22 @@ type Fate = "alive" | "dying" | "gone";
  * blocks another 3/3 and survives. The lighter version plays the heal first,
  * then asks again.
  */
-export function StepHeal({
-  lighterNext,
-  dispatch,
-  onNext,
-  nextTitle,
-  headingRef,
-}: {
-  progress: StepProgress;
-  lighterNext: boolean;
-  dispatch: Dispatch<LessonAction>;
-  onNext: () => void;
-  nextTitle: string | null;
-  headingRef: Ref<HTMLHeadingElement>;
-}) {
-  const fx = useBoardFx();
+export function StepHeal(props: StepProps) {
+  const { onNext, nextTitle, headingRef } = props;
+  const step = useStep<Phase>("heal", props, "q1", ["q2", "done"]);
+  const { fx, phase, setPhase, feedback, setFeedback } = step;
   const board = healBoard();
-  const [phase, setPhase] = useState<Phase>("q1");
   const [q1, setQ1] = useState<"yes" | "no" | null>(null);
   const [q2, setQ2] = useState<"yes" | "no" | null>(null);
   const [golemDamage, setGolemDamage] = useState(3);
   const [boarDamage, setBoarDamage] = useState(0);
   const [boarFate, setBoarFate] = useState<Fate>("alive");
   const [turnEnded, setTurnEnded] = useState(false);
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [announce, setAnnounce] = useState("");
-
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    if (phase === "q2" || phase === "done") headlineRef.current?.focus();
-  }, [phase]);
 
   // The pin is about the first turn's damage. It goes away with that damage and
   // stays away for the second fight, so the finished state has no Key (like every step).
   const pinShown = (id: string) => id === "mossGolem" && golemDamage > 0 && phase !== "playing" && phase !== "done";
   const { cardProps, keyProps } = usePinLinks(HEAL.pins, pinShown, fx.mode === "full");
-
-  function miss(note: string, myth?: Myth) {
-    dispatch({ type: "miss", step: "heal", myth, note, at: now() });
-    return lighterNext;
-  }
 
   /** The turn ends: a clock mark, then the damage fades away (514.2). */
   async function heal() {
@@ -74,7 +43,7 @@ export function StepHeal({
     await fx.wait(900);
     const after = endTurn(board);
     setGolemDamage(after.creatures.mossGolem.damage);
-    setAnnounce("The turn ends. Moss Golem's damage is removed. It's back to full health.");
+    step.setAnnounce("The turn ends. Moss Golem's damage is removed. It's back to full health.");
     await fx.wait(900);
   }
 
@@ -86,7 +55,7 @@ export function StepHeal({
       setPhase("q2");
       return;
     }
-    const toLighter = miss("Thought damage stays", HEAL.q1.myth);
+    const toLighter = step.miss("Thought damage stays", HEAL.q1.myth);
     setFeedback({ tone: "bad", text: HEAL.q1.wrong });
     if (toLighter) {
       // Lighter version: show the heal, then ask the first question again.
@@ -102,7 +71,7 @@ export function StepHeal({
   async function answerQ2(v: "yes" | "no") {
     setQ2(v);
     if (v === "no") {
-      dispatch({ type: "miss", step: "heal", note: "Thought healed Golem dies to a 3/3", at: now(), soft: true });
+      step.miss("Thought healed Golem dies to a 3/3", undefined, true);
       setFeedback({ tone: "bad", text: HEAL.q2.wrong });
     } else setFeedback({ tone: "good", text: "Let's see it." });
     // Either way, play it out so the learner sees it.
@@ -116,8 +85,8 @@ export function StepHeal({
     setBoarFate("dying");
     await fx.wait(fx.mode === "full" ? 900 : 600);
     setBoarFate("gone");
-    setAnnounce("Thorn Boar deals 3 to Moss Golem. Moss Golem deals 3 to Thorn Boar. Thorn Boar dies. Moss Golem survives.");
-    dispatch({ type: "complete", step: "heal", at: now() });
+    step.setAnnounce("Thorn Boar deals 3 to Moss Golem. Moss Golem deals 3 to Thorn Boar. Thorn Boar dies. Moss Golem survives.");
+    step.complete();
     setFeedback({ tone: "good", text: HEAL.win });
     setPhase("done");
   }
@@ -131,7 +100,7 @@ export function StepHeal({
       title="Damage wears off"
       headingRef={headingRef}
       headline={headline}
-      headlineRef={headlineRef}
+      headlineRef={step.headlineRef}
       speak={phase === "q1" ? `${HEAL.speak} ${HEAL.q1.question}` : headline}
       howTo={phase === "q1" ? "Golem took 3 damage this turn. Predict first." : undefined}
       board={
@@ -210,7 +179,7 @@ export function StepHeal({
       }
       feedback={feedback}
       below={<PinKey {...keyProps} />}
-      announce={announce}
+      announce={step.announce}
       done={phase === "done"}
       onNext={onNext}
       nextTitle={nextTitle}
