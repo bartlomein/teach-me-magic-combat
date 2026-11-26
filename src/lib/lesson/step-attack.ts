@@ -24,7 +24,7 @@ export const ATTACK = {
   ],
   callouts: { stormHawk: "New this turn" },
   hintHighlight: ["emberPup", "mossGolem"],
-  win: "5 damage! Attackers hit the player. Their creatures choose whether to block.",
+  win: "5 damage! When you attack, they pick the blockers. When they attack, you do.",
   after: "Your attackers stay tapped until your next turn.",
 } as const;
 
