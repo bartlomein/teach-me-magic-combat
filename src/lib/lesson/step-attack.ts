@@ -15,7 +15,7 @@ export const ATTACK = {
     pickLighter: "Which one can attack?",
   },
   hints: [
-    "Look for the New this turn tag.",
+    "Look for the New tag.",
     "Read the Key below.",
     "These two can attack.",
   ],

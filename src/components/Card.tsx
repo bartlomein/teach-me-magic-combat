@@ -8,11 +8,11 @@ import { BladesIcon, CheckIcon, MoonIcon, ShieldIcon, TapIcon, WebIcon, WingIcon
 
 export type CardStatus = "attacking" | "blocking" | "new" | "tapped" | null;
 
-const STATUS: Record<Exclude<CardStatus, null>, { icon: ReactNode; text: string }> = {
-  attacking: { icon: <BladesIcon className="size-[1.15em]" />, text: "Attacking" },
-  blocking: { icon: <ShieldIcon className="size-[1.15em]" />, text: "Blocking" },
-  new: { icon: <MoonIcon className="size-[1.15em]" />, text: "New this turn" },
-  tapped: { icon: <TapIcon className="size-[1.15em]" />, text: "Tapped" },
+const STATUS: Record<Exclude<CardStatus, null>, { icon: ReactNode; text: string; short: string }> = {
+  attacking: { icon: <BladesIcon className="size-[1.15em]" />, text: "Attacking", short: "Attack" },
+  blocking: { icon: <ShieldIcon className="size-[1.15em]" />, text: "Blocking", short: "Block" },
+  new: { icon: <MoonIcon className="size-[1.15em]" />, text: "New this turn", short: "New" },
+  tapped: { icon: <TapIcon className="size-[1.15em]" />, text: "Tapped", short: "Tapped" },
 };
 
 const KEYWORD_ICON: Record<Keyword, ReactNode> = {
@@ -217,6 +217,9 @@ export function CardFace({ card, status, damage = 0, readable = false }: { card:
           <span className="cf-status" data-status={status}>
             {STATUS[status].icon}
             <span className="cf-status-word">{STATUS[status].text}</span>
+            <span className="cf-status-short" aria-hidden>
+              {STATUS[status].short}
+            </span>
           </span>
         )}
         {damage > 0 && (

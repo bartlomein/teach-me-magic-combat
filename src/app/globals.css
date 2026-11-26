@@ -292,6 +292,9 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   line-height: 1;
   white-space: nowrap;
 }
+.cf-status-short {
+  display: none;
+}
 .cf-status[data-status="attacking"] {
   --st: var(--ember);
 }
@@ -410,6 +413,9 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+  .cf-status-short {
+    display: inline;
   }
   .cf-kw-mini {
     display: flex;
