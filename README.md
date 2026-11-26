@@ -34,9 +34,19 @@ You start by saying if you've played before.
 - **Never played** gets a short "What's the game?" screen first.
 - **Played a bit** gets a 3 question quick check. Each right answer skips that step.
 
-Then there are 5 steps: Attacking, Blocking, Flying + reach, Damage wears off, and a Final challenge. The first three show a short demo, then you try it on a real board. Wrong answers get feedback that names the exact mistake. If you miss twice, you get an easier version of the same step.
+Then there are 5 steps: Attacking, Blocking, Flying + reach, Damage wears off, and a Final challenge. The first three show a short demo, then you try it on a real board. Wrong answers get feedback that names the exact mistake. Miss twice on one of those three and you get an easier version of the same step. Damage wears off starts with a prediction that isn't scored. In the final challenge, two misses turn on extra help.
 
 At the end there's a report card. It shows how each step went, your mistakes grouped by type, and what to practice. If you go back and practice a step, the report shows that too.
+
+## How it's built
+
+- `src/lib/rules` is the rules engine. It's pure functions for attacking, blocking, damage and dying, with the rule numbers in the code. Every answer in the lesson is checked by running it through the engine, so the UI can't call an illegal play right.
+- `src/lib/lesson` is the lesson. Each step's boards and checks live in `steps.ts`. Progress is a pure reducer in `lesson.ts`. A small store in `store.ts` saves it in the browser and keeps tabs in sync.
+- `src/components/lesson` is the screens. What's on the board right now (the selected card, damage, the phase) stays local to each step. Only lesson events like a miss, a hint or a finished step go to the store.
+- Shared hooks in `useStep.tsx` give every step the same phases, feedback, focus handling and animations that stop cleanly when you leave.
+- Tests: the engine, the reducer and the report card are plain unit tests. Each step is also clicked through with Testing Library and the real reducer.
+
+A good place to start reading is `src/lib/rules/engine.ts`, then `src/lib/lesson/lesson.ts`, then `src/components/lesson/StepBlock.tsx`.
 
 ## How it lines up with Marker
 
@@ -59,7 +69,7 @@ About 14 hours over two days, so well over the 4 hours. I went in knowing I'd go
 - three.js and Blender for the Moss Golem stepping out of its card on the welcome page (the Blender file and build scripts are in [art/source/](art/source/))
 - Vitest and Testing Library for tests
 - Claude Code for planning, research, writing code with me, and testing (Playwright runs in Chrome and Safari, axe, Lighthouse)
-- Codex image generation for the card art and avatars. The prompts are in [art/prompts.md](art/prompts.md).
+- Codex image generation for the card art and avatars.
 
 The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2026). All the cards are made up.
 
@@ -68,12 +78,15 @@ The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2
 - **One topic, deep.** Combat only, instead of a light pass over six keywords. Flying and reach are the only keywords.
 - **Tap, don't drag.** Tap your creature, then tap what it blocks. It works the same with a mouse, a phone, or a keyboard.
 - **A real rules engine, scripted boards.** Every answer is checked by pure functions with tests, so the lesson can't call an illegal play right. The boards themselves are set up by hand instead of being a full game.
-- **Flat cards, one 3D moment.** The cards are CSS with painted art, because it's lighter on phones and easier to make accessible. The one 3D moment is on the welcome page: the Moss Golem punches through its card, climbs out, points at the lesson text and then at you, pounds its chest and the ground, and jumps back in. The card's art window works like a real window, so you only see the golem through it while it's behind the card. I built the golem in Blender with Python scripts: chiselled boulders with moss and ferns, hung on a joint rig, with one baked animation (311 KB GLB). An earlier version had the Storm Hawk cut out of its painting and leaping out, but it looked flat, so I replaced it. I tried an AI image-to-3D generator too, but it was out of credits. It loads only after the page is ready, plays each time the page loads, and is skipped in Calm and Off motion, on data saver, and on low-memory phones. It runs about 13 seconds, so there's a Skip button and Esc works. The painting and the 3D golem never line up exactly, so they swap under a short gold flash in the art window instead of cross-fading.
+- **Flat cards, one 3D moment.** The cards are CSS with painted art, because it's lighter on phones and easier to make accessible. The one 3D moment is the Moss Golem climbing out of its card on the welcome page. I built it in Blender with Python scripts (in [art/source/](art/source/)). It only loads on capable devices, is skipped in Calm and Off motion, and has a Skip button.
 - **Rebuilt the final challenge.** The first version had you attack first and guess what the opponent would do next. That was too much hidden info for a beginner. Now they attack first, and everything you need for your turn is on the board.
 - **Cut the check-in.** Marker asks students how tired they felt and how much they enjoyed it. I built that, but here the answer didn't do anything for the learner, so I took it out.
 
 ## With more time
 
+- Draw the board on the server, and only wait for saved progress before it becomes clickable.
+- Turn each step into a small state machine, starting with the final challenge. Then step screens become mostly data, and new lessons are quicker to add.
+- Tests for the quick check, the report screen and saving progress.
 - Test it with real beginners and watch where they get stuck.
 - More keywords: first strike, trample, deathtouch.
 - Lesson 2 (combat tricks). The report card already has a short demo of it.
@@ -84,7 +97,7 @@ The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2
 ## Known limitations
 
 - Progress only lives in this browser. Clearing site data starts you over.
-- Step pages wait for saved progress before they show, so locked steps stay locked. Until then you see the step's outline. On a slow phone that's about 3.7 seconds (Lighthouse mobile score 90). Desktop scores 100. Next step: draw the board on the server and only wait for progress before it becomes clickable.
+- Step pages wait for saved progress before they show, so locked steps stay locked. Until then you see the step's outline.
 - The opponent is predictable on purpose, so the final challenge has one clear answer. It doesn't play like a real person.
 - Read-aloud uses the browser's built-in speech, so the voice depends on the device.
 - I checked phone sizes in Chrome and Safari on my laptop, not on a real phone.
