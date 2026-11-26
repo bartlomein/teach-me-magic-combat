@@ -26,7 +26,6 @@ type Props = {
   damage?: number;
   /** Toggle-button state (selected as blocker, attacker, etc). */
   pressed?: boolean;
-  flipped?: boolean;
   foil?: boolean;
   /** When set, the card is a real button. Otherwise it's a labelled, non-interactive figure. */
   onSelect?: () => void;
@@ -59,7 +58,6 @@ export function Card({
   status = null,
   damage = 0,
   pressed,
-  flipped,
   foil,
   onSelect,
   disabled,
@@ -140,7 +138,6 @@ export function Card({
 
   const shared = {
     className: "card text-left",
-    "data-flipped": flipped ? "true" : "false",
     "data-foil": foil ? "true" : "false",
     "data-status": status ?? undefined,
     "data-tapped": tapped ? "true" : "false",
@@ -153,7 +150,6 @@ export function Card({
     <>
       <CardFace card={card} status={status} damage={damage} readable={!!onSelect} />
       {onSelect && extras.length > 0 && <span className="sr-only">, {extras.join(", ")}</span>}
-      <div className="card__back" aria-hidden />
       <div className="card__foil" aria-hidden />
       <div className="card__glare" aria-hidden />
       {pressed && (
@@ -223,10 +219,8 @@ export function Card({
  * same markup works from a 112px board card to a 260px inspect card. Below 160px
  * a container query hides the type line and text box.
  * Also reused by the death shatter so shards look like the real card.
- */
-/**
- * The printed face. `readable`: screen readers read it (the card is a button and
- * takes its name from this text); otherwise it's hidden and the card's label speaks.
+ * `readable`: screen readers read it (the card is a button and takes its name
+ * from this text); otherwise it's hidden and the card's label speaks.
  */
 export function CardFace({ card, status, damage = 0, readable = false }: { card: CardDef; status?: CardStatus; damage?: number; readable?: boolean }) {
   return (

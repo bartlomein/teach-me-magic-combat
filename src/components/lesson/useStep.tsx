@@ -39,8 +39,17 @@ export type StepProps = {
 /** Clock for the mistake log. Only called from event handlers, never during render. */
 export const now = () => Date.now();
 
-/** Time to read a caption. Not scaled by the motion setting: reading speed isn't motion. */
-export const readPause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+/**
+ * Reading time. Not scaled by the motion setting: reading speed isn't motion.
+ * Tests speed it up through `reading.scale`; the app never changes it.
+ */
+export const reading = { scale: 1 };
+export const readPause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms * reading.scale));
+
+/** Thrown inside a sequence when a newer one starts or the learner moves on. */
+const STOPPED = Symbol("sequence stopped");
+/** One beat of a sequence: wait (a reading pause in ms, or an animation), then stop if it was cancelled. */
+export type Beat = (wait: number | Promise<unknown>) => Promise<void>;
 
 export type Fate = "alive" | "dying" | "gone";
 
@@ -57,7 +66,10 @@ export function useStep<P extends string>(
   const fx = useBoardFx();
   const run = useRun();
   const [phase, setPhase] = useState<P>(initial);
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [feedback, showFeedback] = useState<Feedback | null>(null);
+  // Every message gets its own number: repeating a wrong answer shows (and reads) it again.
+  const said = useRef(0);
+  const setFeedback = (f: Feedback | null) => showFeedback(f && { ...f, n: ++said.current });
   const [announce, setAnnounce] = useState("");
   const lighter = progress.lighter === "active";
 
@@ -100,9 +112,29 @@ export function useStep<P extends string>(
     return toLighter;
   }
 
+  /**
+   * Runs a timed sequence (a demo, a combat with reading pauses). A newer one, or
+   * leaving the step, stops it at its next beat. Resolves true if it finished.
+   */
+  async function sequence(script: (beat: Beat) => Promise<void>) {
+    const live = run.begin();
+    const beat: Beat = async (wait) => {
+      await (typeof wait === "number" ? readPause(wait) : wait);
+      if (!live()) throw STOPPED;
+    };
+    try {
+      await script(beat);
+      return true;
+    } catch (e) {
+      if (e === STOPPED) return false;
+      throw e;
+    }
+  }
+
   return {
     fx,
     run,
+    sequence,
     phase,
     setPhase,
     feedback,
@@ -174,10 +206,6 @@ export function useCombat(fx: StepCore<string>["fx"], startLife: Lives = FULL_LI
 }
 
 type DemoPhase = "explain" | "watch" | "pick";
-/** Thrown inside a demo when a newer one starts or the learner moves on. */
-const STOPPED = Symbol("demo stopped");
-/** One beat of a demo: wait (a reading pause in ms, or an animation), then stop if it was cancelled. */
-export type Beat = (wait: number | Promise<unknown>) => Promise<void>;
 
 /**
  * The Explain → Watch → Try loop. `reset` puts the board back; `script` is the
@@ -193,20 +221,10 @@ export function useDemo<P extends string>(
   const to = (p: DemoPhase) => core.setPhase(p as P);
 
   async function watch() {
-    const live = core.run.begin();
-    const beat: Beat = async (wait) => {
-      await (typeof wait === "number" ? readPause(wait) : wait);
-      if (!live()) throw STOPPED;
-    };
     reset();
     core.setFeedback(null);
     to("watch");
-    try {
-      await script(beat);
-    } catch (e) {
-      if (e === STOPPED) return;
-      throw e;
-    }
+    if (!(await core.sequence(script))) return;
     // The result stays on the board until Try it or Watch again (both reset it).
     setWatched(true);
     to("explain");

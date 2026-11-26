@@ -18,7 +18,7 @@ Then open http://localhost:3000.
 Other commands:
 
 ```bash
-npm test        # 91 tests: rules engine, lesson flow, report card, and every step clicked through
+npm test        # 93 tests: rules engine, lesson flow, report card, and every step clicked through
 npm run lint
 npm run build
 ```
@@ -42,7 +42,7 @@ I read through Marker's site and tried to build a small version of the same idea
 
 - Adapts when you struggle. Two misses gets you a lighter task.
 - Doesn't test what you already know. The quick check skips steps.
-- Corrective feedback. Every wrong answer is tied to a beginner myth (M1 to M10 in the code).
+- Corrective feedback. Every rules mistake is tied to a beginner myth (nine of them, from the lesson script). Strategy misses, like holding back a creature that could attack, are logged without one.
 - Error analysis. The report groups mistakes by myth, with strengths and things to practice.
 - Less text. Pictures, short sentences, a read-aloud button, tap instead of type.
 

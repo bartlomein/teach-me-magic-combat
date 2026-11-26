@@ -20,23 +20,25 @@ const started = (): LessonState =>
 group("lesson flow", () => {
   it("starts on the welcome screen with every step locked", () => {
     const s = initialLesson();
-    expect(s.view).toBe("welcome");
     expect(Object.values(s.steps).every((p) => p.status === "locked")).toBe(
       true,
     );
   });
 
-  it("starting opens Step 1 and goes there", () => {
+  it("starting opens Step 1", () => {
     const s = started();
-    expect(s.view).toBe("attack");
     expect(s.steps.attack.status).toBe("open");
     expect(s.steps.attack.startedAt).toBe(1);
   });
 
+  it("starting twice changes nothing (a stale button can't reset Step 1)", () => {
+    const s = r(started(), { type: "complete", step: "attack", at: 5 });
+    expect(r(s, { type: "start", experience: "some", at: 6 })).toBe(s);
+  });
+
   it("won't open a locked step", () => {
-    expect(r(started(), { type: "open", step: "final", at: 2 }).view).toBe(
-      "attack",
-    );
+    const s = started();
+    expect(r(s, { type: "open", step: "final", at: 2 })).toBe(s);
   });
 
   it("finishing a step unlocks the next one, which can then be opened", () => {
@@ -44,13 +46,14 @@ group("lesson flow", () => {
     expect(s.steps.attack.status).toBe("done");
     expect(s.steps.block.status).toBe("open");
     s = r(s, { type: "open", step: "block", at: 6 });
-    expect(s.view).toBe("block");
+    expect(s.steps.block.startedAt).toBe(6);
   });
 
   it("finished steps can be reviewed", () => {
     let s = r(started(), { type: "complete", step: "attack", at: 5 });
     s = r(s, { type: "open", step: "block", at: 6 });
-    expect(r(s, { type: "open", step: "attack", at: 7 }).view).toBe("attack");
+    s = r(s, { type: "miss", step: "attack", note: "x", at: 7 });
+    expect(r(s, { type: "open", step: "attack", at: 8 }).steps.attack.replayMisses).toBe(0);
   });
 
   it("two misses switch on the lighter version, and it stays cleared afterward", () => {
@@ -75,7 +78,7 @@ group("lesson flow", () => {
     s = r(s, {
       type: "miss",
       step: "attack",
-      myth: "M1",
+      myth: "M2",
       note: "picked new Storm Hawk",
       at: 2,
       soft: true,
@@ -83,7 +86,7 @@ group("lesson flow", () => {
     s = r(s, {
       type: "miss",
       step: "attack",
-      myth: "M1",
+      myth: "M2",
       note: "picked new Storm Hawk",
       at: 3,
       soft: true,
@@ -217,7 +220,6 @@ group("quick check (Played a bit)", () => {
     expect(s.steps.attack.status).toBe("skipped");
     expect(s.steps.block.status).toBe("skipped");
     expect(s.steps.flying.status).toBe("open");
-    expect(s.view).toBe("flying");
   });
 
   it("logs wrong answers with their myth for the report card", () => {
@@ -234,8 +236,8 @@ group("quick check (Played a bit)", () => {
   });
 
   it("skipped steps can still be opened for review", () => {
-    const s = r(qc(true, false, false), { type: "open", step: "attack", at: 3 });
-    expect(s.view).toBe("attack");
+    const s = qc(true, false, false);
+    expect(r(s, { type: "open", step: "attack", at: 3 })).not.toBe(s);
   });
 
   it("practicing a skipped step keeps it skipped: misses go to practice, not the first-try record", () => {
@@ -253,7 +255,7 @@ group("quick check (Played a bit)", () => {
 
   it("all three right still leaves Damage wears off (it's too short to skip)", () => {
     const s = qc(true, true, true);
-    expect(s.view).toBe("heal");
+    expect(s.steps.heal.status).toBe("open");
     expect(resultOf(s.steps.attack)).toBe("skipped");
   });
 
@@ -287,7 +289,6 @@ group("saved lesson check", () => {
     delete partial.block;
     expect(isLessonState({ ...s, steps: partial })).toBe(false);
     expect(isLessonState({ ...s, mistakes: "none" })).toBe(false);
-    expect(isLessonState({ ...s, view: "nowhere" })).toBe(false);
     expect(isLessonState({ ...s, steps: { ...s.steps, attack: { ...s.steps.attack, status: "won" } } })).toBe(false);
     expect(isLessonState(null)).toBe(false);
   });

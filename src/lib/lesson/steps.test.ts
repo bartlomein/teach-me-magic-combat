@@ -5,7 +5,8 @@ import { canWinNow, checkAssign, finalTheirAttack, flyingBoard, judgeAttack, jud
 group("Step 2 checks", () => {
   it("Golem is the right block", () => expect(judgeBlock("mossGolem").ok).toBe(true));
   it("Pup dies and the Boar lives (M5)", () => expect(judgeBlock("emberPup")).toMatchObject({ ok: false, myth: "M5" }));
-  it("no block costs 3 life", () => expect(judgeBlock(null).message).toMatch(/take 3/));
+  it("no block costs 3 life (M4: the new Golem could block)", () =>
+    expect(judgeBlock(null)).toMatchObject({ ok: false, myth: "M4", message: expect.stringMatching(/take 3/) }));
 });
 
 group("Step 3 checks", () => {
@@ -16,8 +17,10 @@ group("Step 3 checks", () => {
   });
   it("Archer on Bat + Golem on Boar loses nothing", () =>
     expect(judgeFlying({ vineArcher: "nightBat", mossGolem: "thornBoar" }).ok).toBe(true));
-  it("Finch on the Bat works but Finch dies", () =>
-    expect(judgeFlying({ skyFinch: "nightBat", mossGolem: "thornBoar" }).message).toMatch(/Finch dies/));
+  it("Finch on the Bat works but Finch dies (M5)", () =>
+    expect(judgeFlying({ skyFinch: "nightBat", mossGolem: "thornBoar" })).toMatchObject({ myth: "M5", message: expect.stringMatching(/Finch dies/) }));
+  it("leaving an attacker unblocked is a choice, not a myth", () =>
+    expect(judgeFlying({ vineArcher: "nightBat" })).toEqual({ ok: false, message: "You'd take 3. Block both attackers." }));
   it("leaving the Bat unblocked costs 2", () => expect(judgeFlying({ mossGolem: "thornBoar" }).message).toMatch(/take 2/));
 });
 

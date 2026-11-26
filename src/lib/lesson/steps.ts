@@ -53,7 +53,8 @@ export const blockLighterBoard = (): GameState =>
 export function judgeBlock(blocker: string | null): Judged {
   const s = blockBoard();
   const r = resolveCombat(s, ["thornBoar"], blocker ? { [blocker]: "thornBoar" } : {});
-  if (!blocker) return { ok: false, message: "You'd take 3. Moss Golem can kill it and live." };
+  // Moss Golem is new this turn (pin A). Not blocking with it is the "new creatures can't block" myth.
+  if (!blocker) return { ok: false, myth: "M4", message: "You'd take 3. Moss Golem can kill it and live." };
   const blockerDied = r.state.graveyard.includes(blocker);
   const boarDied = r.state.graveyard.includes("thornBoar");
   if (boarDied && !blockerDied) return { ok: true, message: BLOCK.win };
@@ -111,10 +112,11 @@ export function judgeFlying(blocks: Blocks): Judged {
   const lost = 20 - r.state.life.you;
   const yoursDied = r.state.graveyard.filter((id) => s.creatures[id].controller === "you");
   if (lost === 0 && yoursDied.length === 0) return { ok: true, message: FLYING.win };
-  if (blocks.skyFinch === "nightBat") return { ok: false, message: "That works, but Finch dies too. Vine Archer survives it." };
-  if (blocks.skyFinch === "thornBoar") return { ok: false, message: "Legal! Flyers can block ground creatures. But Finch dies." };
+  // A blocker that dies: its toughness wasn't enough (M5). Not blocking: a choice, not a myth.
+  if (blocks.skyFinch === "nightBat") return { ok: false, myth: "M5", message: "That works, but Finch dies too. Vine Archer survives it." };
+  if (blocks.skyFinch === "thornBoar") return { ok: false, myth: "M5", message: "Legal! Flyers can block ground creatures. But Finch dies." };
   if (lost > 0) return { ok: false, message: `You'd take ${lost}. Block both attackers.` };
-  return { ok: false, message: `${s.creatures[yoursDied[0]].name} dies. Pick a blocker that survives.` };
+  return { ok: false, myth: "M5", message: `${s.creatures[yoursDied[0]].name} dies. Pick a blocker that survives.` };
 }
 
 // ---------------------------------------------------------------------------

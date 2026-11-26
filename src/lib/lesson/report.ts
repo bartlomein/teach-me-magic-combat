@@ -10,7 +10,6 @@ import { resultOf, STEPS, type LessonState, type StepId } from "./lesson";
 
 /** Each myth as the learner believed it, and the rule that fixes it. Plain words. */
 export const MYTHS: Record<Myth, { belief: string; rule: string }> = {
-  M1: { belief: "Thought attackers hit creatures", rule: "Attackers hit the player. The defender chooses blocks." },
   M2: { belief: "Thought a new creature can attack", rule: "New creatures wait one turn before they attack." },
   M3: { belief: "Thought the attacker picks blockers", rule: "The defender always picks the blockers." },
   M4: { belief: "Thought a new creature can't block", rule: "New creatures can block right away." },
@@ -37,8 +36,6 @@ export type ReportRow = {
   id: StepId;
   title: string;
   result: StepResult;
-  /** Time on the step in seconds; null if skipped or unknown. */
-  seconds: number | null;
   hints: number;
   misses: number;
   /** How the latest practice replay went, if any. */
@@ -52,9 +49,11 @@ export type MythGroup = {
   rule: string;
   /** Steps where it happened, in lesson order. */
   steps: StepId[];
-  /** True if every one came from the quick check (before teaching). */
-  quickCheckOnly: boolean;
-  /** You've since practiced every step it happened in and got it right. */
+  /**
+   * Fixed: none of its steps is still on the To practice list. Either you
+   * practiced them clean, or it was a quick-check miss you then got right in
+   * the lesson.
+   */
   fixed: boolean;
 };
 
@@ -72,25 +71,19 @@ export type Report = {
   needs: string[];
   /** Steps to replay for "Practice what you missed", in order. */
   practice: StepId[];
-  totalSeconds: number;
   hintsUsed: number;
 };
-
-const QUICK_NOTE = "Quick check:";
 
 export function buildReport(s: LessonState): Report {
   const rows: ReportRow[] = STEPS.map(({ id, title }) => {
     const p = s.steps[id];
     const result = resultOf(p);
-    const seconds =
-      p.status === "done" && p.startedAt != null && p.finishedAt != null ? Math.max(1, Math.round((p.finishedAt - p.startedAt) / 1000)) : null;
     return {
       id,
       title,
       // A step that isn't finished shows as "retry" here; the page won't render
       // the report until `complete` is true anyway.
       result: result ?? "retry",
-      seconds,
       hints: p.hints,
       misses: p.misses,
       ...(p.practiced ? { practiced: p.practiced } : {}),
@@ -108,23 +101,13 @@ export function buildReport(s: LessonState): Report {
       count: 0,
       ...MYTHS[m.myth],
       steps: [],
-      quickCheckOnly: true,
       fixed: false,
     };
     g.count += 1;
     if (!g.steps.includes(m.step)) g.steps.push(m.step);
-    if (!m.note.startsWith(QUICK_NOTE)) g.quickCheckOnly = false;
     groups.set(m.myth, g);
   }
   const practicedClean = (id: StepId) => s.steps[id].practiced === "clean";
-  const myths = [...groups.values()]
-    .map((g) => ({
-      ...g,
-      steps: [...g.steps].sort((a, b) => order(a) - order(b)),
-      fixed: !g.quickCheckOnly && g.steps.every(practicedClean),
-    }))
-    .sort((a, b) => b.count - a.count || a.myth.localeCompare(b.myth));
-
   // Needs: steps you missed during the lesson itself,
   // unless you've since practiced them and got them right.
   // A quick-check miss that you then got right first time is a strength: you learned it.
@@ -132,6 +115,14 @@ export function buildReport(s: LessonState): Report {
   const needIds = missedFirst.filter((id) => !practicedClean(id));
   const fixedIds = missedFirst.filter(practicedClean);
   const strengths = rows.filter((r) => !missedFirst.includes(r.id)).map((r) => SKILLS[r.id]).concat(fixedIds.map((id) => `${SKILLS[id]} (after practice)`));
+
+  const myths = [...groups.values()]
+    .map((g) => ({
+      ...g,
+      steps: [...g.steps].sort((a, b) => order(a) - order(b)),
+      fixed: !g.steps.some((id) => needIds.includes(id)),
+    }))
+    .sort((a, b) => b.count - a.count || a.myth.localeCompare(b.myth));
 
   return {
     complete,
@@ -143,15 +134,6 @@ export function buildReport(s: LessonState): Report {
     strengths,
     needs: needIds.map((id) => SKILLS[id]),
     practice: needIds,
-    totalSeconds: rows.reduce((t, r) => t + (r.seconds ?? 0), 0),
     hintsUsed: rows.reduce((t, r) => t + r.hints, 0),
   };
-}
-
-/** "45 s", "2 min", "2 min 05 s". */
-export function formatTime(seconds: number) {
-  if (seconds < 60) return `${seconds} s`;
-  const m = Math.floor(seconds / 60);
-  const r = seconds % 60;
-  return r ? `${m} min ${String(r).padStart(2, "0")} s` : `${m} min`;
 }

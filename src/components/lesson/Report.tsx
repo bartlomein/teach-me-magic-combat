@@ -21,10 +21,11 @@ export function Report() {
   const { lesson, ready } = useLesson();
   const headingRef = useArrivalFocus<HTMLHeadingElement>();
   const r = buildReport(lesson);
+  const nextPractice = r.practice[0];
 
   useEffect(() => {
-    if (r.practice[0]) router.prefetch(stepHref(r.practice[0]));
-  }, [router, r.practice]);
+    if (nextPractice) router.prefetch(stepHref(nextPractice));
+  }, [router, nextPractice]);
 
   if (!ready) return <div aria-hidden className="min-h-[70vh]" />;
   if (!r.complete)
@@ -40,10 +41,8 @@ export function Report() {
     );
 
   const total = STEPS.length;
-  // A mistake is still open while its step is on the To practice list; otherwise it's been fixed
-  // (practiced clean, or a quick-check miss you then got right in the lesson).
-  const open = r.myths.filter((g) => g.steps.some((id) => r.practice.includes(id)));
-  const fixed = r.myths.filter((g) => !open.includes(g));
+  const open = r.myths.filter((g) => !g.fixed);
+  const fixed = r.myths.filter((g) => g.fixed);
   const fixedCount = fixed.reduce((n, g) => n + g.count, 0);
   const summary =
     r.clean === total

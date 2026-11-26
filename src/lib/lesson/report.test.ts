@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { initialLesson, lessonReducer, type LessonAction, type LessonState } from "./lesson";
-import { buildReport, formatTime } from "./report";
+import { buildReport } from "./report";
 
 const run = (actions: LessonAction[], s: LessonState = initialLesson()) => actions.reduce(lessonReducer, s);
 
@@ -24,7 +24,6 @@ describe("report card", () => {
     expect(r.needs).toEqual([]);
     expect(r.practice).toEqual([]);
     expect(r.myths).toEqual([]);
-    expect(r.totalSeconds).toBe(150);
   });
 
   it("groups mistakes by myth, most common first, and names the rule", () => {
@@ -58,9 +57,9 @@ describe("report card", () => {
     const r = buildReport(s);
     expect(r.complete).toBe(true);
     expect(r.rows.map((x) => x.result)).toEqual(["skipped", "first-try", "skipped", "first-try", "first-try"]);
-    expect(r.myths).toEqual([expect.objectContaining({ myth: "M3", count: 1, quickCheckOnly: true })]);
+    // Missed in the quick check, then right in the lesson: learned, so fixed.
+    expect(r.myths).toEqual([expect.objectContaining({ myth: "M3", count: 1, fixed: true })]);
     expect(r.needs).toEqual([]);
-    expect(r.rows[0].seconds).toBeNull();
   });
 
   it("practicing a missed step clean moves it from needs to strengths, and marks its myths fixed", () => {
@@ -92,10 +91,4 @@ describe("report card", () => {
     expect(buildReport(s).complete).toBe(false);
   });
 
-
-  it("formats time plainly", () => {
-    expect(formatTime(45)).toBe("45 s");
-    expect(formatTime(120)).toBe("2 min");
-    expect(formatTime(125)).toBe("2 min 05 s");
-  });
 });

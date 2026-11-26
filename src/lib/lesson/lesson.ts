@@ -17,7 +17,6 @@ export const STEPS = [
 ] as const;
 
 export type StepId = (typeof STEPS)[number]["id"];
-export type View = "welcome" | StepId;
 
 /** After this many misses on a step, offer the lighter version. */
 export const LIGHTER_AFTER = 2;
@@ -50,7 +49,6 @@ export type Mistake = {
 };
 
 export type LessonState = {
-  view: View;
   experience: "new" | "some" | null;
   steps: Record<StepId, StepProgress>;
   mistakes: Mistake[];
@@ -91,7 +89,6 @@ const fresh = (): StepProgress => ({
 
 export function initialLesson(): LessonState {
   return {
-    view: "welcome",
     experience: null,
     steps: Object.fromEntries(STEPS.map((s) => [s.id, fresh()])) as Record<
       StepId,
@@ -108,12 +105,11 @@ const LIGHTER = ["no", "active", "cleared"];
 export function isLessonState(x: unknown): x is LessonState {
   if (!x || typeof x !== "object") return false;
   const s = x as Partial<LessonState>;
-  const views: unknown[] = ["welcome", ...STEPS.map((st) => st.id)];
+  const ids: unknown[] = STEPS.map((st) => st.id);
   return (
-    views.includes(s.view) &&
     (s.experience === null || s.experience === "new" || s.experience === "some") &&
     Array.isArray(s.mistakes) &&
-    s.mistakes.every((m) => m && typeof m.note === "string" && typeof m.at === "number" && views.includes(m.step)) &&
+    s.mistakes.every((m) => m && typeof m.note === "string" && typeof m.at === "number" && ids.includes(m.step)) &&
     !!s.steps &&
     STEPS.every((st) => {
       const p = s.steps![st.id] as Partial<StepProgress> | undefined;
@@ -169,12 +165,14 @@ export function canOpen(s: LessonState, id: StepId) {
 export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
   switch (a.type) {
     case "start": {
+      // Once only: a second start (a stale button, another tab) must not reset Step 1.
+      if (s.experience !== null) return s;
       // Both paths open Step 1. "Some" then takes the quick check, which may skip ahead.
       const next = patchStep({ ...s, experience: a.experience }, "attack", {
         status: "open",
         startedAt: a.at,
       });
-      return { ...next, view: "attack" };
+      return next;
     }
     case "open": {
       if (!canOpen(s, a.step)) return s; // locked steps can't be opened
@@ -182,7 +180,7 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       let next = p.startedAt ? s : patchStep(s, a.step, { startedAt: a.at });
       // Opening a finished step starts a fresh practice attempt.
       if (isFinished(p)) next = patchStep(next, a.step, { replayMisses: 0 });
-      return { ...next, view: a.step };
+      return next;
     }
     case "miss": {
       const p = s.steps[a.step];
@@ -239,7 +237,7 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       }
       const first = STEPS.find((x) => next.steps[x.id].status !== "skipped")!.id;
       next = patchStep(next, first, { status: "open", startedAt: a.at });
-      return { ...next, view: first };
+      return next;
     }
     case "restart":
       return initialLesson();

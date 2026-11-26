@@ -87,7 +87,7 @@ export function useBoardFx() {
           );
         }),
       );
-      setBursts([{ id, x: p.x, y: p.y, color: "#c23a26" }]);
+      setBursts((cur) => [...cur, { id, x: p.x, y: p.y, color: "#c23a26" }]);
       animate(scope.current, { x: [0, -9, 8, -5, 3, 0] }, { duration: 0.4 });
       showFloats();
       onImpact();
@@ -251,13 +251,10 @@ export function Row({
   side,
   life,
   children,
-  lifeAction,
 }: {
   side: PlayerId;
   life: number;
   children: ReactNode;
-  /** When set, the life total is a button (e.g. "attack this player"). */
-  lifeAction?: { onSelect: () => void; disabled?: boolean; highlight?: boolean };
 }) {
   const label = side === "you" ? "You" : "Opponent";
   // Like a real table: each player sits at their own edge, the opponent above
@@ -274,7 +271,7 @@ export function Row({
       />
       <div className="flex flex-col items-start gap-1">
         <span className="text-sm leading-none font-bold">{label}</span>
-        <Life side={side} life={life} action={lifeAction} />
+        <Life side={side} life={life} />
       </div>
     </div>
   );
@@ -302,15 +299,7 @@ export function Row({
   );
 }
 
-function Life({
-  side,
-  life,
-  action,
-}: {
-  side: PlayerId;
-  life: number;
-  action?: { onSelect: () => void; disabled?: boolean; highlight?: boolean };
-}) {
+function Life({ side, life }: { side: PlayerId; life: number }) {
   const who = side === "you" ? "Your" : "Your opponent's";
   const inner = (
     <motion.span key={life} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="inline-flex items-center gap-1.5">
@@ -318,22 +307,6 @@ function Life({
       <span className="tabular-nums">{life}</span>
     </motion.span>
   );
-  if (action)
-    return (
-      <button
-        type="button"
-        data-life={side}
-        onClick={action.onSelect}
-        disabled={action.disabled}
-        aria-label={`Attack your opponent. ${who} life: ${life}.`}
-        className={`inline-flex min-h-11 items-center gap-2.5 border-2 border-ink bg-ink px-4 font-bold text-panel transition-colors enabled:hover:border-spot enabled:hover:bg-spot ${
-          action.highlight ? "outline-[5px] outline-offset-2 outline-hi outline-solid" : ""
-        }`}
-      >
-        {inner}
-        <span className="text-sm">Attack them</span>
-      </button>
-    );
   // Named so the life boxes on the basics screen fly into these spots.
   return (
     <ViewTransition name={`life-${side}`} share="morph" default="none">

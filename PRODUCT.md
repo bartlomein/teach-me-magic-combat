@@ -43,8 +43,8 @@ Built the way Marker Learning builds assessments: minimal text, tap instead of t
 
 ## Evidence on Hand
 
-- Card art: `public/art/storm-hawk-bg-v2.png`, `public/art/storm-hawk-fg.png`. Other 8 cards use placeholders.
-- Lesson script: `../CONTENT.md`. Plan: `../PLAN.md`.
+- Card art: painted background and creature layers for all eight cards in `public/art/`. The Moss Golem also has a 3D model (`moss-golem-3d.glb`, Blender source in `art/source/`).
+- Lesson words and boards: `src/lib/lesson/steps.ts` and `step-attack.ts`.
 - No testimonials, users, or metrics exist. Do not invent any.
 
 ## Product Principles

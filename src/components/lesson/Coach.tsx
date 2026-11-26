@@ -53,7 +53,8 @@ export function Speak({
   );
 }
 
-export type Feedback = { tone: "good" | "bad" | "info"; text: string };
+/** `n`: set per message, so the same words said twice still show (and are read) again. */
+export type Feedback = { tone: "good" | "bad" | "info"; text: string; n?: number };
 
 const TONE = {
   good: { box: "bg-ok-tint", badge: "bg-ok", word: "text-ok", label: "Right", icon: <CheckIcon className="size-3.5" /> },
@@ -70,7 +71,7 @@ export function FeedbackBox({ feedback }: { feedback: Feedback | null }) {
     <div aria-live="polite" aria-atomic="true">
       {feedback && (
         <motion.div
-          key={feedback.text}
+          key={`${feedback.n ?? 0}:${feedback.text}`}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
@@ -154,17 +155,20 @@ export function PinKey({
       <h3 className="text-sm font-bold text-ink-soft">Key</h3>
       <ul className="flex flex-col gap-1.5 text-[15px] leading-snug">
         {pins.map((p) => (
-          <li
-            key={p.letter}
-            id={`key-${p.letter}`}
-            data-state={active === null ? undefined : active === p.letter ? "active" : "dim"}
-            className="key-row flex items-start gap-2.5"
-            onPointerEnter={(e) => e.pointerType !== "touch" && onHover?.(p.letter)}
-            onPointerLeave={(e) => e.pointerType !== "touch" && onHover?.(null)}
-            onClick={() => onTap?.(p.letter)}
-          >
-            <PinMark letter={p.letter} className="key-pin" />
-            <span className="pt-0.5">{p.text}</span>
+          <li key={p.letter} id={`key-${p.letter}`} data-state={active === null ? undefined : active === p.letter ? "active" : "dim"} className="key-row">
+            {/* A button, so keyboard users can light up the card it's about, like a tap does. */}
+            <button
+              type="button"
+              className="flex w-full items-start gap-2.5 text-left"
+              onPointerEnter={(e) => e.pointerType !== "touch" && onHover?.(p.letter)}
+              onPointerLeave={(e) => e.pointerType !== "touch" && onHover?.(null)}
+              onFocus={() => onHover?.(p.letter)}
+              onBlur={() => onHover?.(null)}
+              onClick={() => onTap?.(p.letter)}
+            >
+              <PinMark letter={p.letter} className="key-pin" />
+              <span className="pt-0.5">{p.text}</span>
+            </button>
           </li>
         ))}
       </ul>

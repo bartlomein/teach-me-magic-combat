@@ -15,7 +15,6 @@ export type CardDef = {
   toughness: number;
   keywords: Keyword[];
   side: "you" | "opp";
-  /** One short italic line. Decorative; not read by screen readers. */
   /**
    * Art: painted layers when available (background + transparent creature that
    * breaks out of the frame); otherwise a glyph placeholder.

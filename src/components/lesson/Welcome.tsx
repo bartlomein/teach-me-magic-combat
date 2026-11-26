@@ -163,7 +163,9 @@ export function Welcome() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            // Held (invisible, but its space kept) until saved progress is read, so a
+            // returning learner never sees or clicks these first.
+            <div className={`flex flex-col gap-3 ${ready ? "" : "invisible"}`} inert={!ready}>
               <p className="text-lg font-bold">Have you played before?</p>
               <div className="flex flex-wrap gap-3">
                 <OnSpot primary onClick={() => start("new")}>

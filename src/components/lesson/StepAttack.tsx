@@ -16,11 +16,12 @@ import { AttackArrow, Board, Row } from "../board/Board";
 import { Card } from "../Card";
 import { HintButton, HintText, PinKey, Primary } from "./Coach";
 import { StepFrame } from "./StepFrame";
+import { usePinLinks } from "./usePinLinks";
 import { sides, useDemo, useStep, type StepProps } from "./useStep";
 
 /**
- * Step 1: Attacking. Loop: Explain → Watch → Try (pick attackers, then pick a
- * target) → Feedback. Two misses swap in the lighter board, then back.
+ * Step 1: Attacking. Loop: Explain → Watch → Try (pick attackers, press
+ * Attack) → Feedback. Two misses swap in the lighter board, then back.
  */
 
 type Phase = "explain" | "watch" | "pick" | "resolving" | "done";
@@ -58,8 +59,6 @@ export function StepAttack(props: StepProps) {
   const [oppLife, setOppLife] = useState(20);
   /** The card the current correction is about: its pin and Key line stay visible. */
   const [flagged, setFlagged] = useState<string | null>(null);
-  /** The pinned card in focus (hover, keyboard focus or tap), shared by the board and the Key. */
-  const [activePin, setActivePin] = useState<string | null>(null);
   const [lighterPassed, setLighterPassed] = useState(false);
 
   const { theirs, yours } = sides(board);
@@ -101,11 +100,6 @@ export function StepAttack(props: StepProps) {
       if (!v.ok) {
         fx.nope(c.id);
         const text = namePin(v.message, c);
-        if (c.controller === "opp") {
-          setFlagged(c.id);
-          setFeedback({ tone: "info", text }); // just a pointer, not a mistake
-          return;
-        }
         const toLighter = step.wrong(`Tried to attack with ${c.name}`, { message: text, myth: v.myth });
         if (toLighter) resetBoard();
         else setFlagged(c.id);
@@ -164,7 +158,7 @@ export function StepAttack(props: StepProps) {
 
   const n = selected.length;
 
-  // Pins mark only what matters right now: B (new this turn) while explaining and
+  // Pins mark only what matters right now: A (new this turn) while explaining and
   // from hint 2; any card a correction names.
   const pinVisible = (id: string) => {
     if (lighter) return false;
@@ -175,30 +169,7 @@ export function StepAttack(props: StepProps) {
     if (phase === "pick") return progress.hints >= 2 && pin.when.includes("pick-hint");
     return false;
   };
-  const pinFor = (id: string) => (pinVisible(id) ? ATTACK.pins.find((p) => p.id === id)?.letter : undefined);
-  const keyPins = ATTACK.pins.filter((p) => pinVisible(p.id));
-
-  // ---- Linked highlighting: a pinned card and its Key line light up together. ----
-  const letterOf = (id: string | null) => ATTACK.pins.find((p) => p.id === id)?.letter ?? null;
-  const idOf = (letter: string | null) => ATTACK.pins.find((p) => p.letter === letter)?.id ?? null;
-  const shownActive = activePin && pinFor(activePin) ? activePin : null;
-  const scrollTo = (el: Element | null | undefined) =>
-    el?.scrollIntoView({ block: "nearest", behavior: fx.mode === "full" ? "smooth" : "auto" });
-  const pinProps = (id: string) => {
-    const letter = pinFor(id);
-    if (!letter) return {};
-    const note = ATTACK.pins.find((p) => p.id === id)!;
-    return {
-      pinState: shownActive ? (shownActive === id ? "active" : "dim") : undefined,
-      pinNote: `Note ${letter}: ${note.text}`,
-      onPinHover: (on: boolean) => setActivePin((cur) => (on ? id : cur === id ? null : cur)),
-      // Phones: the Key sits under the board, so bring its line into view.
-      onPinTap: () => {
-        setActivePin(id);
-        scrollTo(document.getElementById(`key-${letter}`));
-      },
-    } as const;
-  };
+  const { cardProps, keyProps } = usePinLinks(ATTACK.pins, pinVisible, fx.mode === "full");
   const arrowOn = phase === "watch" || phase === "resolving" || phase === "done";
 
   return (
@@ -236,8 +207,7 @@ export function StepAttack(props: StepProps) {
                   card={CARDS[c.id as keyof typeof CARDS]}
                   status={c.tapped ? "tapped" : null}
                   tapped={c.tapped}
-                  pin={pinFor(c.id)}
-                  {...pinProps(c.id)}
+                  {...cardProps(c.id)}
                   onSelect={() => onCard(c)}
                   disabled={phase !== "pick"}
                 />
@@ -260,8 +230,7 @@ export function StepAttack(props: StepProps) {
                   tapped={tapped.includes(c.id)}
                   pressed={phase === "pick" ? selected.includes(c.id) : undefined}
                   highlight={hintOn && (ATTACK.hintHighlight as readonly string[]).includes(c.id)}
-                  pin={pinFor(c.id)}
-                  {...pinProps(c.id)}
+                  {...cardProps(c.id)}
                   transitionName={c.id === "mossGolem" ? "card-mossGolem" : c.id === "emberPup" ? "card-emberPup" : undefined}
                   callout={c.enteredThisTurn ? ATTACK.callouts[c.id as keyof typeof ATTACK.callouts] : undefined}
                   onSelect={() => onCard(c)}
@@ -291,16 +260,7 @@ export function StepAttack(props: StepProps) {
       below={
         <>
           {phase === "pick" && !lighter && <HintText level={progress.hints} hints={ATTACK.hints} />}
-          <PinKey
-            pins={keyPins}
-            active={letterOf(shownActive)}
-            onHover={(letter) => setActivePin(idOf(letter))}
-            onTap={(letter) => {
-              const id = idOf(letter);
-              setActivePin(id);
-              scrollTo(document.querySelector(`[data-card-id="${id}"]`));
-            }}
-          />
+          <PinKey {...keyProps} />
         </>
       }
       announce={step.announce}

@@ -39,5 +39,5 @@ export function renderStep(step: StepId, Body: ComponentType<StepProps>) {
 /** A lesson where `step` is open, like arriving at its URL. */
 function openStep(step: StepId): LessonState {
   const s = lessonReducer(initialLesson(), { type: "start", experience: "new", at: 0 });
-  return { ...s, steps: { ...s.steps, [step]: { ...s.steps[step], status: "open", startedAt: 0 } }, view: step };
+  return { ...s, steps: { ...s.steps, [step]: { ...s.steps[step], status: "open", startedAt: 0 } } };
 }

@@ -8,7 +8,7 @@ import { Board, BlockLines, CardSlot, Row } from "../board/Board";
 import { HintButton, HintText, PinKey, Primary } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
-import { readPause, sides, useCombat, useDemo, useStep, type StepProps } from "./useStep";
+import { sides, useCombat, useDemo, useStep, type StepProps } from "./useStep";
 
 type Phase = "explain" | "watch" | "pick" | "resolving" | "missed" | "follow" | "done";
 
@@ -119,9 +119,9 @@ export function StepFlying(props: StepProps) {
     const v = judgeFlying(blocks);
     if (v.ok) {
       setFeedback({ tone: "good", text: v.message });
-      await readPause(2600);
       // The follow-up question only names cards you can see: clear the board
       // down to the two it's about (a question figure).
+      if (!(await step.sequence((beat) => beat(2600)))) return;
       reset();
       setFeedback(null);
       setPhase("follow");

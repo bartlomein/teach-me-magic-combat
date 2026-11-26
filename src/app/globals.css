@@ -111,7 +111,6 @@ button:disabled,
   --ry: 0deg;
   --mx: 50%;
   --my: 50%;
-  --flip: 0deg;
   --lift: 0%;
   position: relative;
   display: block;
@@ -119,7 +118,7 @@ button:disabled,
   aspect-ratio: 5 / 7;
   border-radius: 6cqw;
   transform-style: preserve-3d;
-  transform: translateY(var(--lift)) rotateX(var(--ry)) rotateY(calc(var(--rx) + var(--flip)));
+  transform: translateY(var(--lift)) rotateX(var(--ry)) rotateY(var(--rx));
   transition:
     transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
     rotate 0.5s cubic-bezier(0.16, 1, 0.3, 1),
@@ -163,9 +162,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
     0 0 0 4px var(--panel),
     0 0 0 9px var(--hi);
 }
-.card[data-flipped="true"] {
-  --flip: 180deg;
-}
 .card[data-status="attacking"] {
   --lift: -4%; /* attackers step forward: a shape cue, not just a color */
 }
@@ -204,45 +200,12 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   transform: translateZ(1px);
 }
 
-.card__face,
-.card__back {
+.card__face {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   overflow: hidden;
 }
-/* The front face does NOT use backface-visibility. Safari (WebKit) drops the
-   images and art inside a backface-hidden face while the card tilts in 3D, even
-   when it faces you. Instead the face simply hides at the midpoint of a flip
-   (the card is edge-on then, so the swap is invisible). */
-/* No isolation/will-change here either: an isolated, clipped face inside a
-   tilting 3D card makes Safari drop the face's own navy background. */
-.card__face {
-  transition: visibility 0s linear 0.22s;
-}
-.card[data-flipped="true"] .card__face {
-  visibility: hidden;
-}
-.card[data-flipped="true"] .card__back {
-  visibility: visible;
-}
-/* The back is also hidden outright unless the card is flipped (it appears at
-   the flip's midpoint, like the face disappears). Backface hiding alone isn't
-   enough: Safari flattens the 3D card when it snapshots it for a page
-   transition, and the back then paints over the front. */
-.card__back {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  visibility: hidden;
-  transition: visibility 0s linear 0.22s;
-  transform: rotateY(180deg);
-  border: 3.5cqw solid transparent;
-  background:
-    radial-gradient(circle at 50% 50%, #c9c3f0 0 7%, #6b5bd6 7.5% 9%, transparent 9.5%) padding-box,
-    repeating-conic-gradient(from 0deg, #2c3a74 0 15deg, #1f2a58 15deg 30deg) padding-box,
-    conic-gradient(from 200deg, #e9c46a, #8a6424 25%, #fff3c4 40%, #e9c46a 55%, #8a6424 80%, #e9c46a) border-box;
-}
-
 /* ---------- Printed face ---------- */
 .cf {
   /* Metal for your side: gilt. */
@@ -579,7 +542,7 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
   --py: 0;
 }
 
-/* Calm / Off: no tilt, no moving foil, flips become a crossfade. */
+/* Calm / Off: no tilt, no moving foil. */
 [data-motion="calm"] .card,
 [data-motion="off"] .card {
   --rx: 0deg !important;
@@ -588,20 +551,6 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
 [data-motion="calm"] .card__foil,
 [data-motion="off"] .card__foil {
   background-position: 50% 50%;
-}
-[data-motion="calm"] .card[data-flipped="true"],
-[data-motion="off"] .card[data-flipped="true"] {
-  --flip: 0deg;
-}
-[data-motion="calm"] .card .card__back,
-[data-motion="off"] .card .card__back {
-  transform: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-[data-motion="calm"] .card[data-flipped="true"] .card__back,
-[data-motion="off"] .card[data-flipped="true"] .card__back {
-  opacity: 1;
 }
 [data-motion="off"] *,
 [data-motion="off"] *::before,
@@ -931,12 +880,6 @@ html[data-motion="calm"] .card-wrap[data-pin-state="active"] > .card-pin,
 html[data-motion="calm"] .key-row[data-state="active"] .key-pin {
   scale: 1;
 }
-/* Calm / Off flip is a crossfade: hide the face only once the back has faded in. */
-[data-motion="calm"] .card__face {
-  transition: visibility 0s linear 0.3s;
-}
-
-/* ---- Check-in slider: a printed 1-5 scale with tick marks, ink thumb. ---- */
 /* ---- Report card ---- */
 .report-table th,
 .report-table td {

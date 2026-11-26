@@ -66,14 +66,7 @@ export type Check = { ok: true } | { ok: false; myth?: Myth; message: string };
 /** Tapping a card while choosing attackers. Illegal picks are explained right away. */
 export function checkPick(state: GameState, id: string): Check {
   const v = canAttack(state, id);
-  if (v.ok) return v;
-  if (v.reason === "not-yours")
-    return {
-      ok: false,
-      myth: "M1",
-      message: "That's their creature. You attack with yours.",
-    };
-  return { ok: false, myth: v.myth, message: v.message };
+  return v.ok ? v : { ok: false, myth: v.myth, message: v.message };
 }
 
 /** Pressing "Attack". Every creature that can attack should be in. */

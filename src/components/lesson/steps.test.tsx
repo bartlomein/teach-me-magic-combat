@@ -7,18 +7,31 @@
  */
 import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe as group, expect, it } from "vitest";
+import { afterEach, beforeEach, describe as group, expect, it } from "vitest";
 import { renderStep } from "@/test/harness";
 import { StepAttack } from "./StepAttack";
 import { StepBlock } from "./StepBlock";
 import { StepFinal } from "./StepFinal";
 import { StepFlying } from "./StepFlying";
 import { StepHeal } from "./StepHeal";
+import { FINAL } from "@/lib/lesson/steps";
+import { reading } from "./useStep";
 
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
-const card = (name: string) => screen.getByRole("button", { name: new RegExp(`^${name}`) });
-/** Reading pauses are real time (they're for reading, not animation). */
-const slow = { timeout: 9000 };
+/** A card on the board (the Key's lines can start with a card's name too). */
+const card = (name: string) => {
+  const onBoard = screen.getAllByRole("button", { name: new RegExp(`^${name}`) }).filter((b) => b.closest("[data-card-id]"));
+  expect(onBoard).toHaveLength(1);
+  return onBoard[0];
+};
+// Reading pauses at 2% speed: a 2.8 s pause takes 56 ms. Animations are already
+// instant (the harness turns motion off).
+beforeEach(() => {
+  reading.scale = 0.02;
+});
+afterEach(() => {
+  reading.scale = 1;
+});
 
 group("Step 1: Attacking", () => {
   it("two misses swap in the smaller board; passing it leads back and on to the win", async () => {
@@ -44,30 +57,21 @@ group("Step 1: Attacking", () => {
     await screen.findByRole("heading", { name: "Step complete" });
     expect(lesson().steps.attack.status).toBe("done");
   });
-
-  it("the opponent's creature is a pointer, not a mistake", async () => {
-    const u = userEvent.setup();
-    const { lesson } = renderStep("attack", StepAttack);
-    await u.click(button("Skip to try"));
-    const theirs = screen.getAllByRole("button").find((b) => /opponent's creature/.test(b.getAttribute("aria-label") ?? ""));
-    await u.click(theirs!);
-    expect(lesson().mistakes).toHaveLength(0);
-  });
-
-  it("locks Try it and Watch again while the demo plays", async () => {
-    localStorage.setItem("teachme.motion", "full");
-    const u = userEvent.setup();
-    renderStep("attack", StepAttack);
-    localStorage.setItem("teachme.motion", "full");
-    await u.click(button("Watch it"));
-    expect(button("Watching…").hasAttribute("disabled")).toBe(true);
-    expect(button("Skip to try").hasAttribute("disabled")).toBe(true);
-    await screen.findByRole("button", { name: "Watch again" }, slow);
-    expect(button("Try it").hasAttribute("disabled")).toBe(false);
-  }, 12000);
 });
 
 group("Step 2: Blocking", () => {
+  it("locks Try it and Watch again while the demo plays", async () => {
+    reading.scale = 0.2; // long enough to look at the buttons mid-demo
+    const u = userEvent.setup();
+    renderStep("block", StepBlock);
+    await u.click(button("Me"));
+    await u.click(button("Watch it"));
+    expect(button("Watching…").hasAttribute("disabled")).toBe(true);
+    expect(button("Skip to try").hasAttribute("disabled")).toBe(true);
+    await screen.findByRole("button", { name: "Watch again" }, { timeout: 4000 });
+    expect(button("Try it").hasAttribute("disabled")).toBe(false);
+  });
+
   it("a wrong first answer is a soft miss: logged, but no lighter board", async () => {
     const u = userEvent.setup();
     const { lesson } = renderStep("block", StepBlock);
@@ -89,16 +93,16 @@ group("Step 2: Blocking", () => {
     expect(lesson().steps.block.misses).toBe(1);
 
     await u.click(button("Don't block"));
-    await screen.findByRole("heading", { name: "Does Moss Golem kill the Boar and live?" }, slow);
+    await screen.findByRole("heading", { name: "Does Moss Golem kill the Boar and live?" });
     expect(lesson().steps.block.lighter).toBe("active");
 
     await u.click(button("Yes"));
     await u.click(button("Back to the full board"));
     await u.click(card("Moss Golem"));
     await u.click(button("Block with Moss Golem"));
-    await screen.findByRole("heading", { name: "Step complete" }, slow);
+    await screen.findByRole("heading", { name: "Step complete" });
     expect(lesson().steps.block.status).toBe("done");
-  }, 15000);
+  });
 });
 
 group("Step 3: Flying + reach", () => {
@@ -116,10 +120,10 @@ group("Step 3: Flying + reach", () => {
     await u.click(card("Moss Golem"));
     await u.click(card("Thorn Boar"));
     await u.click(button("Block with 2"));
-    await u.click(await screen.findByRole("button", { name: "Yes" }, slow));
+    await u.click(await screen.findByRole("button", { name: "Yes" }));
     await screen.findByRole("heading", { name: "Step complete" });
     expect(lesson().steps.flying.status).toBe("done");
-  }, 15000);
+  });
 });
 
 group("Step 4: Damage wears off", () => {
@@ -135,12 +139,34 @@ group("Step 4: Damage wears off", () => {
 });
 
 group("Step 5: Final challenge", () => {
+  it("hints on their turn don't give away your turn's answer", async () => {
+    const u = userEvent.setup();
+    const { lesson } = renderStep("final", StepFinal);
+    await u.click(button("Start their turn"));
+    await screen.findByText(/^Turn 1 of 2/);
+    for (let i = 0; i < FINAL.blockHints.length; i++) await u.click(button(/hint/i));
+    expect(lesson().steps.final.hints).toBe(3);
+
+    await u.click(card("Vine Archer"));
+    await u.click(card("Night Bat"));
+    await u.click(card("Moss Golem"));
+    await u.click(card("Thorn Boar"));
+    await u.click(button("Block with 2"));
+    await u.click(await screen.findByRole("button", { name: "Yes" }));
+    await u.click(button("Continue"));
+
+    // Your turn starts with no hint showing, and the Hint button back.
+    for (const h of FINAL.attackHints) expect(screen.queryByText(h)).toBeNull();
+    expect(button(/^Hint/)).toBeTruthy();
+    expect(card("Storm Hawk").closest("[data-highlight='true']")).toBeNull();
+  });
+
   it("block well on their turn, then attack with all three to win", async () => {
     const u = userEvent.setup();
     const { lesson, nextClicks } = renderStep("final", StepFinal);
     await u.click(button("Start their turn"));
     // Blocking opens once both attackers have turned sideways.
-    await screen.findByText(/^Turn 1 of 2/, undefined, slow);
+    await screen.findByText(/^Turn 1 of 2/, undefined);
 
     await u.click(card("Vine Archer"));
     await u.click(card("Night Bat"));
@@ -148,14 +174,14 @@ group("Step 5: Final challenge", () => {
     await u.click(card("Thorn Boar"));
     await u.click(button("Block with 2"));
 
-    await u.click(await screen.findByRole("button", { name: "Yes" }, slow));
+    await u.click(await screen.findByRole("button", { name: "Yes" }));
     await u.click(button("Continue"));
     for (const name of ["Storm Hawk", "Moss Golem", "Vine Archer"]) await u.click(card(name));
     await u.click(button("Attack with 3"));
-    await screen.findByRole("heading", { name: "You win!" }, slow);
+    await screen.findByRole("heading", { name: "You win!" });
     expect(lesson().steps.final.status).toBe("done");
 
     await act(() => u.click(button(/^Next:/)));
     expect(nextClicks()).toBe(1);
-  }, 20000);
+  });
 });
