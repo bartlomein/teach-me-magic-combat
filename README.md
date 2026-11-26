@@ -2,6 +2,8 @@
 
 An interactive lesson on how combat works in Magic: The Gathering. It takes about 10 minutes and you don't need any cards.
 
+**Live:** https://teach-me-magic-combat.vercel.app
+
 I picked combat because it's a real decision with real rules, and beginners get the same things wrong over and over. That makes it a good fit for practice and feedback instead of reading.
 
 ## Run it
