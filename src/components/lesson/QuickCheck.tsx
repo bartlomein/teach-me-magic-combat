@@ -4,9 +4,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, ViewTransition } from "react";
 import { CARDS, type CardDef } from "@/lib/cards";
-import { STEPS, stepHref, type StepId } from "@/lib/lesson/lesson";
+import { hasProgress, resumeStep, STEPS, stepHref, type StepId } from "@/lib/lesson/lesson";
 import { QUICK } from "@/lib/lesson/steps";
-import { dispatch } from "@/lib/lesson/store";
+import { dispatch, useLesson } from "@/lib/lesson/store";
 import { useMotionMode } from "@/lib/motion-pref";
 import { Card } from "../Card";
 import { CheckIcon } from "../icons";
@@ -35,9 +35,16 @@ export function QuickCheck() {
   const done = answers.length === QUICK.length && picked === null;
   const q = QUICK[Math.min(i, QUICK.length - 1)];
 
+  const { lesson, ready } = useLesson();
+
   useEffect(() => {
     router.prefetch(stepHref("attack"));
   }, [router]);
+
+  // Already past it (Back button, an old link): offer to carry on instead of retaking it.
+  // Not a redirect, so Back from Step 1 isn't trapped. `submitted` hides it after our own Start.
+  const [submitted, setSubmitted] = useState(false);
+  const taken = ready && hasProgress(lesson) && !submitted;
 
   function answer(v: string) {
     if (picked !== null) return;
@@ -61,6 +68,7 @@ export function QuickCheck() {
   const firstStep = STEPS.find((s) => !skipped.includes(s.id))!;
 
   function start() {
+    setSubmitted(true);
     dispatch({
       type: "quick-check",
       at: now(),
@@ -132,7 +140,14 @@ export function QuickCheck() {
       </div>
 
       <div className="flex flex-col gap-5 p-5 [grid-area:act] sm:p-6 lg:border-r-[3px] lg:border-ink">
-        {!done ? (
+        {taken ? (
+          <>
+            <h2 className="text-[clamp(1.4rem,2.8vw,1.75rem)] leading-[1.15] font-bold tracking-[-0.015em]">You&apos;ve done the quick check.</h2>
+            <Primary onClick={() => router.push(stepHref(resumeStep(lesson)), { transitionTypes: ["nav-forward"] })} className="w-fit">
+              Continue: {STEPS.find((s) => s.id === resumeStep(lesson))!.title}
+            </Primary>
+          </>
+        ) : !done ? (
           <>
             <h2 className="text-[clamp(1.4rem,2.8vw,1.75rem)] leading-[1.15] font-bold tracking-[-0.015em]">{q.question}</h2>
             <Choice options={q.options.map((o) => ({ value: o, label: o }))} answered={picked} correct={q.answer} onAnswer={answer} />

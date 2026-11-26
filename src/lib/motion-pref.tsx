@@ -13,8 +13,14 @@ export type MotionMode = "full" | "calm" | "off";
 const KEY = "teachme.motion";
 const EVENT = "teachme:motion";
 
+/** Used when storage is blocked (some private modes): the choice still holds for this visit. */
+let memory: string | null = null;
+
 function read(): MotionMode {
-  const saved = localStorage.getItem(KEY);
+  let saved = memory;
+  try {
+    saved = localStorage.getItem(KEY) ?? memory;
+  } catch {}
   if (saved === "full" || saved === "calm" || saved === "off") return saved;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "calm" : "full";
 }
@@ -37,7 +43,10 @@ export function useMotionMode(): MotionMode {
 }
 
 export function setMotionMode(mode: MotionMode) {
-  localStorage.setItem(KEY, mode);
+  memory = mode;
+  try {
+    localStorage.setItem(KEY, mode);
+  } catch {}
   window.dispatchEvent(new Event(EVENT));
 }
 

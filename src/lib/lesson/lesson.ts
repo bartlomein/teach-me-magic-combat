@@ -41,8 +41,6 @@ export type StepProgress = {
   practiced?: "clean" | "missed";
 };
 
-
-
 export type Mistake = {
   step: StepId;
   myth?: Myth;
@@ -103,12 +101,44 @@ export function initialLesson(): LessonState {
   };
 }
 
+const STATUSES = ["locked", "open", "done", "skipped"];
+const LIGHTER = ["no", "active", "cleared"];
+
+/** Checks a saved lesson before trusting it: an old or hand-edited save must not crash a step. */
+export function isLessonState(x: unknown): x is LessonState {
+  if (!x || typeof x !== "object") return false;
+  const s = x as Partial<LessonState>;
+  const views: unknown[] = ["welcome", ...STEPS.map((st) => st.id)];
+  return (
+    views.includes(s.view) &&
+    (s.experience === null || s.experience === "new" || s.experience === "some") &&
+    Array.isArray(s.mistakes) &&
+    s.mistakes.every((m) => m && typeof m.note === "string" && typeof m.at === "number" && views.includes(m.step)) &&
+    !!s.steps &&
+    STEPS.every((st) => {
+      const p = s.steps![st.id] as Partial<StepProgress> | undefined;
+      return (
+        !!p &&
+        STATUSES.includes(p.status as string) &&
+        LIGHTER.includes(p.lighter as string) &&
+        typeof p.misses === "number" &&
+        typeof p.hints === "number"
+      );
+    })
+  );
+}
+
 function patchStep(
   s: LessonState,
   id: StepId,
   change: Partial<StepProgress>,
 ): LessonState {
   return { ...s, steps: { ...s.steps, [id]: { ...s.steps[id], ...change } } };
+}
+
+/** Anything done, skipped or missed yet? The quick check only counts before this. */
+export function hasProgress(s: LessonState) {
+  return s.mistakes.length > 0 || STEPS.some((x) => s.steps[x.id].status === "done" || s.steps[x.id].status === "skipped");
 }
 
 /** Would one more (non-soft) miss on this step switch on the lighter version? */
@@ -133,7 +163,7 @@ export function canOpen(s: LessonState, id: StepId) {
 export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
   switch (a.type) {
     case "start": {
-      // G4 adds the quick check for "some". Until then both paths start at Step 1.
+      // Both paths open Step 1. "Some" then takes the quick check, which may skip ahead.
       const next = patchStep({ ...s, experience: a.experience }, "attack", {
         status: "open",
         startedAt: a.at,
@@ -190,6 +220,8 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       return after && next.steps[after].status === "locked" ? patchStep(next, after, { status: "open" }) : next;
     }
     case "quick-check": {
+      // Only before any real progress: retaking it (Back button) must not undo finished steps or log misses twice.
+      if (hasProgress(s)) return s;
       let next: LessonState = { ...s, experience: "some" };
       for (const r of a.results) {
         if (r.correct) next = patchStep(next, r.step, { status: "skipped" });
@@ -237,13 +269,13 @@ export const stepFromSlug = (slug: string): StepId | null =>
 
 export const stepHref = (id: StepId) => `/learn/${SLUGS[id]}`;
 
-/** Where "Continue" should go: the first open step that isn't done, else the last done one. */
 /** The next step after `id` that still needs doing (not done, not skipped), if any. */
 export function nextToDo(s: LessonState, id: StepId): StepId | null {
   const i = STEPS.findIndex((x) => x.id === id);
   return STEPS.slice(i + 1).find((x) => s.steps[x.id].status !== "skipped" && s.steps[x.id].status !== "done")?.id ?? null;
 }
 
+/** Where "Continue" should go: the first open step that isn't done, else the last done one. */
 export function resumeStep(s: LessonState): StepId {
   const open = STEPS.find((x) => s.steps[x.id].status === "open");
   if (open) return open.id;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type Dispatch, type Ref } from "react";
+import { useRun } from "./useRun";
 import { CARDS, type CardDef } from "@/lib/cards";
 import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { checkAssign, FLYING, flyingBoard, flyingLighterBoard, judgeFlying } from "@/lib/lesson/steps";
@@ -43,6 +44,7 @@ export function StepFlying({
   const attackers = useMemo(() => Object.values(board.creatures).filter((c) => c.controller === "opp").map((c) => c.id), [board]);
 
   const [phase, setPhase] = useState<Phase>("explain");
+  const run = useRun();
   const [watched, setWatched] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<Blocks>({});
@@ -112,6 +114,7 @@ export function StepFlying({
   }
 
   async function watch() {
+    const live = run.begin();
     reset();
     setFeedback(null);
     setPhase("watch");
@@ -119,25 +122,32 @@ export function StepFlying({
     // time in every motion mode (Off speeds up animation, not reading).
     setFeedback({ tone: "info", text: "Night Bat flies at you." });
     await readPause(2200);
+    if (!live()) return;
     setBlocks({ mossGolem: "nightBat" });
     setFeedback({ tone: "info", text: "Moss Golem tries to block it…" });
     await readPause(2200);
+    if (!live()) return;
     fx.nope("mossGolem");
     setBlocks({});
     setFeedback({ tone: "info", text: "Golem can't block a flyer. It has no flying or reach." });
     await readPause(3000);
+    if (!live()) return;
     setBlocks({ vineArcher: "nightBat" });
     setFeedback({ tone: "info", text: "Vine Archer has reach. It can block flyers." });
     await readPause(2800);
+    if (!live()) return;
     await play({ vineArcher: "nightBat" }, ["nightBat"]);
+    if (!live()) return;
     setFeedback({ tone: "good", text: "Archer stops the Bat." });
     await readPause(2600);
+    if (!live()) return;
     // The result stays on the board until "Try it" or "Watch again" (both reset it).
     setWatched(true);
     setPhase("explain");
   }
 
   function startTry() {
+    run.cancel();
     reset();
     setFeedback(null);
     setFollow(null);
@@ -273,10 +283,12 @@ export function StepFlying({
         explaining ? (
           watched ? (
             <>
-              <OnSpot primary onClick={startTry}>
+              <OnSpot primary onClick={startTry} disabled={phase === "watch"}>
                 Try it
               </OnSpot>
-              <OnSpot onClick={watch}>Watch again</OnSpot>
+              <OnSpot onClick={watch} disabled={phase === "watch"}>
+                {phase === "watch" ? "Watching…" : "Watch again"}
+              </OnSpot>
             </>
           ) : (
             <>

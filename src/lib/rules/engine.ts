@@ -38,7 +38,7 @@ export type GameState = {
 /** blockerId -> attackerId. One attacker can have several blockers. 509.1a */
 export type Blocks = Record<string, string>;
 
-/** Beginner myths (see CONTENT.md). Wrong answers are tagged so the report card can group them. */
+/** Beginner myths (plain-English names in lib/lesson/report.ts). Wrong answers are tagged so the report card can group them. */
 export type Myth = "M1" | "M2" | "M3" | "M4" | "M5" | "M6" | "M7" | "M8" | "M9" | "M10";
 
 export type Verdict =

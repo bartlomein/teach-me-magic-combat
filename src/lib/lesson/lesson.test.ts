@@ -2,6 +2,7 @@ import { describe as group, expect, it } from "vitest";
 import { declareAttackers, resolveCombat } from "@/lib/rules/engine";
 import {
   initialLesson,
+  isLessonState,
   lessonReducer as r,
   resultOf,
   type LessonState,
@@ -241,5 +242,40 @@ group("quick check (Played a bit)", () => {
     const s = qc(true, true, true);
     expect(s.view).toBe("heal");
     expect(resultOf(s.steps.attack)).toBe("skipped");
+  });
+
+  it("taking it again after real progress changes nothing (Back button)", () => {
+    let s = qc(false, false, false);
+    s = r(s, { type: "complete", step: "attack", at: 2 });
+    const again = r(s, {
+      type: "quick-check",
+      at: 3,
+      results: [
+        { step: "attack", correct: true, myth: "M2", note: "Q1" },
+        { step: "block", correct: false, myth: "M3", note: "Q2" },
+        { step: "flying", correct: false, myth: "M6", note: "Q3" },
+      ],
+    });
+    expect(again).toBe(s);
+    expect(again.steps.attack.status).toBe("done");
+  });
+});
+
+group("saved lesson check", () => {
+  it("accepts a real lesson, before and after progress", () => {
+    const s = initialLesson();
+    expect(isLessonState(s)).toBe(true);
+    expect(isLessonState(JSON.parse(JSON.stringify(r(s, { type: "start", experience: "new", at: 1 }))))).toBe(true);
+  });
+
+  it("rejects old or broken saves instead of crashing later", () => {
+    const s = initialLesson();
+    const partial: Partial<typeof s.steps> = { ...s.steps };
+    delete partial.block;
+    expect(isLessonState({ ...s, steps: partial })).toBe(false);
+    expect(isLessonState({ ...s, mistakes: "none" })).toBe(false);
+    expect(isLessonState({ ...s, view: "nowhere" })).toBe(false);
+    expect(isLessonState({ ...s, steps: { ...s.steps, attack: { ...s.steps.attack, status: "won" } } })).toBe(false);
+    expect(isLessonState(null)).toBe(false);
   });
 });

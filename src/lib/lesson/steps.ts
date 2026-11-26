@@ -1,8 +1,7 @@
 /**
  * Steps 2-5 and the quick check: boards, words, and answer checks. All checks
  * are pure and run the real rules engine, so the lesson's verdicts always match
- * the rules. Words follow the writing limits in CONTENT.md (task <= 8 words,
- * feedback <= 20).
+ * the rules. Words stay short on purpose (task <= 8 words, feedback <= 20).
  */
 import { CARDS } from "@/lib/cards";
 import { aiChooseAttackers, aiChooseBlocks } from "@/lib/rules/ai";

@@ -150,7 +150,9 @@ export async function runGolem(
   const disposeModel = () =>
     gltf.scene.traverse((o) => {
       const m = o as THREE.Mesh;
-      if (m.isMesh) m.geometry.dispose();
+      if (!m.isMesh) return;
+      m.geometry.dispose();
+      for (const mat of [m.material].flat()) mat.dispose();
     });
   if (!clip || cancelled()) {
     disposeModel();

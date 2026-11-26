@@ -8,7 +8,7 @@
  * the current value and tells React when it changes (useSyncExternalStore).
  */
 import { useSyncExternalStore } from "react";
-import { initialLesson, lessonReducer, type LessonAction, type LessonState } from "./lesson";
+import { initialLesson, isLessonState, lessonReducer, type LessonAction, type LessonState } from "./lesson";
 
 const KEY = "teach-me:lesson:v1";
 const listeners = new Set<() => void>();
@@ -19,9 +19,9 @@ function load(): LessonState {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
-      const saved = JSON.parse(raw) as LessonState;
-      // Old or partial saves fall back to a fresh lesson instead of crashing.
-      if (saved?.steps?.attack && Array.isArray(saved.mistakes)) return saved;
+      const saved: unknown = JSON.parse(raw);
+      // Old, partial or hand-edited saves fall back to a fresh lesson instead of crashing.
+      if (isLessonState(saved)) return saved;
     }
   } catch {
     /* private mode or bad JSON: start fresh */

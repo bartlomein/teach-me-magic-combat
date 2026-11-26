@@ -1,5 +1,5 @@
 /**
- * Plays every board from CONTENT.md and checks the outcomes the lesson promises.
+ * Plays every lesson board and checks the outcomes the lesson promises.
  * If someone edits a card's stats, these tests catch a lesson that no longer works.
  */
 import { describe as group, expect, it } from "vitest";

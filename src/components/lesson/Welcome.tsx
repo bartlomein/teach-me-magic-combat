@@ -50,7 +50,9 @@ export function Welcome() {
     let idle = 0;
     let seen: IntersectionObserver | null = null;
     const begin = () => {
-      idle = window.requestIdleCallback?.(() => (timer = window.setTimeout(go, 700)), { timeout: 2000 }) ?? window.setTimeout(go, 900);
+      // Safari has no requestIdleCallback: a plain timer instead. Each kept in its own handle for cleanup.
+      if (window.requestIdleCallback) idle = window.requestIdleCallback(() => (timer = window.setTimeout(go, 700)), { timeout: 2000 });
+      else timer = window.setTimeout(go, 900);
     };
     const go = () => {
       const el = cardRef.current;
@@ -84,7 +86,7 @@ export function Welcome() {
       document.removeEventListener("click", onLinkClick, true);
       window.removeEventListener("popstate", stopGolemLeap);
       window.clearTimeout(timer);
-      if (idle) window.cancelIdleCallback?.(idle);
+      if (idle) window.cancelIdleCallback(idle);
       stopGolemLeap();
     };
     // playLeap only reads `motion` (a dependency already) and refs; re-running on its identity would restart the timers.

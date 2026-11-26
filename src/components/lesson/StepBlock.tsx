@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type Dispatch, type Ref } from "react";
+import { useRun } from "./useRun";
 import { CARDS, type CardDef } from "@/lib/cards";
 import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { BLOCK, blockBoard, blockLighterBoard, judgeBlock } from "@/lib/lesson/steps";
@@ -42,6 +43,7 @@ export function StepBlock({
   const board = useMemo(() => (lighter ? blockLighterBoard() : blockBoard()), [lighter]);
 
   const [phase, setPhase] = useState<Phase>(progress.status === "done" ? "explain" : "ask");
+  const run = useRun();
   const [asked, setAsked] = useState<"me" | "them" | null>(null);
   const [watched, setWatched] = useState(false);
   const [blocker, setBlocker] = useState<string | null>(null);
@@ -108,25 +110,31 @@ export function StepBlock({
   }
 
   async function watch() {
+    const live = run.begin();
     reset();
     setFeedback(null);
     setPhase("watch");
     // Beats held long enough to read twice (real time in every motion mode).
     setFeedback({ tone: "info", text: "Thorn Boar attacks you." });
     await readPause(2000);
+    if (!live()) return;
     setBlocker("emberPup");
     setFeedback({ tone: "info", text: "You block with Ember Pup." });
     await readPause(2200);
+    if (!live()) return;
     setFeedback(null);
     await play("emberPup");
+    if (!live()) return;
     setFeedback({ tone: "info", text: `Both hit at once. ${BLOCK.watchCaption}` });
     await readPause(3200);
+    if (!live()) return;
     // The result stays on the board until "Try it" or "Watch again" (both reset it).
     setWatched(true);
     setPhase("explain");
   }
 
   function startTry() {
+    run.cancel();
     reset();
     setFeedback(null);
     setPhase("pick");
@@ -211,10 +219,12 @@ export function StepBlock({
         explaining ? (
           watched ? (
             <>
-              <OnSpot primary onClick={startTry}>
+              <OnSpot primary onClick={startTry} disabled={phase === "watch"}>
                 Try it
               </OnSpot>
-              <OnSpot onClick={watch}>Watch again</OnSpot>
+              <OnSpot onClick={watch} disabled={phase === "watch"}>
+                {phase === "watch" ? "Watching…" : "Watch again"}
+              </OnSpot>
             </>
           ) : (
             <>

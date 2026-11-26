@@ -2,6 +2,7 @@
 
 import { animate, stagger } from "motion/react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type Ref } from "react";
+import { useRun } from "./useRun";
 import { CARDS } from "@/lib/cards";
 import type { LessonAction, StepProgress } from "@/lib/lesson/lesson";
 import { takeArrival } from "@/lib/lesson/store";
@@ -79,6 +80,7 @@ export function StepAttack({
   );
 
   const [phase, setPhase] = useState<Phase>("explain");
+  const run = useRun();
   const [watched, setWatched] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [tapped, setTapped] = useState<string[]>([]);
@@ -136,21 +138,26 @@ export function StepAttack({
 
   // ---- Watch: Ember Pup taps, rushes their life total, 20 → 18. Then the board resets. ----
   async function watch() {
+    const live = run.begin();
     resetBoard();
     setFeedback(null);
     setPhase("watch");
     setAnnounce("");
     await fx.wait(300);
+    if (!live()) return;
     setTapped(["emberPup"]);
     setAttacking(["emberPup"]);
     await fx.wait(650);
+    if (!live()) return;
     await fx.hitPlayer([{ id: "emberPup", amount: 2 }], "opp", () =>
       setOppLife(18),
     );
+    if (!live()) return;
     setAnnounce(
       "Ember Pup turns sideways to attack, and hits your opponent for 2. Their life goes from 20 to 18.",
     );
     await fx.wait(1200);
+    if (!live()) return;
     // Leave the result on the board (Pup tapped, opponent at 18) so it can be
     // studied. "Try it" and "Watch again" both reset it.
     setWatched(true);
@@ -158,6 +165,7 @@ export function StepAttack({
   }
 
   function startTry() {
+    run.cancel();
     resetBoard();
     setFlagged(null);
     setFeedback(null);
@@ -312,10 +320,12 @@ export function StepAttack({
         explaining ? (
           watched ? (
             <>
-              <OnSpot primary onClick={startTry}>
+              <OnSpot primary onClick={startTry} disabled={phase === "watch"}>
                 Try it
               </OnSpot>
-              <OnSpot onClick={watch}>Watch again</OnSpot>
+              <OnSpot onClick={watch} disabled={phase === "watch"}>
+                {phase === "watch" ? "Watching…" : "Watch again"}
+              </OnSpot>
             </>
           ) : (
             <>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { BulbIcon, CheckIcon, CrossIcon, InfoIcon, SpeakerIcon } from "../icons";
 
 /**
@@ -20,9 +20,18 @@ export function Speak({
   /** Sits on the blue task band. */
   onSpot?: boolean;
 }) {
+  const spoke = useRef(false);
+  // Leaving the step stops the voice (only if this button started it).
+  useEffect(
+    () => () => {
+      if (spoke.current) window.speechSynthesis?.cancel();
+    },
+    [],
+  );
   function say() {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
+    spoke.current = true;
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 0.95;
     window.speechSynthesis.speak(u);
