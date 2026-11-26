@@ -9,11 +9,13 @@ group("Step 2 checks", () => {
     expect(judgeBlock(null)).toMatchObject({ ok: false, myth: "M3", message: expect.stringMatching(/take 3/) }));
 });
 
+const FLY_ATTACKERS = ["nightBat", "thornBoar"];
+
 group("Step 3 checks", () => {
-  it("Golem can't block the Bat (M5)", () => expect(checkAssign(flyingBoard(), "mossGolem", "nightBat")).toMatchObject({ ok: false, myth: "M5" }));
+  it("Golem can't block the Bat (M5)", () => expect(checkAssign(flyingBoard(), FLY_ATTACKERS, "mossGolem", "nightBat")).toMatchObject({ ok: false, myth: "M5" }));
   it("Archer can block the Bat; Finch can block the Boar (M6 myth is wrong)", () => {
-    expect(checkAssign(flyingBoard(), "vineArcher", "nightBat").ok).toBe(true);
-    expect(checkAssign(flyingBoard(), "skyFinch", "thornBoar").ok).toBe(true);
+    expect(checkAssign(flyingBoard(), FLY_ATTACKERS, "vineArcher", "nightBat").ok).toBe(true);
+    expect(checkAssign(flyingBoard(), FLY_ATTACKERS, "skyFinch", "thornBoar").ok).toBe(true);
   });
   it("Archer on Bat + Golem on Boar loses nothing", () =>
     expect(judgeFlying({ vineArcher: "nightBat", mossGolem: "thornBoar" }).ok).toBe(true));
@@ -78,4 +80,12 @@ group("Step 5: their turn, then win on yours", () => {
   it("leaving Archer home falls 1 short", () => expect(judgeAttack(yourTurn, ["stormHawk", "mossGolem"])).toMatchObject({ win: false, lifeLeft: 1 }));
 
   it("there is a winning attack on the good paths", () => expect(canWinNow(yourTurn)).toBe(true));
+});
+
+group("Step 5 checks", () => {
+  it("only attacking creatures can be blocked (Cliff Spider stays home)", () => {
+    const { state, attackers } = finalTheirAttack();
+    expect(checkAssign(state, attackers, "mossGolem", "cliffSpider")).toMatchObject({ ok: false, message: expect.stringMatching(/attacking/) });
+    expect(checkAssign(state, attackers, "mossGolem", "thornBoar").ok).toBe(true);
+  });
 });

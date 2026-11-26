@@ -46,6 +46,7 @@ export function useStep<P extends string>(
   const fx = useBoardFx();
   const run = useRun();
   const [phase, setPhase] = useState<P>(initial);
+  const startPhase = useRef(phase);
   const [feedback, showFeedback] = useState<Feedback | null>(null);
   // Each message gets its own number so a repeated answer is announced again.
   const said = useRef(0);
@@ -98,7 +99,11 @@ export function useStep<P extends string>(
       return true;
     } catch (e) {
       if (e === STOPPED) return false;
-      throw e;
+      // A bug must never leave the learner stuck mid-step: say so and restart the step.
+      console.error(e);
+      setFeedback({ tone: "bad", text: "Something went wrong. Let's start this part again." });
+      setPhase(startPhase.current);
+      return false;
     }
   }
 

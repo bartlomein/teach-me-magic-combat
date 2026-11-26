@@ -65,7 +65,7 @@ export function StepFlying(props: StepProps) {
     if (phase !== "pick") return;
     setFeedback(null);
     if (lighter) {
-      const v = checkAssign(board, id, "nightBat");
+      const v = checkAssign(board, attackers, id, "nightBat");
       if (v.ok) {
         setBlocks({ [id]: "nightBat" });
         setLighterPassed(true);
@@ -87,7 +87,7 @@ export function StepFlying(props: StepProps) {
 
   function onAttacker(id: string) {
     if (phase !== "pick" || lighter || !selected) return;
-    const v = checkAssign(board, selected, id);
+    const v = checkAssign(board, attackers, selected, id);
     if (!v.ok) {
       fx.nope(selected);
       const toLighter = step.wrong(`Tried ${board.creatures[selected].name} on ${board.creatures[id].name}`, v);

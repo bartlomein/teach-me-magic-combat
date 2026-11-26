@@ -117,7 +117,7 @@ export function StepFinal(props: StepProps) {
 
   function onAttacker(id: string) {
     if (phase !== "block" || !pick) return;
-    const v = checkAssign(game, pick, id);
+    const v = checkAssign(game, theirAttackers, pick, id);
     if (!v.ok) {
       fx.nope(pick);
       step.miss(`Tried ${name(pick)} on ${name(id)}`, v.myth, true);

@@ -1,7 +1,6 @@
 import { cardName, CARDS } from "@/lib/cards";
 import { aiChooseAttackers, aiChooseBlocks } from "@/lib/rules/ai";
 import {
-  canBlock,
   creatureFrom as c,
   declareAttackers,
   endTurn,
@@ -10,6 +9,7 @@ import {
   type Blocks,
   type GameState,
   type Myth,
+  validateBlocks,
 } from "@/lib/rules/engine";
 
 export type Judged = { ok: true; message: string } | { ok: false; myth?: Myth; message: string };
@@ -75,8 +75,9 @@ export const flyingBoard = (): GameState =>
 export const flyingLighterBoard = (): GameState =>
   declareAttackers(newGame({ active: "opp", creatures: [c(CARDS.nightBat), c(CARDS.mossGolem), c(CARDS.vineArcher)] }), ["nightBat"]);
 
-export function checkAssign(state: GameState, blocker: string, attacker: string): Judged {
-  const v = canBlock(state, blocker, attacker);
+/** One block, checked by the same rules combat enforces (so the UI can't build a block the engine rejects). */
+export function checkAssign(state: GameState, attackers: string[], blocker: string, attacker: string): Judged {
+  const v = validateBlocks(state, attackers, { [blocker]: attacker });
   return v.ok ? { ok: true, message: "" } : { ok: false, myth: v.myth, message: v.message };
 }
 

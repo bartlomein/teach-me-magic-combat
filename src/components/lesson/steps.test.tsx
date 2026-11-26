@@ -132,6 +132,24 @@ group("Step 4: Damage wears off", () => {
 });
 
 group("Step 5: Final challenge", () => {
+  it("Cliff Spider isn't attacking: blocking it is refused, and the turn goes on", async () => {
+    const u = userEvent.setup();
+    renderStep("final", StepFinal);
+    await u.click(button("Start their turn"));
+    await screen.findByText(/^Turn 1 of 2/);
+    await u.click(card("Moss Golem"));
+    await u.click(card("Cliff Spider"));
+    expect(screen.getByText(/only block creatures that are attacking/)).toBeTruthy();
+    expect(button("Don't block")).toBeTruthy(); // nothing was assigned
+
+    await u.click(card("Vine Archer"));
+    await u.click(card("Night Bat"));
+    await u.click(card("Moss Golem"));
+    await u.click(card("Thorn Boar"));
+    await u.click(button("Block with 2"));
+    await screen.findByRole("button", { name: "Yes" });
+  });
+
   it("hints on their turn don't give away your turn's answer", async () => {
     const u = userEvent.setup();
     const { lesson } = renderStep("final", StepFinal);
