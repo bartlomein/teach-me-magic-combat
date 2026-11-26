@@ -3,7 +3,7 @@
  * are pure and run the real rules engine, so the lesson's verdicts always match
  * the rules. Words stay short on purpose (task <= 8 words, feedback <= 20).
  */
-import { CARDS } from "@/lib/cards";
+import { cardName, CARDS } from "@/lib/cards";
 import { aiChooseAttackers, aiChooseBlocks } from "@/lib/rules/ai";
 import {
   canBlock,
@@ -17,7 +17,8 @@ import {
   type Myth,
 } from "@/lib/rules/engine";
 
-export type Verdict = { ok: true; message: string } | { ok: false; myth?: Myth; message: string };
+/** A lesson check's answer: always a sentence to show (the engine's own Verdict has none). */
+export type Judged = { ok: true; message: string } | { ok: false; myth?: Myth; message: string };
 
 // ---------------------------------------------------------------------------
 // Step 2: Blocking
@@ -49,7 +50,7 @@ export const blockLighterBoard = (): GameState =>
   declareAttackers(newGame({ active: "opp", creatures: [c(CARDS.thornBoar), c(CARDS.mossGolem)] }), ["thornBoar"]);
 
 /** Judge a block (or no block) by actually resolving it. */
-export function judgeBlock(blocker: string | null): Verdict {
+export function judgeBlock(blocker: string | null): Judged {
   const s = blockBoard();
   const r = resolveCombat(s, ["thornBoar"], blocker ? { [blocker]: "thornBoar" } : {});
   if (!blocker) return { ok: false, message: "You'd take 3. Moss Golem can kill it and live." };
@@ -93,7 +94,7 @@ export const flyingLighterBoard = (): GameState =>
   declareAttackers(newGame({ active: "opp", creatures: [c(CARDS.nightBat), c(CARDS.mossGolem), c(CARDS.vineArcher)] }), ["nightBat"]);
 
 /** Can this blocker block that attacker? Uses the engine's rule (702.9b, 702.17b). */
-export function checkAssign(state: GameState, blocker: string, attacker: string): Verdict {
+export function checkAssign(state: GameState, blocker: string, attacker: string): Judged {
   const v = canBlock(state, blocker, attacker);
   if (v.ok) return { ok: true, message: "" };
   if (v.reason === "needs-flying-or-reach") {
@@ -104,7 +105,7 @@ export function checkAssign(state: GameState, blocker: string, attacker: string)
 }
 
 /** Judge a full set of blocks for Step 3 by resolving them. */
-export function judgeFlying(blocks: Blocks): Verdict {
+export function judgeFlying(blocks: Blocks): Judged {
   const s = flyingBoard();
   const r = resolveCombat(s, ["nightBat", "thornBoar"], blocks);
   const lost = 20 - r.state.life.you;
@@ -191,8 +192,7 @@ export function judgeAttack(s: GameState, attack: string[]) {
 /** Is there any attack that wins this turn? */
 export const canWinNow = (s: GameState) => subsets(readyAttackers(s)).some((set) => set.length > 0 && judgeAttack(s, set).win);
 
-const NAME = (id: string) => (CARDS as Record<string, { name: string }>)[id]?.name ?? id;
-const list = (ids: string[]) => (ids.length <= 1 ? ids.map(NAME).join("") : `${ids.slice(0, -1).map(NAME).join(", ")} and ${NAME(ids[ids.length - 1])}`);
+const list = (ids: string[]) => (ids.length <= 1 ? ids.map(cardName).join("") : `${ids.slice(0, -1).map(cardName).join(", ")} and ${cardName(ids[ids.length - 1])}`);
 
 export type TheirTurnResult = {
   /** Your turn has started: damage is gone, their attackers that lived are still tapped. */
@@ -233,7 +233,7 @@ export function judgeTheirTurn(declared: GameState, attackers: string[], blocks:
 
 /** Your turn: feedback for an attack that didn't win. */
 export function missedWinMessage(s: GameState, attack: string[], lifeLeft: number, blocks: Blocks) {
-  const blocked = Object.entries(blocks).map(([b, a]) => `${NAME(b)} blocked ${NAME(a)}.`).join(" ");
+  const blocked = Object.entries(blocks).map(([b, a]) => `${cardName(b)} blocked ${cardName(a)}.`).join(" ");
   const missing = readyAttackers(s).filter((id) => !attack.includes(id));
   const add = missing.length ? ` Attack with ${list(missing)} too.` : "";
   return `They're at ${lifeLeft}. ${blocked}${add}`.replace(/\s+/g, " ").trim();

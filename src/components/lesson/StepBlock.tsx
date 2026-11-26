@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CARDS, type CardDef } from "@/lib/cards";
+import { isFinished } from "@/lib/lesson/lesson";
 import { BLOCK, blockBoard, blockLighterBoard, judgeBlock } from "@/lib/lesson/steps";
 import { Board, BlockLines, CardSlot, Row } from "../board/Board";
 import { HintButton, HintText, PinKey, Primary, Secondary } from "./Coach";
@@ -25,7 +26,7 @@ const LIGHTER_PINS = [
  */
 export function StepBlock(props: StepProps) {
   const { progress, onNext, nextTitle, headingRef } = props;
-  const step = useStep<Phase>("block", props, progress.status === "done" ? "explain" : "ask", ["pick", "done", "explain"]);
+  const step = useStep<Phase>("block", props, isFinished(progress) ? "explain" : "ask", ["pick", "done", "explain"]);
   const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
   const board = useMemo(() => (lighter ? blockLighterBoard() : blockBoard()), [lighter]);
   const combat = useCombat(fx);

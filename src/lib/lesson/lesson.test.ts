@@ -238,6 +238,19 @@ group("quick check (Played a bit)", () => {
     expect(s.view).toBe("attack");
   });
 
+  it("practicing a skipped step keeps it skipped: misses go to practice, not the first-try record", () => {
+    let s = qc(true, false, false);
+    s = r(s, { type: "open", step: "attack", at: 2 });
+    s = r(s, { type: "miss", step: "attack", note: "x", at: 3 });
+    s = r(s, { type: "miss", step: "attack", note: "y", at: 4 });
+    expect(s.steps.attack.misses).toBe(0);
+    expect(s.steps.attack.lighter).toBe("no");
+    s = r(s, { type: "complete", step: "attack", at: 5 });
+    expect(s.steps.attack.status).toBe("skipped");
+    expect(s.steps.attack.practiced).toBe("missed");
+    expect(resultOf(s.steps.attack)).toBe("skipped");
+  });
+
   it("all three right still leaves Damage wears off (it's too short to skip)", () => {
     const s = qc(true, true, true);
     expect(s.view).toBe("heal");

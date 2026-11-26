@@ -136,15 +136,21 @@ function patchStep(
   return { ...s, steps: { ...s.steps, [id]: { ...s.steps[id], ...change } } };
 }
 
+/**
+ * Done or skipped by the quick check. Opening it again is practice: misses and
+ * finishing go to the practice record, never the first-try one.
+ */
+export const isFinished = (p: StepProgress) => p.status === "done" || p.status === "skipped";
+
 /** Anything done, skipped or missed yet? The quick check only counts before this. */
 export function hasProgress(s: LessonState) {
-  return s.mistakes.length > 0 || STEPS.some((x) => s.steps[x.id].status === "done" || s.steps[x.id].status === "skipped");
+  return s.mistakes.length > 0 || STEPS.some((x) => isFinished(s.steps[x.id]));
 }
 
 /** Would one more (non-soft) miss on this step switch on the lighter version? */
 export function nextMissGoesLighter(s: LessonState, id: StepId) {
   const p = s.steps[id];
-  if (p.status === "done" || p.lighter !== "no") return false;
+  if (isFinished(p) || p.lighter !== "no") return false;
   return (
     s.mistakes.filter((m) => m.step === id && !m.soft).length + 1 >=
     LIGHTER_AFTER
@@ -175,13 +181,13 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       const p = s.steps[a.step];
       let next = p.startedAt ? s : patchStep(s, a.step, { startedAt: a.at });
       // Opening a finished step starts a fresh practice attempt.
-      if (p.status === "done") next = patchStep(next, a.step, { replayMisses: 0 });
+      if (isFinished(p)) next = patchStep(next, a.step, { replayMisses: 0 });
       return { ...next, view: a.step };
     }
     case "miss": {
       const p = s.steps[a.step];
       // Replaying a finished step doesn't change the first-try record; it only counts toward this practice attempt.
-      if (p.status === "done") return patchStep(s, a.step, { replayMisses: (p.replayMisses ?? 0) + 1 });
+      if (isFinished(p)) return patchStep(s, a.step, { replayMisses: (p.replayMisses ?? 0) + 1 });
       const misses = p.misses + 1;
       const hardMisses =
         s.mistakes.filter((m) => m.step === a.step && !m.soft).length +
@@ -210,7 +216,7 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
         : s;
     case "complete": {
       const p = s.steps[a.step];
-      if (p.status === "done") {
+      if (isFinished(p)) {
         const clean = (p.replayMisses ?? 0) === 0;
         return patchStep(s, a.step, { practiced: clean ? "clean" : "missed", replayMisses: 0 });
       }

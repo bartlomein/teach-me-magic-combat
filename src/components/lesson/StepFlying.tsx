@@ -127,7 +127,8 @@ export function StepFlying(props: StepProps) {
       setPhase("follow");
       return;
     }
-    if (step.wrong(`Blocks: ${JSON.stringify(blocks)}`, v)) {
+    const said = Object.entries(blocks).map(([b, a]) => `${board.creatures[b].name} on ${board.creatures[a].name}`);
+    if (step.wrong(`Blocked: ${said.join(", ") || "nothing"}`, v)) {
       await fx.wait(900);
       reset();
       setPhase("pick");

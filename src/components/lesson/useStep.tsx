@@ -75,9 +75,21 @@ export function useStep<P extends string>(
     if (focusNow) headlineRef.current?.focus();
   }, [phase, lighter, focusNow]);
 
+  // A combat or pause can still be running when the learner leaves the step (a step tab,
+  // Back). Once the screen is gone, its late results must not reach the lesson.
+  const here = useRef(true);
+  useEffect(() => {
+    here.current = true;
+    return () => {
+      here.current = false;
+    };
+  }, []);
+  const send = (a: LessonAction) => here.current && dispatch(a);
+
   /** Logs a mistake. Returns true when it switches on the lighter board. */
   function miss(note: string, myth?: Myth, soft = false) {
-    dispatch({ type: "miss", step, myth, note, at: now(), soft });
+    if (!here.current) return false;
+    send({ type: "miss", step, myth, note, at: now(), soft });
     return !soft && lighterNext;
   }
 
@@ -101,9 +113,9 @@ export function useStep<P extends string>(
     headlineRef,
     miss,
     wrong,
-    hint: () => dispatch({ type: "hint", step }),
-    complete: () => dispatch({ type: "complete", step, at: now() }),
-    clearLighter: () => dispatch({ type: "lighter-cleared", step }),
+    hint: () => send({ type: "hint", step }),
+    complete: () => send({ type: "complete", step, at: now() }),
+    clearLighter: () => send({ type: "lighter-cleared", step }),
   };
 }
 
@@ -130,20 +142,19 @@ export function useCombat(fx: StepCore<string>["fx"], startLife: Lives = FULL_LI
    */
   async function play(state: GameState, attackers: string[], blocks: Blocks, defender: PlayerId = "you") {
     const r = resolveCombat(state, attackers, blocks);
+    // Every number shown comes from the engine's damage events, so the picture
+    // matches the rules even when damage is split (double blocks, first strike).
+    const dealt = (from: string, to: string) =>
+      r.events.reduce((n, e) => (e.type === "damage" && e.source === from && e.target === to ? n + e.amount : n), 0);
     const fights = Object.entries(blocks).map(([blocker, attacker]) => ({
       attacker,
       blocker,
-      toBlocker: state.creatures[attacker].power,
-      toAttacker: state.creatures[blocker].power,
+      toBlocker: dealt(attacker, blocker),
+      toAttacker: dealt(blocker, attacker),
     }));
-    const unblocked = attackers
-      .filter((a) => !Object.values(blocks).includes(a))
-      .map((id) => ({ id, amount: state.creatures[id].power }));
+    const unblocked = r.events.flatMap((e) => (e.type === "player-damage" ? [{ id: e.source, amount: e.amount }] : []));
     const marks: Record<string, number> = {};
-    for (const f of fights) {
-      marks[f.blocker] = (marks[f.blocker] ?? 0) + f.toBlocker;
-      marks[f.attacker] = (marks[f.attacker] ?? 0) + f.toAttacker;
-    }
+    for (const e of r.events) if (e.type === "damage") marks[e.target] = (marks[e.target] ?? 0) + e.amount;
     await Promise.all([
       fights.length ? fx.clash(fights, () => setDamage(marks)) : null,
       unblocked.length ? fx.hitPlayer(unblocked, defender, () => setLife({ ...r.state.life })) : null,

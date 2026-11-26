@@ -9,8 +9,7 @@ import { CheckIcon, LockIcon } from "../icons";
 /**
  * The five steps as printed tabs, each a real link. Finished steps can be
  * reviewed; later ones stay locked. On a phone only the current step keeps its
- * name; the rest show numbers. Lives in the /learn layout, so it stays put
- * while the step below it slides.
+ * name; the rest show numbers. Rendered by StepScreen above each step.
  */
 export function StepNav() {
   const { lesson } = useLesson();

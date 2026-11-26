@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { useState } from "react";
-import { CARDS, type CardDef } from "@/lib/cards";
+import { cardName, CARDS, type CardDef } from "@/lib/cards";
 import {
   checkAssign,
   FINAL,
@@ -35,7 +35,7 @@ type Phase =
 
 const YOURS = ["stormHawk", "mossGolem", "vineArcher"] as const;
 const THEIRS = ["cliffSpider", "thornBoar", "nightBat"] as const;
-const name = (id: string) => (CARDS as Record<string, CardDef>)[id]?.name ?? id;
+const name = cardName;
 
 /**
  * Step 5: the final challenge, with everything visible. Their turn first: Bat
@@ -305,7 +305,6 @@ export function StepFinal(props: StepProps) {
           }
           caption={
             <>
-              
               {theirTurn || intro
                 ? `Their turn. You have ${FINAL_LIFE.you} life. Bat and Boar attack; Spider stays home.`
                 : `Your turn. They have ${game.life.opp} life. Tapped creatures can't block.`}

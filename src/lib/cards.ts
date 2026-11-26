@@ -118,3 +118,6 @@ export function describeStats(card: CardDef) {
   const kw = card.keywords.length ? `, ${card.keywords.join(", ")}` : "";
   return `power ${card.power}, toughness ${card.toughness}${kw}`;
 }
+
+/** A card's name from its id (falls back to the id). */
+export const cardName = (id: string) => (CARDS as Record<string, { name: string }>)[id]?.name ?? id;
