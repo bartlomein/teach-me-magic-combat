@@ -166,7 +166,7 @@ export function StepAttack(props: StepProps) {
         phase === "pick"
           ? lighter
             ? "A smaller board first. Then back to the full one."
-            : "Tap your creatures, then press Attack."
+            : "Pick your creatures, then press Attack."
           : phase === "resolving"
             ? "Attackers go at the player."
             : undefined

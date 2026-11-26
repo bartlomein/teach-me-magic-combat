@@ -15,7 +15,7 @@ export const ATTACK = {
     pickLighter: "Which one can attack?",
   },
   hints: [
-    "Look for the moon icon.",
+    "Look for the New this turn tag.",
     "Read the Key below.",
     "These two can attack.",
   ],
@@ -25,7 +25,7 @@ export const ATTACK = {
   callouts: { stormHawk: "New this turn" },
   hintHighlight: ["emberPup", "mossGolem"],
   win: "5 damage! When you attack, they pick the blockers. When they attack, you do.",
-  after: "Your attackers stay tapped until your next turn.",
+  after: "Attackers stay tapped (sideways) until your next turn.",
 } as const;
 
 export const attackBoard = (): GameState =>

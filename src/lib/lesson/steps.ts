@@ -25,7 +25,7 @@ export const BLOCK = {
   pins: [{ id: "mossGolem", letter: "A", text: "Moss Golem is new, but new creatures can still block." }],
   callouts: { mossGolem: "New this turn" },
   lighter: { question: "Does Moss Golem kill the Boar and live?" },
-  win: "Golem dealt 3 and took only 3 of its 4.",
+  win: "Golem dealt 3 and took only 3 of its 4. Blockers stay upright.",
 } as const;
 
 export const blockBoard = (): GameState =>
@@ -57,6 +57,7 @@ export const FLYING = {
   pins: [
     { id: "nightBat", letter: "A", text: "Night Bat has flying." },
     { id: "vineArcher", letter: "B", text: "Vine Archer has reach: it can block flyers." },
+    { id: "skyFinch", letter: "C", text: "Flyers can block anyone." },
   ],
   followUp: { question: "Can Sky Finch block Thorn Boar?", myth: "M5" as Myth, wrong: "Yes, it can. Flying limits who blocks you, not who you block." },
   lighter: { prompt: "Who can block the Bat?" },
@@ -96,7 +97,7 @@ export function judgeFlying(blocks: Blocks): Judged {
 export const HEAL = {
   headline: "Damage lasts only this turn.",
   q1: { question: "Next turn, does Golem still have damage?" },
-  q2: { question: "Golem blocks another 3/3 next turn. Does it survive?", myth: "M6" as Myth, wrong: "It does: it's fully healed, so 3 damage is less than 4." },
+  q2: { question: "Golem blocks another Thorn Boar next turn. Does it survive?", myth: "M6" as Myth, wrong: "It does: it's fully healed, so 3 damage is less than 4." },
   pins: [{ id: "mossGolem", letter: "A", text: "Moss Golem has 3 damage marked this turn." }],
   win: "Healed, Golem survives the next 3/3 too.",
 } as const;

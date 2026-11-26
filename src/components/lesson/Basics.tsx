@@ -77,8 +77,8 @@ export function Basics() {
               <Card card={CARDS.emberPup} transitionName="card-emberPup" />
             </div>
             <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-1.5 text-[15px]">
-              <Legend n="2" text="hits for 2" delay={PANEL_START + PANEL_GAP + 0.6} mode={mode} />
-              <Legend n="1" text="dies after 1 damage" delay={PANEL_START + PANEL_GAP + 1.0} mode={mode} />
+              <Legend n="2" text="Power: hits for 2" delay={PANEL_START + PANEL_GAP + 0.6} mode={mode} />
+              <Legend n="1" text="Toughness: dies at 1 damage" delay={PANEL_START + PANEL_GAP + 1.0} mode={mode} />
             </dl>
           </div>
         </Panel>
@@ -136,7 +136,8 @@ function Legend({ n, text, delay, mode }: { n: string; text: string; delay: numb
         {n}
       </motion.dt>
       <motion.dd {...anim} className="m-0">
-        {text}
+        <span className="block font-bold">{text.split(": ")[0]}</span>
+        {text.split(": ")[1]}
       </motion.dd>
     </>
   );
