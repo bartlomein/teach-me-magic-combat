@@ -258,3 +258,9 @@ export function direction(from: StepId | "welcome", to: StepId | "welcome"): "na
 
 /** Hints showing now: this practice run's when replaying a finished step. */
 export const hintsShown = (p: StepProgress) => (isFinished(p) ? (p.replayHints ?? 0) : p.hints);
+
+/** Where "Next" goes from a finished step; null means the report card (also after practice, once every step is finished). */
+export function nextAfter(s: LessonState, id: StepId): StepId | null {
+  if (STEPS.every((x) => isFinished(s.steps[x.id]))) return null;
+  return nextToDo(s, id) ?? nextStep(id);
+}

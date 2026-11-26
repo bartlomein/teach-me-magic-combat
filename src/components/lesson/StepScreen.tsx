@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { nextMissGoesLighter, nextStep, nextToDo, resumeStep, STEPS, stepHref, type StepId } from "@/lib/lesson/lesson";
+import { nextAfter, nextMissGoesLighter, resumeStep, STEPS, stepHref, type StepId } from "@/lib/lesson/lesson";
 import { dispatch, useLesson } from "@/lib/lesson/store";
 import { StepAttack } from "./StepAttack";
 import { StepBlock } from "./StepBlock";
@@ -51,7 +51,7 @@ function KnownStep({ step }: { step: StepId }) {
   // Saved progress only exists in the browser; show the outline until it's read.
   if (!ready || locked || lesson.experience === null) return <StepLoading />;
 
-  const after = nextToDo(lesson, step) ?? nextStep(step);
+  const after = nextAfter(lesson, step);
   const nextTitle = after ? STEPS.find((s) => s.id === after)!.title : "Your report card";
   const goNext = () => router.push(after ? stepHref(after) : "/report", { transitionTypes: ["nav-forward"] });
 

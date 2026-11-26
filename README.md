@@ -18,7 +18,7 @@ Then open http://localhost:3000.
 Other commands:
 
 ```bash
-npm test        # 99 tests: rules engine, lesson flow, report card, and every step clicked through
+npm test        # 100 tests: rules engine, lesson flow, report card, and every step clicked through
 npm run lint
 npm run build
 ```

@@ -61,7 +61,9 @@ export function StepBlock(props: StepProps) {
   const lighterLinks = usePinLinks(LIGHTER_PINS, () => lighter, fx.mode === "full");
   const pinsFor = (id: string) => (lighter ? lighterLinks.cardProps(id) : cardProps(id));
 
+  // Clicking the same wrong answer again isn't another mistake.
   function answerAsk(v: "me" | "them") {
+    if (asked === v) return;
     setAsked(v);
     if (v === "me") {
       setFeedback({ tone: "good", text: "The defender chooses. That's you." });
@@ -91,6 +93,7 @@ export function StepBlock(props: StepProps) {
   }
 
   function answerLighter(v: "yes" | "no") {
+    if (lighterAnswer === v) return;
     setLighterAnswer(v);
     if (v === "yes") setFeedback({ tone: "good", text: "Yes: Golem deals 3 (Boar dies) and takes 3 of its 4 (lives)." });
     else {

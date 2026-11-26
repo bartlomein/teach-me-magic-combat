@@ -2,6 +2,7 @@ import { describe as group, expect, it } from "vitest";
 import { declareAttackers, resolveCombat } from "@/lib/rules/engine";
 import {
   hintsShown,
+  nextAfter,
   initialLesson,
   isLessonState,
   lessonReducer as r,
@@ -138,6 +139,15 @@ group("lesson flow", () => {
     expect(resultOf(s.steps.attack)).toBe("first-try");
     // The next practice run starts with no hints showing.
     expect(hintsShown(r(s, { type: "open", step: "attack", at: 7 }).steps.attack)).toBe(0);
+  });
+
+  it("Next goes to the next step to do, and back to the report once everything is finished", () => {
+    let s = r(started(), { type: "complete", step: "attack", at: 5 });
+    expect(nextAfter(s, "attack")).toBe("block");
+    for (const id of ["block", "flying", "heal", "final"] as const) s = r(r(s, { type: "open", step: id, at: 6 }), { type: "complete", step: id, at: 7 });
+    // Practicing Step 1 from the report card: Next leads back to the report, not into Step 2.
+    s = r(s, { type: "open", step: "attack", at: 8 });
+    expect(nextAfter(s, "attack")).toBeNull();
   });
 
   it("hints cap at level 3", () => {

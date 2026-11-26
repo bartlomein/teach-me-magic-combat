@@ -124,6 +124,7 @@ export function StepFlying(props: StepProps) {
   }
 
   function answerFollow(v: "yes" | "no") {
+    if (follow === v) return;
     setFollow(v);
     if (v === "yes") {
       step.complete();

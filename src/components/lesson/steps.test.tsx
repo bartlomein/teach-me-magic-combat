@@ -76,6 +76,7 @@ group("Step 2: Blocking", () => {
     const u = userEvent.setup();
     const { lesson } = renderStep("block", StepBlock);
     await u.click(button("Them"));
+    await u.click(button(/^Them/)); // the same wrong answer again isn't another mistake
     expect(lesson().mistakes).toHaveLength(1);
     expect(lesson().mistakes[0].soft).toBe(true);
     await u.click(button(/^Me/));
