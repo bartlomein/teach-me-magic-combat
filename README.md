@@ -91,9 +91,9 @@ The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2
 
 ## Checks I ran
 
-- axe: 0 issues on every page and state, desktop and phone.
+- axe (WCAG 2.2 AA): 0 issues on every page and step, before and after pressing Try, desktop and phone. Run on the live site.
 - Keyboard only: the whole lesson can be finished with Tab, Enter and Space.
-- Lighthouse: Accessibility, Best Practices and SEO 100. Performance 100 on desktop, 90 to 97 on mobile.
+- Lighthouse on the live site: Accessibility, Best Practices and SEO 100. Performance 100 on desktop, 96 on mobile.
 - Reduced motion: the lesson starts in Calm mode. There's also a Full / Calm / Off switch in the header.
 
 ## About the commit history
