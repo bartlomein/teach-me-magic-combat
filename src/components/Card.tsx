@@ -73,15 +73,7 @@ export function Card({
     pinNote ?? null,
   ].filter(Boolean);
 
-  const label = [
-    card.name,
-    describeStats(card),
-    status ? STATUS[status].text : null,
-    tapped && status !== "tapped" ? "tapped" : null,
-    damage ? `${damage} damage` : null,
-    card.side === "opp" ? "opponent's creature" : null,
-    pinNote ?? null,
-  ]
+  const label = [card.name, describeStats(card), status ? STATUS[status].text : null, damage ? `${damage} damage` : null, ...extras]
     .filter(Boolean)
     .join(", ");
 

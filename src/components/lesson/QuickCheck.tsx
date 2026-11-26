@@ -13,11 +13,9 @@ import { CheckIcon } from "../icons";
 import { FeedbackBox, Primary, type Feedback } from "./Coach";
 import { Choice } from "./StepFrame";
 import { useArrivalFocus } from "./useArrivalFocus";
+import { now } from "./useStep";
 
 type Answer = { step: StepId; correct: boolean };
-
-// Only called from event handlers.
-const now = () => Date.now();
 
 export function QuickCheck() {
   const router = useRouter();

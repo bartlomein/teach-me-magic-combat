@@ -321,7 +321,8 @@ export function StepFinal(props: StepProps) {
                     status={status(id)}
                     tapped={c?.tapped}
                     damage={combat.damage[id]}
-                    onSelect={phase === "block" && pick ? () => onAttacker(id) : undefined}
+                    // Always a button: swapping it for a plain card mid-assign would drop keyboard focus.
+                    onSelect={() => onAttacker(id)}
                     disabled={phase !== "block"}
                   />
                 );

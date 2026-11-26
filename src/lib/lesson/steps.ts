@@ -77,12 +77,7 @@ export const flyingLighterBoard = (): GameState =>
 
 export function checkAssign(state: GameState, blocker: string, attacker: string): Judged {
   const v = canBlock(state, blocker, attacker);
-  if (v.ok) return { ok: true, message: "" };
-  if (v.reason === "needs-flying-or-reach") {
-    const b = state.creatures[blocker];
-    return { ok: false, myth: "M5", message: `${b.name} can't block flyers. Only flying or reach can.` };
-  }
-  return { ok: false, myth: v.myth, message: v.message };
+  return v.ok ? { ok: true, message: "" } : { ok: false, myth: v.myth, message: v.message };
 }
 
 export function judgeFlying(blocks: Blocks): Judged {
@@ -101,7 +96,7 @@ export const HEAL = {
   headline: "Damage lasts only this turn.",
   speak: "Damage lasts only this turn. At end of turn, every creature that survived heals fully.",
   q1: { question: "Next turn, does Golem still have damage?", myth: "M7" as Myth, wrong: "Damage heals at end of turn. Golem starts fresh with 4 toughness." },
-  q2: { question: "Golem blocks another 3/3 next turn. Does it survive?", wrong: "It does: it's fully healed, so 3 damage is less than 4." },
+  q2: { question: "Golem blocks another 3/3 next turn. Does it survive?", myth: "M7" as Myth, wrong: "It does: it's fully healed, so 3 damage is less than 4." },
   pins: [{ id: "mossGolem", letter: "A", text: "Moss Golem has 3 damage marked this turn." }],
   win: "Healed, Golem survives the next 3/3 too.",
 } as const;

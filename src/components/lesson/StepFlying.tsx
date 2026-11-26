@@ -13,7 +13,7 @@ import { sides, useCombat, useDemo, useStep, type StepProps } from "./useStep";
 type Phase = "explain" | "watch" | "pick" | "resolving" | "missed" | "follow" | "done";
 
 export function StepFlying(props: StepProps) {
-  const { progress, onNext, nextTitle, headingRef } = props;
+  const { onNext, nextTitle, headingRef } = props;
   const step = useStep<Phase>("flying", props, "explain", ["pick", "done", "follow"]);
   const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
   const board = useMemo(() => (lighter ? flyingLighterBoard() : flyingBoard()), [lighter]);
@@ -58,7 +58,7 @@ export function StepFlying(props: StepProps) {
   });
   const { explaining } = demo;
 
-  const pinShown = (id: string) => !lighter && (explaining || (phase === "pick" && progress.hints >= 2)) && FLYING.pins.some((p) => p.id === id);
+  const pinShown = (id: string) => !lighter && (explaining || (phase === "pick" && step.hints >= 2)) && FLYING.pins.some((p) => p.id === id);
   const { cardProps, keyProps } = usePinLinks(FLYING.pins, pinShown, fx.mode === "full");
 
   function onYours(id: string) {
@@ -137,7 +137,7 @@ export function StepFlying(props: StepProps) {
   const theirs = sides(board).theirs.filter((c) => !figure || c.id === "thornBoar");
   const yours = sides(board).yours.filter((c) => !figure || c.id === "skyFinch");
   const canPick = phase === "pick";
-  const hintOn = progress.hints >= 3 && canPick && !lighter;
+  const hintOn = step.hints >= 3 && canPick && !lighter;
   const pairs = Object.entries(blocks).map(([from, to]) => ({ from, to }));
   const nBlocks = pairs.length;
 
@@ -205,7 +205,8 @@ export function StepFlying(props: StepProps) {
                   damage={combat.damage[c.id]}
                   highlight={hintOn && (FLYING.hintHighlight as readonly string[]).includes(c.id)}
                   {...cardProps(c.id)}
-                  onSelect={selected && !lighter ? () => onAttacker(c.id) : undefined}
+                  // Always a button: swapping it for a plain card mid-assign would drop keyboard focus.
+                  onSelect={lighter ? undefined : () => onAttacker(c.id)}
                   disabled={!canPick}
                 />
               ))}
@@ -238,7 +239,7 @@ export function StepFlying(props: StepProps) {
               <Primary onClick={confirm} disabled={nBlocks === 0}>
                 {nBlocks === 0 ? "Assign blockers" : `Block with ${nBlocks}`}
               </Primary>
-              <HintButton level={progress.hints} total={FLYING.hints.length} onMore={step.hint} />
+              <HintButton level={step.hints} total={FLYING.hints.length} onMore={step.hint} />
             </>
           )}
           {canPick && lighter && lighterPassed && <Primary onClick={demo.backToFull}>Back to the full board</Primary>}
@@ -259,7 +260,7 @@ export function StepFlying(props: StepProps) {
       feedback={feedback}
       below={
         <>
-          {canPick && !lighter && <HintText level={progress.hints} hints={FLYING.hints} />}
+          {canPick && !lighter && <HintText level={step.hints} hints={FLYING.hints} />}
           <PinKey {...keyProps} />
         </>
       }

@@ -54,7 +54,7 @@ export function StepBlock(props: StepProps) {
   });
   const { explaining } = demo;
 
-  const pinShown = (id: string) => !lighter && id === "mossGolem" && (explaining || (phase === "pick" && progress.hints >= 2));
+  const pinShown = (id: string) => !lighter && id === "mossGolem" && (explaining || (phase === "pick" && step.hints >= 2));
   const { cardProps, keyProps } = usePinLinks(BLOCK.pins, pinShown, fx.mode === "full");
   const lighterLinks = usePinLinks(LIGHTER_PINS, () => lighter, fx.mode === "full");
   const pinsFor = (id: string) => (lighter ? lighterLinks.cardProps(id) : cardProps(id));
@@ -98,7 +98,7 @@ export function StepBlock(props: StepProps) {
   }
 
   const { theirs, yours } = sides(board);
-  const hintOn = progress.hints >= 3 && phase === "pick" && !lighter;
+  const hintOn = step.hints >= 3 && phase === "pick" && !lighter;
   const canPick = phase === "pick" && !lighter;
 
   const headline =
@@ -190,7 +190,7 @@ export function StepBlock(props: StepProps) {
                 {blocker ? `Block with ${board.creatures[blocker].name}` : "Pick a blocker"}
               </Primary>
               <Secondary onClick={() => confirm(null)}>Don&apos;t block</Secondary>
-              <HintButton level={progress.hints} total={BLOCK.hints.length} onMore={step.hint} />
+              <HintButton level={step.hints} total={BLOCK.hints.length} onMore={step.hint} />
             </>
           )}
           {lighter && phase === "pick" && (
@@ -211,7 +211,7 @@ export function StepBlock(props: StepProps) {
       feedback={feedback}
       below={
         <>
-          {canPick && <HintText level={progress.hints} hints={BLOCK.hints} />}
+          {canPick && <HintText level={step.hints} hints={BLOCK.hints} />}
           {lighter ? <PinKey {...lighterLinks.keyProps} /> : <PinKey {...keyProps} />}
         </>
       }

@@ -36,12 +36,15 @@ function KnownStep({ step }: { step: StepId }) {
   const progress = lesson.steps[step];
   const locked = progress.status === "locked";
 
+  // Not started, or locked: also when another tab starts over while this one is open.
+  const away = !ready ? null : lesson.experience === null ? "/" : locked ? stepHref(resumeStep(lesson)) : null;
   useEffect(() => {
-    if (!ready) return;
-    if (lesson.experience === null) router.replace("/");
-    else if (locked) router.replace(stepHref(resumeStep(lesson)));
-    else dispatch({ type: "open", step, at: Date.now() });
-    // Only on arrival: later state changes must not re-route.
+    if (away) router.replace(away);
+  }, [away, router]);
+
+  useEffect(() => {
+    if (ready && !away) dispatch({ type: "open", step, at: Date.now() });
+    // Only on arrival: later state changes must not count as opening the step again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, step]);
 

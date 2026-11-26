@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type Dispatch, type Ref } from "react";
-import type { LessonAction, StepId, StepProgress } from "@/lib/lesson/lesson";
+import { hintsShown, type LessonAction, type StepId, type StepProgress } from "@/lib/lesson/lesson";
 import {
   describe as describeCombat,
   resolveCombat,
@@ -113,6 +113,7 @@ export function useStep<P extends string>(
     announce,
     setAnnounce,
     lighter,
+    hints: hintsShown(progress),
     headlineRef,
     miss,
     wrong,

@@ -1,6 +1,7 @@
 import { describe as group, expect, it } from "vitest";
 import { declareAttackers, resolveCombat } from "@/lib/rules/engine";
 import {
+  hintsShown,
   initialLesson,
   isLessonState,
   lessonReducer as r,
@@ -126,6 +127,17 @@ group("lesson flow", () => {
     s = r(s, { type: "complete", step: "attack", at: 9 });
     expect(s.steps.attack.practiced).toBe("clean");
     expect(s.steps.attack.finishedAt).toBe(5); // the first-try record is untouched
+  });
+
+  it("hints while practicing a finished step don't touch the first-try record", () => {
+    let s = r(started(), { type: "complete", step: "attack", at: 5 });
+    s = r(s, { type: "open", step: "attack", at: 6 });
+    s = r(s, { type: "hint", step: "attack" });
+    expect(s.steps.attack.hints).toBe(0);
+    expect(hintsShown(s.steps.attack)).toBe(1);
+    expect(resultOf(s.steps.attack)).toBe("first-try");
+    // The next practice run starts with no hints showing.
+    expect(hintsShown(r(s, { type: "open", step: "attack", at: 7 }).steps.attack)).toBe(0);
   });
 
   it("hints cap at level 3", () => {

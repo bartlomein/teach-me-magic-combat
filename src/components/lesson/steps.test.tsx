@@ -109,6 +109,7 @@ group("Step 3: Flying + reach", () => {
 
     await u.click(card("Vine Archer"));
     await u.click(card("Night Bat"));
+    expect(document.activeElement).toBe(card("Night Bat")); // keyboard focus stays put
     await u.click(card("Moss Golem"));
     await u.click(card("Thorn Boar"));
     await u.click(button("Block with 2"));

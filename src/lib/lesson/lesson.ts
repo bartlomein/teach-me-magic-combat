@@ -21,6 +21,7 @@ export type StepProgress = {
   startedAt?: number;
   finishedAt?: number;
   replayMisses?: number;
+  replayHints?: number;
   practiced?: "clean" | "missed";
 };
 
@@ -149,7 +150,7 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       if (!canOpen(s, a.step)) return s; // locked steps can't be opened
       const p = s.steps[a.step];
       let next = p.startedAt ? s : patchStep(s, a.step, { startedAt: a.at });
-      if (isFinished(p)) next = patchStep(next, a.step, { replayMisses: 0 });
+      if (isFinished(p)) next = patchStep(next, a.step, { replayMisses: 0, replayHints: 0 });
       return next;
     }
     case "miss": {
@@ -175,6 +176,8 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
     }
     case "hint": {
       const p = s.steps[a.step];
+      // Practice hints stay out of the first-try record, like practice misses.
+      if (isFinished(p)) return patchStep(s, a.step, { replayHints: Math.min((p.replayHints ?? 0) + 1, 3) });
       return patchStep(s, a.step, { hints: Math.min(p.hints + 1, 3) });
     }
     case "lighter-cleared":
@@ -252,3 +255,6 @@ export function direction(from: StepId | "welcome", to: StepId | "welcome"): "na
   const i = (v: StepId | "welcome") => (v === "welcome" ? -1 : STEPS.findIndex((x) => x.id === v));
   return i(to) >= i(from) ? "nav-forward" : "nav-back";
 }
+
+/** Hints showing now: this practice run's when replaying a finished step. */
+export const hintsShown = (p: StepProgress) => (isFinished(p) ? (p.replayHints ?? 0) : p.hints);

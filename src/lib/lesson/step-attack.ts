@@ -4,14 +4,12 @@ import {
   creatureFrom as c,
   newGame,
   type GameState,
-  type Myth,
 } from "@/lib/rules/engine";
+import type { Judged } from "./steps";
 
 export const ATTACK = {
   title: "Attacking",
   headline: "Attack to bring their life to 0.",
-  explain:
-    "Attack to bring their life to 0.",
   prompts: {
     pick: "Attack with every creature that can.",
     pickLighter: "Which one can attack?",
@@ -49,14 +47,12 @@ export const attackLighterBoard = (): GameState =>
     ],
   });
 
-export type Check = { ok: true } | { ok: false; myth?: Myth; message: string };
-
-export function checkPick(state: GameState, id: string): Check {
+export function checkPick(state: GameState, id: string): Judged {
   const v = canAttack(state, id);
-  return v.ok ? v : { ok: false, myth: v.myth, message: v.message };
+  return v.ok ? { ok: true, message: "" } : { ok: false, myth: v.myth, message: v.message };
 }
 
-export function checkAttackers(state: GameState, selected: string[]): Check {
+export function checkAttackers(state: GameState, selected: string[]): Judged {
   for (const id of selected) {
     const v = checkPick(state, id);
     if (!v.ok) return v;
@@ -72,5 +68,5 @@ export function checkAttackers(state: GameState, selected: string[]): Check {
       ok: false,
       message: `${missing.name} can attack too. It's been here since last turn.`,
     };
-  return { ok: true };
+  return { ok: true, message: "" };
 }

@@ -22,7 +22,7 @@ import { sides, useDemo, useStep, type StepProps } from "./useStep";
 type Phase = "explain" | "watch" | "pick" | "resolving" | "done";
 
 export function StepAttack(props: StepProps) {
-  const { progress, onNext, nextTitle, headingRef } = props;
+  const { onNext, nextTitle, headingRef } = props;
   const step = useStep<Phase>("attack", props, "explain", ["pick", "done"]);
   const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
 
@@ -53,7 +53,7 @@ export function StepAttack(props: StepProps) {
   const [lighterPassed, setLighterPassed] = useState(false);
 
   const { theirs, yours } = sides(board);
-  const hintOn = progress.hints >= 3 && phase === "pick" && !lighter;
+  const hintOn = step.hints >= 3 && phase === "pick" && !lighter;
 
   function namePin(message: string, c: Creature) {
     const pin = lighter ? undefined : ATTACK.pins.find((p) => p.id === c.id)?.letter;
@@ -148,7 +148,7 @@ export function StepAttack(props: StepProps) {
     const pin = ATTACK.pins.find((p) => p.id === id);
     if (!pin) return false;
     if (explaining) return pin.when.includes("explain");
-    if (phase === "pick") return progress.hints >= 2 && pin.when.includes("pick-hint");
+    if (phase === "pick") return step.hints >= 2 && pin.when.includes("pick-hint");
     return false;
   };
   const { cardProps, keyProps } = usePinLinks(ATTACK.pins, pinVisible, fx.mode === "full");
@@ -161,7 +161,7 @@ export function StepAttack(props: StepProps) {
       headingRef={headingRef}
       headline={explaining ? ATTACK.headline : prompt}
       headlineRef={step.headlineRef}
-      speak={explaining ? ATTACK.explain : prompt}
+      speak={explaining ? ATTACK.headline : prompt}
       howTo={
         phase === "pick"
           ? lighter
@@ -229,7 +229,7 @@ export function StepAttack(props: StepProps) {
                 <Primary onClick={confirmAttackers} disabled={n === 0}>
                   {n === 0 ? "Pick attackers" : `Attack with ${n}`}
                 </Primary>
-                <HintButton level={progress.hints} total={ATTACK.hints.length} onMore={step.hint} />
+                <HintButton level={step.hints} total={ATTACK.hints.length} onMore={step.hint} />
               </>
             )}
             {phase === "pick" && lighter && lighterPassed && <Primary onClick={demo.backToFull}>Back to the full board</Primary>}
@@ -239,7 +239,7 @@ export function StepAttack(props: StepProps) {
       feedback={feedback}
       below={
         <>
-          {phase === "pick" && !lighter && <HintText level={progress.hints} hints={ATTACK.hints} />}
+          {phase === "pick" && !lighter && <HintText level={step.hints} hints={ATTACK.hints} />}
           <PinKey {...keyProps} />
         </>
       }

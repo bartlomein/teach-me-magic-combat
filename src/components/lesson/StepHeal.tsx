@@ -61,7 +61,7 @@ export function StepHeal(props: StepProps) {
   async function answerQ2(v: "yes" | "no") {
     setQ2(v);
     if (v === "no") {
-      step.miss("Thought healed Golem dies to a 3/3", HEAL.q1.myth, true);
+      step.miss("Thought healed Golem dies to a 3/3", HEAL.q2.myth, true);
       setFeedback({ tone: "bad", text: HEAL.q2.wrong });
     } else setFeedback({ tone: "good", text: "Let's see it." });
     setPhase("playing");
