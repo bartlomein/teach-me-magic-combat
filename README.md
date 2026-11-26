@@ -18,7 +18,7 @@ Then open http://localhost:3000.
 Other commands:
 
 ```bash
-npm test        # 80 unit tests (rules engine, lesson flow, report card)
+npm test        # 91 tests: rules engine, lesson flow, report card, and every step clicked through
 npm run lint
 npm run build
 ```
@@ -55,7 +55,7 @@ About 14 hours over two days, so well over the 4 hours. I went in knowing I'd go
 - Next.js 16, React 19, TypeScript, Tailwind CSS 4
 - Motion for animations, plus the View Transitions API between pages
 - three.js and Blender for the Moss Golem stepping out of its card on the welcome page (the Blender file and build scripts are in [art/source/](art/source/))
-- Vitest for tests
+- Vitest and Testing Library for tests
 - Claude Code for planning, research, writing code with me, and testing (Playwright runs in Chrome and Safari, axe, Lighthouse)
 - Codex image generation for the card art and avatars. The prompts are in [art/prompts.md](art/prompts.md).
 
