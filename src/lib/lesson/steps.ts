@@ -25,7 +25,7 @@ export type Judged = { ok: true; message: string } | { ok: false; myth?: Myth; m
 // ---------------------------------------------------------------------------
 
 export const BLOCK = {
-  ask: { question: "They're attacking. Who picks blockers?", myth: "M3" as Myth, wrong: "The defender always chooses. That's you." },
+  ask: { question: "They're attacking. Who picks blockers?", myth: "M2" as Myth, wrong: "The defender always chooses. That's you." },
   headline: "When they attack, you pick blockers.",
   speak: "When they attack, you pick blockers. Both creatures deal damage at the same time.",
   watchCaption: "Pup dealt 2. Boar needed 3.",
@@ -54,11 +54,11 @@ export function judgeBlock(blocker: string | null): Judged {
   const s = blockBoard();
   const r = resolveCombat(s, ["thornBoar"], blocker ? { [blocker]: "thornBoar" } : {});
   // Moss Golem is new this turn (pin A). Not blocking with it is the "new creatures can't block" myth.
-  if (!blocker) return { ok: false, myth: "M4", message: "You'd take 3. Moss Golem can kill it and live." };
+  if (!blocker) return { ok: false, myth: "M3", message: "You'd take 3. Moss Golem can kill it and live." };
   const blockerDied = r.state.graveyard.includes(blocker);
   const boarDied = r.state.graveyard.includes("thornBoar");
   if (boarDied && !blockerDied) return { ok: true, message: BLOCK.win };
-  return { ok: false, myth: "M5", message: "Pup deals 2. Boar has 3 toughness. Pup dies, Boar lives." };
+  return { ok: false, myth: "M4", message: "Pup deals 2. Boar has 3 toughness. Pup dies, Boar lives." };
 }
 
 // ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ export const FLYING = {
     { id: "nightBat", letter: "A", text: "Night Bat has flying." },
     { id: "vineArcher", letter: "B", text: "Vine Archer has reach: it can block flyers." },
   ],
-  followUp: { question: "Can Sky Finch block Thorn Boar?", myth: "M7" as Myth, wrong: "Yes, it can. Flying limits who blocks you, not who you block." },
+  followUp: { question: "Can Sky Finch block Thorn Boar?", myth: "M6" as Myth, wrong: "Yes, it can. Flying limits who blocks you, not who you block." },
   lighter: { prompt: "Who can block the Bat?" },
   win: "Archer stopped the Bat, Golem stopped the Boar. You lost nothing.",
 } as const;
@@ -100,7 +100,7 @@ export function checkAssign(state: GameState, blocker: string, attacker: string)
   if (v.ok) return { ok: true, message: "" };
   if (v.reason === "needs-flying-or-reach") {
     const b = state.creatures[blocker];
-    return { ok: false, myth: "M6", message: `${b.name} can't block flyers. Only flying or reach can.` };
+    return { ok: false, myth: "M5", message: `${b.name} can't block flyers. Only flying or reach can.` };
   }
   return { ok: false, myth: v.myth, message: v.message };
 }
@@ -112,11 +112,11 @@ export function judgeFlying(blocks: Blocks): Judged {
   const lost = 20 - r.state.life.you;
   const yoursDied = r.state.graveyard.filter((id) => s.creatures[id].controller === "you");
   if (lost === 0 && yoursDied.length === 0) return { ok: true, message: FLYING.win };
-  // A blocker that dies: its toughness wasn't enough (M5). Not blocking: a choice, not a myth.
-  if (blocks.skyFinch === "nightBat") return { ok: false, myth: "M5", message: "That works, but Finch dies too. Vine Archer survives it." };
-  if (blocks.skyFinch === "thornBoar") return { ok: false, myth: "M5", message: "Legal! Flyers can block ground creatures. But Finch dies." };
+  // A blocker that dies: its toughness wasn't enough (M4). Not blocking: a choice, not a myth.
+  if (blocks.skyFinch === "nightBat") return { ok: false, myth: "M4", message: "That works, but Finch dies too. Vine Archer survives it." };
+  if (blocks.skyFinch === "thornBoar") return { ok: false, myth: "M4", message: "Legal! Flyers can block ground creatures. But Finch dies." };
   if (lost > 0) return { ok: false, message: `You'd take ${lost}. Block both attackers.` };
-  return { ok: false, myth: "M5", message: `${s.creatures[yoursDied[0]].name} dies. Pick a blocker that survives.` };
+  return { ok: false, myth: "M4", message: `${s.creatures[yoursDied[0]].name} dies. Pick a blocker that survives.` };
 }
 
 // ---------------------------------------------------------------------------
@@ -126,7 +126,7 @@ export function judgeFlying(blocks: Blocks): Judged {
 export const HEAL = {
   headline: "Damage lasts only this turn.",
   speak: "Damage lasts only this turn. At end of turn, every creature that survived heals fully.",
-  q1: { question: "Next turn, does Golem still have damage?", myth: "M8" as Myth, wrong: "Damage heals at end of turn. Golem starts fresh with 4 toughness." },
+  q1: { question: "Next turn, does Golem still have damage?", myth: "M7" as Myth, wrong: "Damage heals at end of turn. Golem starts fresh with 4 toughness." },
   q2: { question: "Golem blocks another 3/3 next turn. Does it survive?", wrong: "It does: it's fully healed, so 3 damage is less than 4." },
   pins: [{ id: "mossGolem", letter: "A", text: "Moss Golem has 3 damage marked this turn." }],
   win: "Healed, Golem survives the next 3/3 too.",
@@ -221,7 +221,7 @@ export function judgeTheirTurn(declared: GameState, attackers: string[], blocks:
     if (blocks.stormHawk === "nightBat") tip = "Vine Archer could block Night Bat and live.";
     else if (blocks.vineArcher === "thornBoar" || blocks.stormHawk === "thornBoar") tip = "Moss Golem can block Thorn Boar and live.";
     const what = lost.length ? `You lost ${list(lost)}. ` : "";
-    return { next, ok: false, myth: lost.length ? "M5" : undefined, message: `${what}Now you can't deal 4 this turn. ${tip}`, blockedAndLived };
+    return { next, ok: false, myth: lost.length ? "M4" : undefined, message: `${what}Now you can't deal 4 this turn. ${tip}`, blockedAndLived };
   }
   const tappedTheirs = attackers.filter((id) => after.creatures[id]);
   const message =
@@ -246,7 +246,7 @@ export function missedWinMessage(s: GameState, attack: string[], lifeLeft: numbe
 // ---------------------------------------------------------------------------
 
 export const QUICK = [
-  { step: "attack", card: "emberPup", newThisTurn: true, question: "This creature was played this turn. Can it attack?", options: ["Yes", "No"], answer: "No", myth: "M2" as Myth },
-  { step: "block", card: "thornBoar", attacking: true, question: "Thorn Boar attacks you. Who picks the blocker?", options: ["You", "Your opponent"], answer: "You", myth: "M3" as Myth },
-  { step: "flying", card: "nightBat", question: "Can Moss Golem block Night Bat?", options: ["Yes", "No"], answer: "No", myth: "M6" as Myth },
+  { step: "attack", card: "emberPup", newThisTurn: true, question: "This creature was played this turn. Can it attack?", options: ["Yes", "No"], answer: "No", myth: "M1" as Myth },
+  { step: "block", card: "thornBoar", attacking: true, question: "Thorn Boar attacks you. Who picks the blocker?", options: ["You", "Your opponent"], answer: "You", myth: "M2" as Myth },
+  { step: "flying", card: "nightBat", question: "Can Moss Golem block Night Bat?", options: ["Yes", "No"], answer: "No", myth: "M5" as Myth },
 ] as const;

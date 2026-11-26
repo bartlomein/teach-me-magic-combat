@@ -15,7 +15,7 @@ type Phase = "explain" | "watch" | "pick" | "resolving" | "missed" | "follow" | 
 /**
  * Step 3: Flying + reach. Two attackers (Night Bat flies, Thorn Boar doesn't).
  * Assign blockers by tapping your creature, then the attacker it blocks; a line
- * joins them. A ground creature on a flyer bounces off (myth M6). After a
+ * joins them. A ground creature on a flyer bounces off (myth M5). After a
  * perfect block, one follow-up question checks myth M7.
  */
 export function StepFlying(props: StepProps) {

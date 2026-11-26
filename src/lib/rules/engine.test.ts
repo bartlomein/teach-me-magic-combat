@@ -22,7 +22,7 @@ group("attacking", () => {
   it("stops a creature that is new this turn from attacking (302.6)", () => {
     const s = newGame({ active: "you", creatures: [c(CARDS.stormHawk, { enteredThisTurn: true })] });
     const v = canAttack(s, "stormHawk");
-    expect(v).toMatchObject({ ok: false, reason: "new-this-turn", myth: "M2" });
+    expect(v).toMatchObject({ ok: false, reason: "new-this-turn", myth: "M1" });
     expect(() => declareAttackers(s, ["stormHawk"])).toThrow(/new this turn/);
   });
 
@@ -52,12 +52,12 @@ group("blocking", () => {
   });
 
   it("only lets the defending player block", () => {
-    expect(canBlock(defending(), "thornBoar", "emberPup")).toMatchObject({ ok: false, myth: "M3" });
+    expect(canBlock(defending(), "thornBoar", "emberPup")).toMatchObject({ ok: false, myth: "M2" });
   });
 
   it("stops tapped creatures from blocking (509.1a)", () => {
     const s = newGame({ active: "opp", creatures: [c(CARDS.thornBoar), c(CARDS.mossGolem, { tapped: true })] });
-    expect(canBlock(s, "mossGolem", "thornBoar")).toMatchObject({ ok: false, reason: "tapped", myth: "M9" });
+    expect(canBlock(s, "mossGolem", "thornBoar")).toMatchObject({ ok: false, reason: "tapped", myth: "M8" });
   });
 
   it("deals damage simultaneously, so both creatures can die (510.2)", () => {
@@ -98,7 +98,7 @@ group("flying and reach (702.9b, 702.17b)", () => {
   });
 
   it("stops a ground creature from blocking a flyer", () => {
-    expect(canBlock(s, "mossGolem", "nightBat")).toMatchObject({ ok: false, myth: "M6" });
+    expect(canBlock(s, "mossGolem", "nightBat")).toMatchObject({ ok: false, myth: "M5" });
   });
 
   it("lets reach and flying creatures block a flyer", () => {

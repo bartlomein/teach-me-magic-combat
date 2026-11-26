@@ -41,7 +41,7 @@ group("Step 1: Attacking", () => {
     await u.click(button("Skip to try"));
     await u.click(card("Storm Hawk")); // new this turn: miss 1
     expect(lesson().steps.attack.misses).toBe(1);
-    expect(lesson().mistakes[0].myth).toBe("M2");
+    expect(lesson().mistakes[0].myth).toBe("M1");
 
     await u.click(card("Storm Hawk")); // miss 2: the lighter board
     expect(lesson().steps.attack.lighter).toBe("active");
@@ -113,7 +113,7 @@ group("Step 3: Flying + reach", () => {
 
     await u.click(card("Moss Golem"));
     await u.click(card("Night Bat"));
-    expect(lesson().mistakes.at(-1)?.myth).toBe("M6");
+    expect(lesson().mistakes.at(-1)?.myth).toBe("M5");
 
     await u.click(card("Vine Archer"));
     await u.click(card("Night Bat"));

@@ -38,13 +38,8 @@ export type GameState = {
 /** blockerId -> attackerId. One attacker can have several blockers. 509.1a */
 export type Blocks = Record<string, string>;
 
-/**
- * Beginner myths (plain-English names in lib/lesson/report.ts). Rules mistakes are
- * tagged so the report card can group them. Numbered from the lesson script; the
- * first one ("attackers hit creatures") is shown in Step 1 but never asked, so it
- * has no code.
- */
-export type Myth = "M2" | "M3" | "M4" | "M5" | "M6" | "M7" | "M8" | "M9" | "M10";
+/** Beginner myths. Rules mistakes are tagged so the report can group them (names in lesson/report.ts). */
+export type Myth = "M1" | "M2" | "M3" | "M4" | "M5" | "M6" | "M7" | "M8" | "M9";
 
 export type Verdict =
   | { ok: true }
@@ -124,7 +119,7 @@ export function canAttack(state: GameState, id: string): Verdict {
     return {
       ok: false,
       reason: "new-this-turn",
-      myth: "M2",
+      myth: "M1",
       message: `${c.name} is new this turn. New creatures can't attack until your next turn.`,
     };
   return { ok: true };
@@ -139,19 +134,19 @@ export function canBlock(state: GameState, blockerId: string, attackerId: string
   const b = get(state, blockerId);
   const a = get(state, attackerId);
   if (b.controller === a.controller || b.controller === state.active)
-    return { ok: false, reason: "not-defender", myth: "M3", message: "The defending player chooses blockers." };
+    return { ok: false, reason: "not-defender", myth: "M2", message: "The defending player chooses blockers." };
   if (b.tapped)
     return {
       ok: false,
       reason: "tapped",
-      myth: "M9",
+      myth: "M8",
       message: `${b.name} is still tapped from attacking. Tapped creatures can't block.`,
     };
   if (has(a, "flying") && !has(b, "flying") && !has(b, "reach"))
     return {
       ok: false,
       reason: "needs-flying-or-reach",
-      myth: "M6",
+      myth: "M5",
       message: `${b.name} can't block a flyer. Only creatures with flying or reach can.`,
     };
   return { ok: true };

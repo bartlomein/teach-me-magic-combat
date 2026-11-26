@@ -10,7 +10,7 @@
 import { useSyncExternalStore } from "react";
 import { initialLesson, isLessonState, lessonReducer, type LessonAction, type LessonState } from "./lesson";
 
-const KEY = "teach-me:lesson:v1";
+const KEY = "teach-me:lesson:v2";
 const listeners = new Set<() => void>();
 const SERVER = initialLesson();
 let state: LessonState | null = null;

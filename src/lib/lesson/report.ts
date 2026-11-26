@@ -10,15 +10,15 @@ import { resultOf, STEPS, type LessonState, type StepId } from "./lesson";
 
 /** Each myth as the learner believed it, and the rule that fixes it. Plain words. */
 export const MYTHS: Record<Myth, { belief: string; rule: string }> = {
-  M2: { belief: "Thought a new creature can attack", rule: "New creatures wait one turn before they attack." },
-  M3: { belief: "Thought the attacker picks blockers", rule: "The defender always picks the blockers." },
-  M4: { belief: "Thought a new creature can't block", rule: "New creatures can block right away." },
-  M5: { belief: "Thought the bigger creature always wins", rule: "A creature dies when damage reaches its toughness." },
-  M6: { belief: "Thought ground creatures can block flyers", rule: "Only flying or reach can block a flyer." },
-  M7: { belief: "Thought flyers can't block ground creatures", rule: "Flyers can block any attacker." },
-  M8: { belief: "Thought damage stays on a creature", rule: "Damage heals at the end of every turn." },
-  M9: { belief: "Thought tapped creatures can block", rule: "Attackers stay tapped until their next turn, so they can't block." },
-  M10: { belief: "Thought blocking taps a creature", rule: "Blocking doesn't tap. Only attacking does." },
+  M1: { belief: "Thought a new creature can attack", rule: "New creatures wait one turn before they attack." },
+  M2: { belief: "Thought the attacker picks blockers", rule: "The defender always picks the blockers." },
+  M3: { belief: "Thought a new creature can't block", rule: "New creatures can block right away." },
+  M4: { belief: "Thought the bigger creature always wins", rule: "A creature dies when damage reaches its toughness." },
+  M5: { belief: "Thought ground creatures can block flyers", rule: "Only flying or reach can block a flyer." },
+  M6: { belief: "Thought flyers can't block ground creatures", rule: "Flyers can block any attacker." },
+  M7: { belief: "Thought damage stays on a creature", rule: "Damage heals at the end of every turn." },
+  M8: { belief: "Thought tapped creatures can block", rule: "Attackers stay tapped until their next turn, so they can't block." },
+  M9: { belief: "Thought blocking taps a creature", rule: "Blocking doesn't tap. Only attacking does." },
 };
 
 /** What each step actually tests, named as a skill (for Strengths / Needs). */

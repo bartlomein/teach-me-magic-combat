@@ -179,7 +179,7 @@ export function StepFinal(props: StepProps) {
     setAsked(v);
     if (v === "yes") setFeedback({ tone: "good", text: "Right. Blocking doesn't tap. Only attacking does." });
     else {
-      step.miss(`Thought ${name(askAbout!)} was tapped from blocking`, "M10", true);
+      step.miss(`Thought ${name(askAbout!)} was tapped from blocking`, "M9", true);
       setFeedback({ tone: "bad", text: "It can. Blocking doesn't tap. Only attacking does." });
     }
   }

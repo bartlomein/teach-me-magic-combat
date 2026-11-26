@@ -19,7 +19,7 @@ An interactive tutorial that teaches one thing well: how combat works in Magic. 
 
 ## Positioning
 
-Built the way Marker Learning builds assessments: minimal text, tap instead of type, a lighter version after two misses, selective testing (quick check skips known steps), and error analysis grouped by misconception (myths M1–M10). The rules come from a tested engine that matches the official Comprehensive Rules (Nov 2026), so the lesson can never call an illegal play correct.
+Built the way Marker Learning builds assessments: minimal text, tap instead of type, a lighter version after two misses, selective testing (quick check skips known steps), and error analysis grouped by misconception (myths M1–M9). The rules come from a tested engine that matches the official Comprehensive Rules (Nov 2026), so the lesson can never call an illegal play correct.
 
 ## Operating Context
 

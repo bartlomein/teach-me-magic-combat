@@ -61,7 +61,7 @@ group("lesson flow", () => {
     s = r(s, {
       type: "miss",
       step: "attack",
-      myth: "M2",
+      myth: "M1",
       note: "picked Hawk",
       at: 2,
     });
@@ -78,7 +78,7 @@ group("lesson flow", () => {
     s = r(s, {
       type: "miss",
       step: "attack",
-      myth: "M2",
+      myth: "M1",
       note: "picked new Storm Hawk",
       at: 2,
       soft: true,
@@ -86,7 +86,7 @@ group("lesson flow", () => {
     s = r(s, {
       type: "miss",
       step: "attack",
-      myth: "M2",
+      myth: "M1",
       note: "picked new Storm Hawk",
       at: 3,
       soft: true,
@@ -100,12 +100,12 @@ group("lesson flow", () => {
     const s = r(started(), {
       type: "miss",
       step: "attack",
-      myth: "M2",
+      myth: "M1",
       note: "picked Hawk",
       at: 2,
     });
     expect(s.mistakes).toEqual([
-      { step: "attack", myth: "M2", note: "picked Hawk", at: 2 },
+      { step: "attack", myth: "M1", note: "picked Hawk", at: 2 },
     ]);
   });
 
@@ -149,8 +149,8 @@ group("lesson flow", () => {
 group("Step 1 checks", () => {
   const s = attackBoard();
 
-  it("explains why Storm Hawk can't attack (M2)", () => {
-    expect(checkPick(s, "stormHawk")).toMatchObject({ ok: false, myth: "M2" });
+  it("explains why Storm Hawk can't attack (M1)", () => {
+    expect(checkPick(s, "stormHawk")).toMatchObject({ ok: false, myth: "M1" });
   });
 
 
@@ -209,9 +209,9 @@ group("quick check (Played a bit)", () => {
       type: "quick-check",
       at: 1,
       results: [
-        { step: "attack", correct: attack, myth: "M2", note: "Q1" },
-        { step: "block", correct: block, myth: "M3", note: "Q2" },
-        { step: "flying", correct: flying, myth: "M6", note: "Q3" },
+        { step: "attack", correct: attack, myth: "M1", note: "Q1" },
+        { step: "block", correct: block, myth: "M2", note: "Q2" },
+        { step: "flying", correct: flying, myth: "M5", note: "Q3" },
       ],
     });
 
@@ -224,7 +224,7 @@ group("quick check (Played a bit)", () => {
 
   it("logs wrong answers with their myth for the report card", () => {
     const s = qc(false, true, false);
-    expect(s.mistakes.map((m) => m.myth)).toEqual(["M2", "M6"]);
+    expect(s.mistakes.map((m) => m.myth)).toEqual(["M1", "M5"]);
     expect(s.steps.attack.status).toBe("open");
   });
 
@@ -266,9 +266,9 @@ group("quick check (Played a bit)", () => {
       type: "quick-check",
       at: 3,
       results: [
-        { step: "attack", correct: true, myth: "M2", note: "Q1" },
-        { step: "block", correct: false, myth: "M3", note: "Q2" },
-        { step: "flying", correct: false, myth: "M6", note: "Q3" },
+        { step: "attack", correct: true, myth: "M1", note: "Q1" },
+        { step: "block", correct: false, myth: "M2", note: "Q2" },
+        { step: "flying", correct: false, myth: "M5", note: "Q3" },
       ],
     });
     expect(again).toBe(s);

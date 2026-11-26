@@ -19,7 +19,7 @@ const LIGHTER_PINS = [
 ] as const;
 
 /**
- * Step 2: Blocking. A quick "who picks blockers?" first (myth M3), then the rule,
+ * Step 2: Blocking. A quick "who picks blockers?" first (myth M2), then the rule,
  * a Watch demo (Pup blocks and dies), and the try: block so the Boar dies and
  * yours lives. Two misses swap in the lighter version (one blocker, the math
  * shown in the Key, a yes/no question).
@@ -101,7 +101,7 @@ export function StepBlock(props: StepProps) {
     setLighterAnswer(v);
     if (v === "yes") setFeedback({ tone: "good", text: "Yes: Golem deals 3 (Boar dies) and takes 3 of its 4 (lives)." });
     else {
-      step.miss("Lighter: thought Golem dies or misses", "M5", true);
+      step.miss("Lighter: thought Golem dies or misses", "M4", true);
       setFeedback({ tone: "bad", text: "Golem deals 3: enough for the Boar. It takes 3, but has 4." });
     }
   }

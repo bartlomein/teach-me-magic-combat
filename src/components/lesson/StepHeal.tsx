@@ -15,7 +15,7 @@ type Phase = "q1" | "healing" | "q2" | "playing" | "done";
 
 /**
  * Step 4: Damage wears off. Predict first, then watch: does Golem keep its 3
- * damage into next turn? (myth M8). The turn ends, the damage fades, and Golem
+ * damage into next turn? (myth M7). The turn ends, the damage fades, and Golem
  * blocks another 3/3 and survives. The lighter version plays the heal first,
  * then asks again.
  */
