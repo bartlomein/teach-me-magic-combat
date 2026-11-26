@@ -20,7 +20,9 @@ const LIGHTER_PINS = [
 export function StepBlock(props: StepProps) {
   const { progress, onNext, nextTitle, headingRef } = props;
   const step = useStep<Phase>("block", props, isFinished(progress) ? "explain" : "ask", ["pick", "done", "explain"]);
-  const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
+  const { fx, phase, setPhase, feedback, setFeedback } = step;
+  // The easier board waits until the missed fight's result is cleared.
+  const lighter = step.lighter && phase !== "resolving";
   const board = useMemo(() => (lighter ? blockLighterBoard() : blockBoard()), [lighter]);
   const combat = useCombat(fx);
 
@@ -92,7 +94,7 @@ export function StepBlock(props: StepProps) {
     setLighterAnswer(v);
     if (v === "yes") setFeedback({ tone: "good", text: "Yes: Golem deals 3 (Boar dies) and takes 3 of its 4 (lives)." });
     else {
-      step.miss("Lighter: thought Golem dies or misses", "M4", true);
+      step.miss("Lighter: thought Golem dies or misses", "M3", true);
       setFeedback({ tone: "bad", text: "Golem deals 3: enough for the Boar. It takes 3, but has 4." });
     }
   }

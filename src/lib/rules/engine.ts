@@ -28,7 +28,7 @@ export type GameState = {
 /** blockerId -> attackerId. 509.1a */
 export type Blocks = Record<string, string>;
 
-export type Myth = "M1" | "M2" | "M3" | "M4" | "M5" | "M6" | "M7" | "M8" | "M9";
+export type Myth = "M1" | "M2" | "M3" | "M4" | "M5" | "M6" | "M7" | "M8";
 
 export type Verdict =
   | { ok: true }
@@ -115,14 +115,14 @@ export function canBlock(state: GameState, blockerId: string, attackerId: string
     return {
       ok: false,
       reason: "tapped",
-      myth: "M8",
+      myth: "M7",
       message: `${b.name} is still tapped from attacking. Tapped creatures can't block.`,
     };
   if (has(a, "flying") && !has(b, "flying") && !has(b, "reach"))
     return {
       ok: false,
       reason: "needs-flying-or-reach",
-      myth: "M5",
+      myth: "M4",
       message: `${b.name} can't block a flyer. Only creatures with flying or reach can.`,
     };
   return { ok: true };

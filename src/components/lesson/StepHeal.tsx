@@ -38,30 +38,19 @@ export function StepHeal(props: StepProps) {
     await fx.wait(900);
   }
 
+  // A prediction before anything is taught: never scored. Either way, watch it heal.
   async function answerQ1(v: "yes" | "no") {
+    if (q1) return;
     setQ1(v);
-    if (v === "no") {
-      setFeedback({ tone: "good", text: "Watch it heal at end of turn." });
-      await heal();
-      setPhase("q2");
-      return;
-    }
-    const toLighter = step.miss("Thought damage stays", HEAL.q1.myth);
-    setFeedback({ tone: "bad", text: HEAL.q1.wrong });
-    if (toLighter) {
-      await heal();
-      setGolemDamage(3);
-      setTurnEnded(false);
-      setQ1(null);
-      setFeedback({ tone: "info", text: "You saw it heal. Same question again." });
-      setPhase("q1");
-    }
+    setFeedback(v === "no" ? { tone: "good", text: "Right. Watch it heal at end of turn." } : { tone: "info", text: "Let's see. Watch the end of the turn." });
+    await heal();
+    setPhase("q2");
   }
 
   async function answerQ2(v: "yes" | "no") {
     setQ2(v);
     if (v === "no") {
-      step.miss("Thought healed Golem dies to a 3/3", HEAL.q2.myth, true);
+      step.miss("Thought healed Golem dies to a 3/3", HEAL.q2.myth);
       setFeedback({ tone: "bad", text: HEAL.q2.wrong });
     } else setFeedback({ tone: "good", text: "Let's see it." });
     setPhase("playing");
@@ -89,7 +78,7 @@ export function StepHeal(props: StepProps) {
       headingRef={headingRef}
       headline={headline}
       headlineRef={step.headlineRef}
-      speak={phase === "q1" ? `${HEAL.speak} ${HEAL.q1.question}` : headline}
+      speak={headline}
       howTo={phase === "q1" ? "Golem took 3 damage this turn. Predict first." : undefined}
       board={
         <Board

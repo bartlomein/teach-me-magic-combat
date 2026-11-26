@@ -165,6 +165,15 @@ html[data-motion="off"] .card-wrap[data-highlight="true"] .card {
     0 0 0 7px var(--spot),
     0 12px 22px #121d3840;
 }
+/* Selected and focused: an extra outer ring, so keyboard focus still shows. */
+.card[aria-pressed="true"]:focus-visible {
+  box-shadow:
+    0 0 0 3px var(--panel),
+    0 0 0 7px var(--spot),
+    0 0 0 10px var(--panel),
+    0 0 0 13px var(--ink),
+    0 12px 22px #121d3840;
+}
 .card__check {
   position: absolute;
   top: -3cqw;

@@ -32,7 +32,7 @@ group("Step 2: blocking", () => {
     expect(r.state.creatures.mossGolem.damage).toBe(3);
   });
 
-  it("Ember Pup dies and the Boar lives (myth M4)", () => {
+  it("Ember Pup dies and the Boar lives (myth M3)", () => {
     const r = resolveCombat(s, ["thornBoar"], { emberPup: "thornBoar" });
     expect(r.state.graveyard).toEqual(["emberPup"]);
     expect(r.state.creatures.thornBoar.damage).toBe(2);
@@ -55,7 +55,7 @@ group("Step 3: flying + reach", () => {
     expect(r.state.life.you).toBe(20);
   });
 
-  it("Golem can't block the Bat (myth M5)", () => {
+  it("Golem can't block the Bat (myth M4)", () => {
     expect(() => resolveCombat(s, ["nightBat"], { mossGolem: "nightBat" })).toThrow(/can't block a flyer/);
   });
 

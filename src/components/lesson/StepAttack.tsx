@@ -23,7 +23,7 @@ type Phase = "explain" | "watch" | "pick" | "resolving" | "done";
 
 export function StepAttack(props: StepProps) {
   const { onNext, nextTitle, headingRef } = props;
-  const step = useStep<Phase>("attack", props, "explain", ["pick", "done"]);
+  const step = useStep<Phase>("attack", props, "explain", ["pick", "done", "explain"]);
   const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
 
   // Before paint so cards never flash in; no cleanup on purpose (dev double-run would freeze them mid-deal).

@@ -49,6 +49,14 @@ group("Step 1: Attacking", () => {
     await screen.findByRole("heading", { name: "Step complete" });
     expect(lesson().steps.attack.status).toBe("done");
   });
+
+  it("after the demo, keyboard focus lands on the task, not the top of the page", async () => {
+    const u = userEvent.setup();
+    renderStep("attack", StepAttack);
+    await u.click(button("Watch it"));
+    await screen.findByRole("button", { name: "Watch again" });
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Attack to bring their life to 0." }));
+  });
 });
 
 group("Step 2: Blocking", () => {
@@ -105,7 +113,7 @@ group("Step 3: Flying + reach", () => {
 
     await u.click(card("Moss Golem"));
     await u.click(card("Night Bat"));
-    expect(lesson().mistakes.at(-1)?.myth).toBe("M5");
+    expect(lesson().mistakes.at(-1)?.myth).toBe("M4");
 
     await u.click(card("Vine Archer"));
     await u.click(card("Night Bat"));
@@ -120,6 +128,17 @@ group("Step 3: Flying + reach", () => {
 });
 
 group("Step 4: Damage wears off", () => {
+  it("the first question is a prediction: a wrong guess isn't a mistake", async () => {
+    const u = userEvent.setup();
+    const { lesson } = renderStep("heal", StepHeal);
+    await u.click(button("Yes, 3 damage"));
+    await u.click(await screen.findByRole("button", { name: "No, it dies" }));
+    await screen.findByRole("heading", { name: "Step complete" });
+    // Only the question after the teaching counts.
+    expect(lesson().mistakes.map((m) => m.myth)).toEqual(["M6"]);
+    expect(lesson().steps.heal.misses).toBe(1);
+  });
+
   it("predict, watch it heal, then see Golem survive", async () => {
     const u = userEvent.setup();
     const { lesson } = renderStep("heal", StepHeal);

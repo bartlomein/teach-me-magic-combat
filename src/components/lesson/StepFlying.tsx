@@ -14,8 +14,10 @@ type Phase = "explain" | "watch" | "pick" | "resolving" | "missed" | "follow" | 
 
 export function StepFlying(props: StepProps) {
   const { onNext, nextTitle, headingRef } = props;
-  const step = useStep<Phase>("flying", props, "explain", ["pick", "done", "follow"]);
-  const { fx, phase, setPhase, feedback, setFeedback, lighter } = step;
+  const step = useStep<Phase>("flying", props, "explain", ["pick", "done", "follow", "explain"]);
+  const { fx, phase, setPhase, feedback, setFeedback } = step;
+  // The easier board waits until the missed fight's result is cleared.
+  const lighter = step.lighter && phase !== "resolving";
   const board = useMemo(() => (lighter ? flyingLighterBoard() : flyingBoard()), [lighter]);
   const attackers = useMemo(() => sides(board).theirs.map((c) => c.id), [board]);
   const combat = useCombat(fx);

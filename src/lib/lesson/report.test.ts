@@ -26,12 +26,12 @@ describe("report card", () => {
   });
 
   it("groups mistakes by myth, most common first, and names the rule", () => {
-    const miss = (myth: "M5" | "M4", step: "flying" | "block"): LessonAction => ({ type: "miss", step, myth, note: "x", at: 1 });
-    const r = buildReport(playAll({ flying: [miss("M5", "flying"), miss("M5", "flying")], block: [miss("M4", "block")] }));
+    const miss = (myth: "M4" | "M3", step: "flying" | "block"): LessonAction => ({ type: "miss", step, myth, note: "x", at: 1 });
+    const r = buildReport(playAll({ flying: [miss("M4", "flying"), miss("M4", "flying")], block: [miss("M3", "block")] }));
     expect(r.totalMistakes).toBe(3);
     expect(r.myths.map((g) => [g.myth, g.count])).toEqual([
-      ["M5", 2],
-      ["M4", 1],
+      ["M4", 2],
+      ["M3", 1],
     ]);
     expect(r.myths[0].rule).toMatch(/flying or reach/);
     expect(r.rows.find((x) => x.id === "flying")!.result).toBe("lighter");
@@ -48,7 +48,7 @@ describe("report card", () => {
         results: [
           { step: "attack", correct: true, myth: "M1", note: "Quick check: a" },
           { step: "block", correct: false, myth: "M2", note: "Quick check: b" },
-          { step: "flying", correct: true, myth: "M5", note: "Quick check: c" },
+          { step: "flying", correct: true, myth: "M4", note: "Quick check: c" },
         ],
       },
     ]);
@@ -61,8 +61,8 @@ describe("report card", () => {
   });
 
   it("practicing a missed step clean moves it from needs to strengths, and marks its myths fixed", () => {
-    const miss = (myth: "M5" | "M4", step: "flying" | "block"): LessonAction => ({ type: "miss", step, myth, note: "x", at: 1 });
-    let s = playAll({ flying: [miss("M5", "flying"), miss("M5", "flying")], block: [miss("M4", "block")] });
+    const miss = (myth: "M4" | "M3", step: "flying" | "block"): LessonAction => ({ type: "miss", step, myth, note: "x", at: 1 });
+    let s = playAll({ flying: [miss("M4", "flying"), miss("M4", "flying")], block: [miss("M3", "block")] });
     s = run([{ type: "open", step: "flying", at: 900_000 }, { type: "complete", step: "flying", at: 930_000 }], s);
     const r = buildReport(s);
     expect(r.rows.find((x) => x.id === "flying")).toMatchObject({ result: "lighter", practiced: "clean" });
@@ -70,14 +70,14 @@ describe("report card", () => {
     expect(r.practice).toEqual(["block"]);
     expect(r.strengths).toContain("Blocking flyers (after practice)");
     expect(r.fixedByPractice).toBe(1);
-    expect(r.myths.find((g) => g.myth === "M5")!.fixed).toBe(true);
-    expect(r.myths.find((g) => g.myth === "M4")!.fixed).toBe(false);
+    expect(r.myths.find((g) => g.myth === "M4")!.fixed).toBe(true);
+    expect(r.myths.find((g) => g.myth === "M3")!.fixed).toBe(false);
     expect(r.totalMistakes).toBe(3); // history is kept
   });
 
   it("a practice run with a miss keeps the step in needs", () => {
-    let s = playAll({ block: [{ type: "miss", step: "block", myth: "M4", note: "x", at: 1 }] });
-    s = run([{ type: "open", step: "block", at: 900_000 }, { type: "miss", step: "block", myth: "M4", note: "x", at: 900_001 }, { type: "complete", step: "block", at: 930_000 }], s);
+    let s = playAll({ block: [{ type: "miss", step: "block", myth: "M3", note: "x", at: 1 }] });
+    s = run([{ type: "open", step: "block", at: 900_000 }, { type: "miss", step: "block", myth: "M3", note: "x", at: 900_001 }, { type: "complete", step: "block", at: 930_000 }], s);
     const r = buildReport(s);
     expect(r.rows.find((x) => x.id === "block")!.practiced).toBe("missed");
     expect(r.needs).toEqual(["Blocking math"]);

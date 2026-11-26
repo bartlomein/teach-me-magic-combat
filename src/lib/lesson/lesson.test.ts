@@ -222,7 +222,7 @@ group("quick check (Played a bit)", () => {
       results: [
         { step: "attack", correct: attack, myth: "M1", note: "Q1" },
         { step: "block", correct: block, myth: "M2", note: "Q2" },
-        { step: "flying", correct: flying, myth: "M5", note: "Q3" },
+        { step: "flying", correct: flying, myth: "M4", note: "Q3" },
       ],
     });
 
@@ -235,7 +235,7 @@ group("quick check (Played a bit)", () => {
 
   it("logs wrong answers with their myth for the report card", () => {
     const s = qc(false, true, false);
-    expect(s.mistakes.map((m) => m.myth)).toEqual(["M1", "M5"]);
+    expect(s.mistakes.map((m) => m.myth)).toEqual(["M1", "M4"]);
     expect(s.steps.attack.status).toBe("open");
   });
 
@@ -279,7 +279,7 @@ group("quick check (Played a bit)", () => {
       results: [
         { step: "attack", correct: true, myth: "M1", note: "Q1" },
         { step: "block", correct: false, myth: "M2", note: "Q2" },
-        { step: "flying", correct: false, myth: "M5", note: "Q3" },
+        { step: "flying", correct: false, myth: "M4", note: "Q3" },
       ],
     });
     expect(again).toBe(s);

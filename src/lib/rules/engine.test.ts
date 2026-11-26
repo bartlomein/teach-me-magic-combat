@@ -57,7 +57,7 @@ group("blocking", () => {
 
   it("stops tapped creatures from blocking (509.1a)", () => {
     const s = newGame({ active: "opp", creatures: [c(CARDS.thornBoar), c(CARDS.mossGolem, { tapped: true })] });
-    expect(canBlock(s, "mossGolem", "thornBoar")).toMatchObject({ ok: false, reason: "tapped", myth: "M8" });
+    expect(canBlock(s, "mossGolem", "thornBoar")).toMatchObject({ ok: false, reason: "tapped", myth: "M7" });
   });
 
   it("deals damage simultaneously, so both creatures can die (510.2)", () => {
@@ -98,7 +98,7 @@ group("flying and reach (702.9b, 702.17b)", () => {
   });
 
   it("stops a ground creature from blocking a flyer", () => {
-    expect(canBlock(s, "mossGolem", "nightBat")).toMatchObject({ ok: false, myth: "M5" });
+    expect(canBlock(s, "mossGolem", "nightBat")).toMatchObject({ ok: false, myth: "M4" });
   });
 
   it("lets reach and flying creatures block a flyer", () => {
