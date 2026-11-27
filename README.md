@@ -61,7 +61,7 @@ I read through Marker's site and tried to build a small version of the same idea
 
 ## Time spent
 
-About 5 hours.
+About 4 hours.
 
 ## Tools
 
