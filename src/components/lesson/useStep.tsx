@@ -63,8 +63,21 @@ export function useStep<P extends string>(
       arrived.current = true;
       return;
     }
-    if (focusNow) headlineRef.current?.focus();
-  }, [phase, lighter, focusNow]);
+    const el = headlineRef.current;
+    if (!focusNow || !el) return;
+    el.focus({ preventScroll: true });
+    // Glide (not jump) to what's next: the Next button once done, otherwise the question band.
+    const behavior = fx.mode === "off" ? "auto" : "smooth";
+    const next = el.closest("section")?.querySelector<HTMLElement>("[data-step-next]");
+    if (next) {
+      // After the feedback above it has opened.
+      const t = setTimeout(() => next.scrollIntoView({ behavior, block: "nearest" }), fx.mode === "off" ? 0 : 350);
+      return () => clearTimeout(t);
+    }
+    const band = el.closest<HTMLElement>(".on-spot") ?? el;
+    const top = band.getBoundingClientRect().top;
+    if (top < 0 || top > window.innerHeight / 2) band.scrollIntoView({ behavior, block: "start" });
+  }, [phase, lighter, focusNow, fx.mode]);
 
   // A combat may still run after leaving the step; its late results must not reach the lesson.
   const here = useRef(true);

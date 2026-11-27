@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { BulbIcon, CheckIcon, CrossIcon, InfoIcon, SpeakerIcon } from "../icons";
 
@@ -58,23 +58,35 @@ const TONE = {
 export function FeedbackBox({ feedback }: { feedback: Feedback | null }) {
   return (
     <div aria-live="polite" aria-atomic="true">
-      {feedback && (
-        <motion.div
-          key={`${feedback.n ?? 0}:${feedback.text}`}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className={`flex items-start gap-3 p-3.5 ${TONE[feedback.tone].box}`}
-        >
-          <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-panel ${TONE[feedback.tone].badge}`}>
-            {TONE[feedback.tone].icon}
-          </span>
-          <p className="flex-1 text-base">
-            <span className={`font-bold ${TONE[feedback.tone].word}`}>{TONE[feedback.tone].label}. </span>
-            {feedback.text}
-          </p>
-        </motion.div>
-      )}
+      <AnimatePresence initial={false}>
+        {feedback && (
+          // Opens smoothly so what's below slides down instead of jumping.
+          <motion.div
+            key="feedback"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <motion.div
+              key={`${feedback.n ?? 0}:${feedback.text}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className={`flex items-start gap-3 p-3.5 ${TONE[feedback.tone].box}`}
+            >
+              <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-panel ${TONE[feedback.tone].badge}`}>
+                {TONE[feedback.tone].icon}
+              </span>
+              <p className="flex-1 text-base">
+                <span className={`font-bold ${TONE[feedback.tone].word}`}>{TONE[feedback.tone].label}. </span>
+                {feedback.text}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

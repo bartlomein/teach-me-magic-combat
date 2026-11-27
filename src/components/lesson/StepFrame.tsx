@@ -89,16 +89,13 @@ export function StepFrame({
       <div className="[grid-area:board]">{board}</div>
 
       <div className="flex flex-col gap-3 px-5 py-4 [grid-area:act] sm:gap-5 sm:p-6 lg:border-r-[3px] lg:border-ink">
-        {done ? (
-          nextTitle && (
-            <div className="flex flex-wrap gap-3">
-              <Primary onClick={onNext}>Next: {nextTitle}</Primary>
-            </div>
-          )
-        ) : (
-          !inBand && actions && <div className="flex flex-wrap gap-3">{actions}</div>
-        )}
+        {!done && !inBand && actions && <div className="flex flex-wrap gap-3">{actions}</div>}
         {!inBand && <FeedbackBox feedback={feedback} />}
+        {done && nextTitle && (
+          <Primary onClick={onNext} data-step-next className="w-full justify-center sm:w-fit">
+            Next: {nextTitle}
+          </Primary>
+        )}
         {!done && below}
       </div>
 
