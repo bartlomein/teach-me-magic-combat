@@ -10,7 +10,7 @@ import { StepFinal } from "./StepFinal";
 import { StepFlying } from "./StepFlying";
 import { StepHeal } from "./StepHeal";
 import { StepNav } from "./StepNav";
-import { useArrivalFocus } from "../useArrivalFocus";
+import { useArrivalFocus } from "../hooks/useArrivalFocus";
 
 const BODIES: Record<StepId, typeof StepBlock> = {
   attack: StepAttack,
@@ -67,7 +67,7 @@ function KnownStep({ step }: { step: StepId }) {
   return <Body {...props} />;
 }
 
-function StepLoading() {
+export function StepLoading() {
   const space = <div className="aspect-[5/7] w-[clamp(84px,22vw,140px)] border-2 border-dashed border-ink/25" />;
   return (
     <div

@@ -8,7 +8,7 @@ import { dispatch, useLesson } from "@/lib/lesson/store";
 import { BulbIcon, CheckIcon, CrossIcon, LockIcon } from "../ui/icons";
 import { OnSpot, Primary } from "./Coach";
 import { Lesson2Demo } from "./Lesson2Demo";
-import { useArrivalFocus } from "./useArrivalFocus";
+import { useArrivalFocus } from "./hooks/useArrivalFocus";
 
 
 export function Report() {

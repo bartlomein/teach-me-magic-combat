@@ -12,7 +12,7 @@ import { Card } from "../ui/Card";
 import { CheckIcon } from "../ui/icons";
 import { FeedbackBox, Primary, type Feedback } from "./Coach";
 import { Choice } from "./steps/StepFrame";
-import { useArrivalFocus } from "./useArrivalFocus";
+import { useArrivalFocus } from "./hooks/useArrivalFocus";
 import { now } from "./steps/hooks/useStep";
 
 type Answer = { step: StepId; correct: boolean };

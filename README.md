@@ -44,7 +44,7 @@ At the end there's a report card. It shows how each step went, your mistakes gro
 - `src/lib/lesson` is the lesson. Each step's boards and checks live in `steps.ts`. Progress is a pure reducer in `lesson.ts`. A small store in `store.ts` saves it in the browser and keeps tabs in sync.
 - `src/components/lesson` is the pages around the steps (welcome, basics, quick check, report). `lesson/steps` is the five step screens and the frame they share. What's on the board right now (the selected card, damage, the phase) stays local to each step. Only lesson events like a miss, a hint or a finished step go to the store.
 - `lesson/steps/hooks` gives every step the same behavior: `useStep` (phase, feedback, logging misses), `useCombat` (runs a fight through the engine and animates it) and `useDemo` (the Watch it / Try it flow). `useRun` stops animations cleanly when you leave.
-- `src/components/ui` is the shared pieces (cards, icons, effects), `board` is the table, and `golem` is the 3D welcome scene.
+- `lesson/hooks` holds the one hook the pages share (`useArrivalFocus`). `src/components/ui` is the shared pieces (cards, icons, effects), `board` is the table, and `golem` is the 3D welcome scene.
 - Tests: the engine, the reducer and the report card are plain unit tests. Each step is also clicked through with Testing Library and the real reducer.
 
 A good place to start reading is `src/lib/rules/engine.ts`, then `src/lib/lesson/lesson.ts`, then `src/components/lesson/steps/StepBlock.tsx`.

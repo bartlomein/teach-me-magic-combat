@@ -10,7 +10,7 @@ import { useMotionMode } from "@/lib/motion-pref";
 import { Card } from "../ui/Card";
 import { canLeap, playGolemLeap, stopGolemLeap } from "../golem/golemLeap";
 import { OnSpot } from "./Coach";
-import { useArrivalFocus } from "./useArrivalFocus";
+import { useArrivalFocus } from "./hooks/useArrivalFocus";
 
 export function Welcome() {
   const router = useRouter();

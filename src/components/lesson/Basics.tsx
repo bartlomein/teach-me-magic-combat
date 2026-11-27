@@ -10,7 +10,7 @@ import { useMotionMode } from "@/lib/motion-pref";
 import { Card } from "../ui/Card";
 import { HeartIcon } from "../ui/icons";
 import { Primary } from "./Coach";
-import { useArrivalFocus } from "./useArrivalFocus";
+import { useArrivalFocus } from "./hooks/useArrivalFocus";
 
 const PANEL_START = 0.6;
 const PANEL_GAP = 1.1;
