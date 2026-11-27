@@ -4,8 +4,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { CARDS, type CardDef } from "@/lib/cards";
 import { useMotionMode } from "@/lib/motion-pref";
-import { Card } from "../Card";
-import { ShieldIcon } from "../icons";
+import { Card } from "../ui/Card";
+import { ShieldIcon } from "../ui/icons";
 import { Secondary } from "./Coach";
 
 const BEAT_MS = 2600;

@@ -9,7 +9,7 @@ import { StepFinal } from "./StepFinal";
 import { StepFlying } from "./StepFlying";
 import { StepHeal } from "./StepHeal";
 import { FINAL } from "@/lib/lesson/steps";
-import { reading } from "./useStep";
+import { reading } from "./hooks/useStep";
 
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
 const card = (name: string) => {

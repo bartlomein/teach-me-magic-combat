@@ -7,8 +7,8 @@ import { CARDS } from "@/lib/cards";
 import { stepHref } from "@/lib/lesson/lesson";
 import { dispatch, markArrival, useLesson } from "@/lib/lesson/store";
 import { useMotionMode } from "@/lib/motion-pref";
-import { Card } from "../Card";
-import { HeartIcon } from "../icons";
+import { Card } from "../ui/Card";
+import { HeartIcon } from "../ui/icons";
 import { Primary } from "./Coach";
 import { useArrivalFocus } from "./useArrivalFocus";
 

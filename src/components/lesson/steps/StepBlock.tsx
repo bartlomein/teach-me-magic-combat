@@ -4,13 +4,13 @@ import { useMemo, useState } from "react";
 import { CARDS, type CardDef } from "@/lib/cards";
 import { isFinished } from "@/lib/lesson/lesson";
 import { BLOCK, blockBoard, blockLighterBoard, judgeBlock } from "@/lib/lesson/steps";
-import { Board, BlockLines, CardSlot, Row } from "../board/Board";
-import { HintButton, HintText, PinKey, Primary, Secondary } from "./Coach";
+import { Board, BlockLines, CardSlot, Row } from "../../board/Board";
+import { HintButton, HintText, PinKey, Primary, Secondary } from "../Coach";
 import { Choice, StepFrame } from "./StepFrame";
-import { usePinLinks } from "./usePinLinks";
-import { sides, useCombat } from "./useCombat";
-import { useDemo } from "./useDemo";
-import { useStep, type StepProps } from "./useStep";
+import { usePinLinks } from "./hooks/usePinLinks";
+import { sides, useCombat } from "./hooks/useCombat";
+import { useDemo } from "./hooks/useDemo";
+import { useStep, type StepProps } from "./hooks/useStep";
 
 type Phase = "ask" | "explain" | "watch" | "pick" | "resolving" | "missed" | "done";
 

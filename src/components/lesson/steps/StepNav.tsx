@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { direction, stepFromSlug, stepHref, STEPS } from "@/lib/lesson/lesson";
 import { useLesson } from "@/lib/lesson/store";
-import { CheckIcon, LockIcon } from "../icons";
+import { CheckIcon, LockIcon } from "../../ui/icons";
 
 export function StepNav() {
   const { lesson } = useLesson();

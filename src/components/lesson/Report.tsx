@@ -5,7 +5,7 @@ import { useEffect, ViewTransition, type ReactNode } from "react";
 import { STEPS, stepHref } from "@/lib/lesson/lesson";
 import { buildReport, type ReportRow } from "@/lib/lesson/report";
 import { dispatch, useLesson } from "@/lib/lesson/store";
-import { BulbIcon, CheckIcon, CrossIcon, LockIcon } from "../icons";
+import { BulbIcon, CheckIcon, CrossIcon, LockIcon } from "../ui/icons";
 import { OnSpot, Primary } from "./Coach";
 import { Lesson2Demo } from "./Lesson2Demo";
 import { useArrivalFocus } from "./useArrivalFocus";

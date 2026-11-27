@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { OnSpot } from "./Coach";
+import { OnSpot } from "../../Coach";
 import type { Beat, StepCore } from "./useStep";
 
 type DemoPhase = "explain" | "watch" | "pick";

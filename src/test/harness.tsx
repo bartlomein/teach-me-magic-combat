@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { useReducer, useRef, type ComponentType } from "react";
 import { initialLesson, lessonReducer, nextMissGoesLighter, type LessonState, type StepId } from "@/lib/lesson/lesson";
 import { MotionProvider } from "@/lib/motion-pref";
-import type { StepProps } from "@/components/lesson/useStep";
+import type { StepProps } from "@/components/lesson/steps/hooks/useStep";
 
 export function renderStep(step: StepId, Body: ComponentType<StepProps>) {
   // Effects off: animations finish at once.

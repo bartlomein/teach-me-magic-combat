@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Atkinson_Hyperlegible_Next, Fraunces, Lexend } from "next/font/google";
-import { MotionToggle } from "@/components/MotionToggle";
-import { PageTransition } from "@/components/PageTransition";
+import { MotionToggle } from "@/components/ui/MotionToggle";
+import { PageTransition } from "@/components/ui/PageTransition";
 import { MotionProvider } from "@/lib/motion-pref";
 import "./globals.css";
 

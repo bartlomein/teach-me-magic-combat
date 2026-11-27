@@ -10,7 +10,7 @@ import { StepFinal } from "./StepFinal";
 import { StepFlying } from "./StepFlying";
 import { StepHeal } from "./StepHeal";
 import { StepNav } from "./StepNav";
-import { useArrivalFocus } from "./useArrivalFocus";
+import { useArrivalFocus } from "../useArrivalFocus";
 
 const BODIES: Record<StepId, typeof StepBlock> = {
   attack: StepAttack,

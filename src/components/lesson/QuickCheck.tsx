@@ -8,12 +8,12 @@ import { hasProgress, resumeStep, STEPS, stepHref, type StepId } from "@/lib/les
 import { QUICK } from "@/lib/lesson/steps";
 import { dispatch, useLesson } from "@/lib/lesson/store";
 import { useMotionMode } from "@/lib/motion-pref";
-import { Card } from "../Card";
-import { CheckIcon } from "../icons";
+import { Card } from "../ui/Card";
+import { CheckIcon } from "../ui/icons";
 import { FeedbackBox, Primary, type Feedback } from "./Coach";
-import { Choice } from "./StepFrame";
+import { Choice } from "./steps/StepFrame";
 import { useArrivalFocus } from "./useArrivalFocus";
-import { now } from "./useStep";
+import { now } from "./steps/hooks/useStep";
 
 type Answer = { step: StepId; correct: boolean };
 

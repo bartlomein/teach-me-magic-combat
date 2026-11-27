@@ -15,11 +15,11 @@ import {
   readyAttackers,
 } from "@/lib/lesson/steps";
 import { declareAttackers, type Blocks, type GameState } from "@/lib/rules/engine";
-import { Board, BlockLines, CardSlot, Row } from "../board/Board";
-import { HintButton, HintText, OnSpot, Primary, Secondary } from "./Coach";
+import { Board, BlockLines, CardSlot, Row } from "../../board/Board";
+import { HintButton, HintText, OnSpot, Primary, Secondary } from "../Coach";
 import { Choice, StepFrame } from "./StepFrame";
-import { useCombat, type Fate } from "./useCombat";
-import { useStep, type StepProps } from "./useStep";
+import { useCombat, type Fate } from "./hooks/useCombat";
+import { useStep, type StepProps } from "./hooks/useStep";
 
 type Phase =
   | "intro"

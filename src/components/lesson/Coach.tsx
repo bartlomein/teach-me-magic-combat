@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, type ReactNode } from "react";
-import { BulbIcon, CheckIcon, CrossIcon, InfoIcon, SpeakerIcon } from "../icons";
+import { BulbIcon, CheckIcon, CrossIcon, InfoIcon, SpeakerIcon } from "../ui/icons";
 
 export function Speak({
   text,

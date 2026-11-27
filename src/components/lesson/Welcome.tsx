@@ -7,7 +7,7 @@ import { resumeStep, STEPS, stepHref } from "@/lib/lesson/lesson";
 import { buildReport } from "@/lib/lesson/report";
 import { dispatch, useLesson } from "@/lib/lesson/store";
 import { useMotionMode } from "@/lib/motion-pref";
-import { Card } from "../Card";
+import { Card } from "../ui/Card";
 import { canLeap, playGolemLeap, stopGolemLeap } from "../golem/golemLeap";
 import { OnSpot } from "./Coach";
 import { useArrivalFocus } from "./useArrivalFocus";

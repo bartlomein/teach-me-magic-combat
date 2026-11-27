@@ -10,16 +10,16 @@ import {
   attackLighterBoard,
   checkAttackers,
   checkPick,
-} from "@/lib/lesson/step-attack";
+} from "@/lib/lesson/steps";
 import { declareAttackers, resolveCombat, type Creature } from "@/lib/rules/engine";
-import { AttackArrow, Board, Row } from "../board/Board";
-import { Card } from "../Card";
-import { HintButton, HintText, PinKey, Primary } from "./Coach";
+import { AttackArrow, Board, Row } from "../../board/Board";
+import { Card } from "../../ui/Card";
+import { HintButton, HintText, PinKey, Primary } from "../Coach";
 import { StepFrame } from "./StepFrame";
-import { usePinLinks } from "./usePinLinks";
-import { sides } from "./useCombat";
-import { useDemo } from "./useDemo";
-import { useStep, type StepProps } from "./useStep";
+import { usePinLinks } from "./hooks/usePinLinks";
+import { sides } from "./hooks/useCombat";
+import { useDemo } from "./hooks/useDemo";
+import { useStep, type StepProps } from "./hooks/useStep";
 
 type Phase = "explain" | "watch" | "pick" | "resolving" | "done";
 

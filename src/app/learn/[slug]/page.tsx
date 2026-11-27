@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { StepScreen } from "@/components/lesson/StepScreen";
+import { StepScreen } from "@/components/lesson/steps/StepScreen";
 import { SLUGS, STEPS, stepFromSlug } from "@/lib/lesson/lesson";
 
 // Prebuilt so it arrives in one pass: transitions run once and shared elements morph.

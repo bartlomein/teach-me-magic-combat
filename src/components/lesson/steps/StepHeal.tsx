@@ -5,12 +5,12 @@ import { useState } from "react";
 import { CARDS, type CardDef } from "@/lib/cards";
 import { HEAL, healBoard } from "@/lib/lesson/steps";
 import { declareAttackers, endTurn, resolveCombat } from "@/lib/rules/engine";
-import { Board, CardSlot, Row } from "../board/Board";
-import { PinKey } from "./Coach";
+import { Board, CardSlot, Row } from "../../board/Board";
+import { PinKey } from "../Coach";
 import { Choice, StepFrame } from "./StepFrame";
-import { usePinLinks } from "./usePinLinks";
-import { type Fate } from "./useCombat";
-import { useStep, type StepProps } from "./useStep";
+import { usePinLinks } from "./hooks/usePinLinks";
+import { type Fate } from "./hooks/useCombat";
+import { useStep, type StepProps } from "./hooks/useStep";
 
 type Phase = "q1" | "healing" | "q2" | "playing" | "done";
 

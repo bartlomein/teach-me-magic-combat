@@ -5,9 +5,9 @@ import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { Children, useLayoutEffect, useState, ViewTransition, type ReactNode } from "react";
 import { useMotionMode } from "@/lib/motion-pref";
 import type { PlayerId } from "@/lib/rules/engine";
-import { Card } from "../Card";
-import { DamageFloat, ImpactBurst, Shatter, type Burst, type Float } from "../effects";
-import { ArrowUpIcon, HeartIcon } from "../icons";
+import { Card } from "../ui/Card";
+import { DamageFloat, ImpactBurst, Shatter, type Burst, type Float } from "../ui/effects";
+import { ArrowUpIcon, HeartIcon } from "../ui/icons";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

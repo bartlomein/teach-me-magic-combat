@@ -1,8 +1,8 @@
 import { useRef, useState, type Dispatch, type Ref } from "react";
 import { hintsShown, type LessonAction, type StepId, type StepProgress } from "@/lib/lesson/lesson";
 import type { Myth } from "@/lib/rules/engine";
-import { useBoardFx } from "../board/Board";
-import type { Feedback } from "./Coach";
+import { useBoardFx } from "../../../board/Board";
+import type { Feedback } from "../../Coach";
 import { useRun } from "./useRun";
 
 export type StepProps = {

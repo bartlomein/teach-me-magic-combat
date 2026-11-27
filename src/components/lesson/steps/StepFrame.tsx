@@ -3,8 +3,8 @@
 import { motion } from "motion/react";
 import { useEffect, useEffectEvent, useRef, ViewTransition, type ReactNode, type Ref } from "react";
 import { useMotionMode } from "@/lib/motion-pref";
-import { CheckIcon, CrossIcon } from "../icons";
-import { FEEDBACK_OPEN_MS, FeedbackBox, Primary, Speak, type Feedback } from "./Coach";
+import { CheckIcon, CrossIcon } from "../../ui/icons";
+import { FEEDBACK_OPEN_MS, FeedbackBox, Primary, Speak, type Feedback } from "../Coach";
 
 const STEP_COMPLETE = "Step complete";
 

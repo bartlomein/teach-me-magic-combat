@@ -14,7 +14,7 @@ import {
   attackLighterBoard,
   checkAttackers,
   checkPick,
-} from "./step-attack";
+} from "./steps";
 
 const started = (): LessonState =>
   r(initialLesson(), { type: "start", experience: "new", at: 1 });
