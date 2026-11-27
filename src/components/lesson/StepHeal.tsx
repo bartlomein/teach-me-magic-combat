@@ -9,7 +9,8 @@ import { Board, CardSlot, Row } from "../board/Board";
 import { PinKey } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
-import { useStep, type Fate, type StepProps } from "./useStep";
+import { type Fate } from "./useCombat";
+import { useStep, type StepProps } from "./useStep";
 
 type Phase = "q1" | "healing" | "q2" | "playing" | "done";
 

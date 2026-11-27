@@ -17,7 +17,9 @@ import { Card } from "../Card";
 import { HintButton, HintText, PinKey, Primary } from "./Coach";
 import { StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
-import { sides, useDemo, useStep, type StepProps } from "./useStep";
+import { sides } from "./useCombat";
+import { useDemo } from "./useDemo";
+import { useStep, type StepProps } from "./useStep";
 
 type Phase = "explain" | "watch" | "pick" | "resolving" | "done";
 

@@ -8,7 +8,9 @@ import { Board, BlockLines, CardSlot, Row } from "../board/Board";
 import { HintButton, HintText, PinKey, Primary } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
 import { usePinLinks } from "./usePinLinks";
-import { sides, useCombat, useDemo, useStep, type StepProps } from "./useStep";
+import { sides, useCombat } from "./useCombat";
+import { useDemo } from "./useDemo";
+import { useStep, type StepProps } from "./useStep";
 
 type Phase = "explain" | "watch" | "pick" | "resolving" | "missed" | "follow" | "done";
 

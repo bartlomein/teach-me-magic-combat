@@ -18,7 +18,8 @@ import { declareAttackers, type Blocks, type GameState } from "@/lib/rules/engin
 import { Board, BlockLines, CardSlot, Row } from "../board/Board";
 import { HintButton, HintText, OnSpot, Primary, Secondary } from "./Coach";
 import { Choice, StepFrame } from "./StepFrame";
-import { useCombat, useStep, type Fate, type StepProps } from "./useStep";
+import { useCombat, type Fate } from "./useCombat";
+import { useStep, type StepProps } from "./useStep";
 
 type Phase =
   | "intro"
