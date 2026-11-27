@@ -59,6 +59,10 @@ I read through Marker's site and tried to build a small version of the same idea
 - Error analysis. The report groups mistakes by myth, with strengths and things to practice.
 - Less text. Pictures, short sentences, a read-aloud button, tap instead of type.
 
+## Time spent
+
+About 5 hours.
+
 ## Tools
 
 - Next.js 16, React 19, TypeScript, Tailwind CSS 4
