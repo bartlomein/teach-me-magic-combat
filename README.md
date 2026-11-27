@@ -59,10 +59,6 @@ I read through Marker's site and tried to build a small version of the same idea
 - Error analysis. The report groups mistakes by myth, with strengths and things to practice.
 - Less text. Pictures, short sentences, a read-aloud button, tap instead of type.
 
-## Time spent
-
-About 14 hours over two days, so well over the 4 hours. I went in knowing I'd go over. Most of the extra time went into the card art, a full redesign of the look halfway through, rebuilding the final challenge, and testing on phones and Safari.
-
 ## Tools
 
 - Next.js 16, React 19, TypeScript, Tailwind CSS 4
@@ -110,10 +106,6 @@ The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2
 - Lighthouse on the live site: Accessibility, Best Practices and SEO 100. Performance 100 on desktop, 96 to 97 on mobile.
 - Phone layout: on an iPhone, the question and the board fit on one screen in most steps.
 - Reduced motion: the lesson starts in Calm mode. There's also a Full / Calm / Off switch in the header.
-
-## About the commit history
-
-I committed in steps at the end of the build. Each commit's date matches when that part was built, and each one holds the finished version of its files. Early commits may not build on their own.
 
 ## Fan content
 
