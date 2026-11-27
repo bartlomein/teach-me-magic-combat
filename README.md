@@ -101,13 +101,14 @@ The rules were checked against the Magic Comprehensive Rules (effective Nov 6, 2
 - Step pages wait for saved progress before they show, so locked steps stay locked. Until then you see the step's outline.
 - The opponent is predictable on purpose, so the final challenge has one clear answer. It doesn't play like a real person.
 - Read-aloud uses the browser's built-in speech, so the voice depends on the device.
-- I checked phone sizes in Chrome and Safari on my laptop, not on a real phone.
+- I tested on an iPhone in Safari, plus phone sizes in Chrome and Safari on my laptop. I haven't tested on an Android phone.
 
 ## Checks I ran
 
 - axe (WCAG 2.2 AA): 0 issues on every page and step, before and after pressing Try, desktop and phone. Run on the live site.
 - Keyboard only: the whole lesson can be finished with Tab, Enter and Space.
-- Lighthouse on the live site: Accessibility, Best Practices and SEO 100. Performance 100 on desktop, 96 on mobile.
+- Lighthouse on the live site: Accessibility, Best Practices and SEO 100. Performance 100 on desktop, 96 to 97 on mobile.
+- Phone layout: on an iPhone, the question and the board fit on one screen in most steps.
 - Reduced motion: the lesson starts in Calm mode. There's also a Full / Calm / Off switch in the header.
 
 ## About the commit history
