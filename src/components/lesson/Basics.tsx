@@ -89,10 +89,10 @@ export function Basics() {
       </ol>
 
       <div className="flex flex-col gap-2 px-5 py-4 [grid-area:act] sm:gap-3 sm:p-6 lg:border-r-[3px] lg:border-ink">
-        <Primary onClick={start} className="w-fit">
+        <Primary onClick={start} className="w-full justify-center sm:w-fit">
           Start Step 1
         </Primary>
-        <p className="text-sm text-ink-soft">5 short steps, about 2 minutes each.</p>
+        <p className="text-center text-sm text-ink-soft sm:text-left">5 short steps, about 2 minutes each.</p>
       </div>
     </section>
   );
