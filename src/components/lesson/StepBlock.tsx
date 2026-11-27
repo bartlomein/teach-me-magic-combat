@@ -213,6 +213,7 @@ export function StepBlock(props: StepProps) {
           {phase === "missed" && <Primary onClick={demo.startTry}>Try again</Primary>}
         </>
       }
+      asking={phase === "ask" || (lighter && phase === "pick")}
       feedback={feedback}
       below={
         <>

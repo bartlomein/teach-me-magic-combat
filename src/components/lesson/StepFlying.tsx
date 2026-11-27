@@ -260,6 +260,7 @@ export function StepFlying(props: StepProps) {
           {phase === "missed" && <Primary onClick={demo.startTry}>Try again</Primary>}
         </>
       }
+      asking={phase === "follow"}
       feedback={feedback}
       below={
         <>

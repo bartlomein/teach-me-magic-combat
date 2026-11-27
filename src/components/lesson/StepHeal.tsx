@@ -154,6 +154,7 @@ export function StepHeal(props: StepProps) {
           )}
         </>
       }
+      asking={phase === "q1" || phase === "q2"}
       feedback={feedback}
       below={<PinKey {...keyProps} />}
       announce={step.announce}

@@ -16,6 +16,7 @@ export function StepFrame({
   speak,
   howTo,
   bandActions,
+  asking = false,
   board,
   actions,
   feedback,
@@ -34,6 +35,8 @@ export function StepFrame({
   speak: string;
   howTo?: ReactNode;
   bandActions?: ReactNode;
+  /** A question is open: answers and feedback sit under it in the band. */
+  asking?: boolean;
   board: ReactNode;
   actions?: ReactNode;
   feedback: Feedback | null;
@@ -44,6 +47,7 @@ export function StepFrame({
   onNext: () => void;
   nextTitle: string | null;
 }) {
+  const inBand = asking && !done;
   return (
     <section
       aria-labelledby="step-title"
@@ -73,6 +77,12 @@ export function StepFrame({
           </h2>
           {!done && howTo && <p className="col-span-3 text-base text-panel/90">{howTo}</p>}
           {!done && bandActions && <div className="col-span-3 flex flex-wrap gap-3">{bandActions}</div>}
+          {inBand && (
+            <div className="col-span-3 flex flex-col gap-3 text-ink">
+              {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
+              <FeedbackBox feedback={feedback} />
+            </div>
+          )}
         </div>
       </ViewTransition>
 
@@ -86,9 +96,9 @@ export function StepFrame({
             </div>
           )
         ) : (
-          actions && <div className="flex flex-wrap gap-3">{actions}</div>
+          !inBand && actions && <div className="flex flex-wrap gap-3">{actions}</div>
         )}
-        <FeedbackBox feedback={feedback} />
+        {!inBand && <FeedbackBox feedback={feedback} />}
         {!done && below}
       </div>
 

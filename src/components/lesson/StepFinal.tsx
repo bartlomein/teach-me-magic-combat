@@ -394,6 +394,7 @@ export function StepFinal(props: StepProps) {
           )}
         </>
       }
+      asking={phase === "ask"}
       feedback={feedback}
       below={
         <>
