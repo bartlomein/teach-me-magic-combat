@@ -160,7 +160,7 @@ export function StepAttack(props: StepProps) {
       title={ATTACK.title}
       headingRef={headingRef}
       headline={explaining ? ATTACK.headline : prompt}
-      headlineRef={step.headlineRef}
+      focusKey={step.focusKey}
       speak={explaining ? ATTACK.headline : prompt}
       howTo={
         phase === "pick"

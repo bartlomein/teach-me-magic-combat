@@ -77,7 +77,7 @@ export function StepHeal(props: StepProps) {
       title="Damage wears off"
       headingRef={headingRef}
       headline={headline}
-      headlineRef={step.headlineRef}
+      focusKey={step.focusKey}
       speak={headline}
       howTo={phase === "q1" ? "Golem took 3 damage this turn. Predict first." : undefined}
       board={

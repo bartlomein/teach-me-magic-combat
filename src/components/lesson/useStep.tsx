@@ -54,30 +54,8 @@ export function useStep<P extends string>(
   const [announce, setAnnounce] = useState("");
   const lighter = progress.lighter === "active";
 
-  // Not on arrival: the lesson focuses the step heading then.
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const arrived = useRef(false);
-  const focusNow = focusOn.includes(phase);
-  useEffect(() => {
-    if (!arrived.current) {
-      arrived.current = true;
-      return;
-    }
-    const el = headlineRef.current;
-    if (!focusNow || !el) return;
-    el.focus({ preventScroll: true });
-    // Glide (not jump) to what's next: the Next button once done, otherwise the question band.
-    const behavior = fx.mode === "off" ? "auto" : "smooth";
-    const next = el.closest("section")?.querySelector<HTMLElement>("[data-step-next]");
-    if (next) {
-      // After the feedback above it has opened.
-      const t = setTimeout(() => next.scrollIntoView({ behavior, block: "nearest" }), fx.mode === "off" ? 0 : 350);
-      return () => clearTimeout(t);
-    }
-    const band = el.closest<HTMLElement>(".on-spot") ?? el;
-    const top = band.getBoundingClientRect().top;
-    if (top < 0 || top > window.innerHeight / 2) band.scrollIntoView({ behavior, block: "start" });
-  }, [phase, lighter, focusNow, fx.mode]);
+  // StepFrame moves attention to the headline whenever this changes.
+  const focusKey = focusOn.includes(phase) ? `${phase}:${lighter}` : null;
 
   // A combat may still run after leaving the step; its late results must not reach the lesson.
   const here = useRef(true);
@@ -132,7 +110,7 @@ export function useStep<P extends string>(
     setAnnounce,
     lighter,
     hints: hintsShown(progress),
-    headlineRef,
+    focusKey,
     miss,
     wrong,
     hint: () => send({ type: "hint", step }),

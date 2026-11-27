@@ -158,7 +158,7 @@ export function StepFlying(props: StepProps) {
       title="Flying + reach"
       headingRef={headingRef}
       headline={headline}
-      headlineRef={step.headlineRef}
+      focusKey={step.focusKey}
       speak={explaining ? FLYING.speak : headline}
       howTo={
         canPick && !lighter

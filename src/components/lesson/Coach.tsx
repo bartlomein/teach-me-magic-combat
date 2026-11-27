@@ -54,6 +54,8 @@ const TONE = {
   info: { box: "bg-spot-tint", badge: "bg-spot", word: "text-spot", label: "Note", icon: <InfoIcon className="size-3.5" /> },
 };
 
+export const FEEDBACK_OPEN_MS = 300;
+
 // Always mounted so aria-live announces each new message.
 export function FeedbackBox({ feedback }: { feedback: Feedback | null }) {
   return (
@@ -66,7 +68,7 @@ export function FeedbackBox({ feedback }: { feedback: Feedback | null }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: FEEDBACK_OPEN_MS / 1000, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
             <motion.div
@@ -167,7 +169,7 @@ export function PinKey({
   );
 }
 
-type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode };
+type BtnProps = React.ComponentProps<"button"> & { children: ReactNode };
 
 const BTN =
   "inline-flex min-h-12 items-center justify-center gap-2 border-2 px-5 font-bold transition-colors disabled:cursor-not-allowed disabled:border-rule disabled:bg-panel disabled:text-ink-soft/70 disabled:line-through disabled:decoration-1";

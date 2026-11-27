@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ViewTransition, type ReactNode, type Ref } from "react";
+import { useEffect, useEffectEvent, useRef, ViewTransition, type ReactNode, type Ref } from "react";
+import { useMotionMode } from "@/lib/motion-pref";
 import { CheckIcon, CrossIcon } from "../icons";
-import { FeedbackBox, Primary, Speak, type Feedback } from "./Coach";
+import { FEEDBACK_OPEN_MS, FeedbackBox, Primary, Speak, type Feedback } from "./Coach";
 
 const STEP_COMPLETE = "Step complete";
 
@@ -12,7 +13,7 @@ export function StepFrame({
   title,
   headingRef,
   headline,
-  headlineRef,
+  focusKey = null,
   speak,
   howTo,
   bandActions,
@@ -31,7 +32,8 @@ export function StepFrame({
   title: string;
   headingRef: Ref<HTMLHeadingElement>;
   headline: ReactNode;
-  headlineRef?: Ref<HTMLHeadingElement>;
+  /** Changes whenever the step wants attention back on the headline (new question, result). */
+  focusKey?: string | null;
   speak: string;
   howTo?: ReactNode;
   bandActions?: ReactNode;
@@ -48,15 +50,44 @@ export function StepFrame({
   nextTitle: string | null;
 }) {
   const inBand = asking && !done;
+  const mode = useMotionMode();
+  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const bandRef = useRef<HTMLDivElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+
+  // Focus the headline for screen readers, then glide (not jump) to what to do next:
+  // the Next button once the result has opened, otherwise the band if it's off screen.
+  const reveal = useEffectEvent(() => {
+    headlineRef.current?.focus({ preventScroll: true });
+    const behavior = mode === "off" ? "auto" : "smooth";
+    if (done) {
+      const t = setTimeout(() => nextRef.current?.scrollIntoView({ behavior, block: "nearest" }), mode === "off" ? 0 : FEEDBACK_OPEN_MS + 100);
+      return () => clearTimeout(t);
+    }
+    const band = bandRef.current;
+    const top = band?.getBoundingClientRect().top ?? 0;
+    if (top < 0 || top > window.innerHeight / 2) band?.scrollIntoView({ behavior, block: "start" });
+  });
+  // Not on arrival: the lesson focuses the step heading then.
+  const arrived = useRef(false);
+  useEffect(() => {
+    if (!arrived.current) {
+      arrived.current = true;
+      return;
+    }
+    if (focusKey) return reveal();
+  }, [focusKey]);
+
   return (
     <section
       aria-labelledby="step-title"
       className="grid grid-cols-[minmax(0,1fr)] border-[3px] border-ink bg-panel [grid-template-areas:'task'_'board'_'act'] lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:[grid-template-areas:'task_board'_'act_board']"
     >
       <ViewTransition name="task-band" share="morph" default="none">
-        <div className="on-spot grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-3 bg-spot px-5 py-4 text-panel sm:gap-y-4 [grid-area:task] sm:p-6 lg:border-r-[3px] lg:border-ink">
-          <div className="contents">
-            <h1 id="step-title" ref={headingRef} tabIndex={-1} className="col-start-1 row-start-1 leading-none">
+        <div ref={bandRef} className="on-spot flex flex-col gap-3 bg-spot px-5 py-4 text-panel [grid-area:task] sm:gap-4 sm:p-6 lg:border-r-[3px] lg:border-ink">
+          {/* Phones: number, headline, speaker on one line. Larger: the headline wraps below. */}
+          <div className="flex flex-wrap items-start gap-x-3 gap-y-4">
+            <h1 id="step-title" ref={headingRef} tabIndex={-1} className="leading-none">
               <span aria-hidden className="text-[1.625rem] font-extrabold tracking-[-0.04em] sm:text-[2.5rem]">
                 {n}
               </span>
@@ -64,21 +95,21 @@ export function StepFrame({
                 Step {n}: {title}
               </span>
             </h1>
-            <div className="col-start-3 row-start-1">
+            <h2
+              ref={headlineRef}
+              tabIndex={-1}
+              className="min-w-0 flex-1 text-[clamp(1.375rem,3vw,1.875rem)] leading-[1.15] font-bold tracking-[-0.015em] sm:order-last sm:basis-full"
+            >
+              {done ? doneHeadline : headline}
+            </h2>
+            <div className="ml-auto">
               <Speak text={done ? doneHeadline : speak} onSpot />
             </div>
           </div>
-          <h2
-            ref={headlineRef}
-            tabIndex={-1}
-            className="col-start-2 row-start-1 text-[clamp(1.375rem,3vw,1.875rem)] leading-[1.15] sm:col-span-3 sm:col-start-1 sm:row-start-2 font-bold tracking-[-0.015em]"
-          >
-            {done ? doneHeadline : headline}
-          </h2>
-          {!done && howTo && <p className="col-span-3 text-base text-panel/90">{howTo}</p>}
-          {!done && bandActions && <div className="col-span-3 flex flex-wrap gap-3">{bandActions}</div>}
+          {!done && howTo && <p className="text-base text-panel/90">{howTo}</p>}
+          {!done && bandActions && <div className="flex flex-wrap gap-3">{bandActions}</div>}
           {inBand && (
-            <div className="col-span-3 flex flex-col gap-3 text-ink">
+            <div className="flex flex-col gap-3 text-ink">
               {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
               <FeedbackBox feedback={feedback} />
             </div>
@@ -92,7 +123,7 @@ export function StepFrame({
         {!done && !inBand && actions && <div className="flex flex-wrap gap-3">{actions}</div>}
         {!inBand && <FeedbackBox feedback={feedback} />}
         {done && nextTitle && (
-          <Primary onClick={onNext} data-step-next className="w-full justify-center sm:w-fit">
+          <Primary ref={nextRef} onClick={onNext} className="w-full justify-center sm:w-fit">
             Next: {nextTitle}
           </Primary>
         )}

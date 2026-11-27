@@ -253,7 +253,7 @@ export function StepFinal(props: StepProps) {
       title="Final challenge"
       headingRef={headingRef}
       headline={headline}
-      headlineRef={step.headlineRef}
+      focusKey={step.focusKey}
       speak={intro ? FINAL.speak : headline}
       howTo={
         intro

@@ -121,7 +121,7 @@ export function StepBlock(props: StepProps) {
       title="Blocking"
       headingRef={headingRef}
       headline={headline}
-      headlineRef={step.headlineRef}
+      focusKey={step.focusKey}
       speak={explaining ? BLOCK.speak : headline}
       howTo={
         canPick ? "Tap one of your creatures, then press Block." : phase === "missed" ? "Watch what happened, then try again." : undefined

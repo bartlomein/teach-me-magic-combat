@@ -167,7 +167,7 @@ const WIN = "bg-spot px-3 py-1 text-sm font-extrabold text-panel";
 function WinCountdown({ mode }: { mode: "full" | "calm" | "off" }) {
   const life = useMotionValue(20);
   const shown = useTransform(life, (v) => Math.round(v));
-  const [finished, setWon] = useState(false);
+  const [finished, setFinished] = useState(false);
 
   useEffect(() => {
     if (mode !== "full") return;
@@ -175,7 +175,7 @@ function WinCountdown({ mode }: { mode: "full" | "calm" | "off" }) {
       delay: PANEL_START + 2 * PANEL_GAP + 0.9,
       duration: 2.6,
       ease: [0.33, 0, 0.2, 1],
-      onComplete: () => setWon(true),
+      onComplete: () => setFinished(true),
     });
     return () => controls.stop();
   }, [life, mode]);
