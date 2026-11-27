@@ -74,7 +74,7 @@ export function QuickCheck() {
     router.push(stepHref(firstStep.id), { transitionTypes: ["nav-forward"] });
   }
 
-  const fade = mode === "off" ? {} : { initial: { opacity: 0, y: mode === "full" ? 10 : 0 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0 }, transition: { duration: 0.35 } };
+  const fade = mode === "off" ? { initial: false, animate: { opacity: 1, y: 0 } } : { initial: { opacity: 0, y: mode === "full" ? 10 : 0 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0 }, transition: { duration: 0.35 } };
 
   return (
     <section

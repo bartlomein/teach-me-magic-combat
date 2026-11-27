@@ -34,7 +34,7 @@ export function Basics() {
 
   const reveal = (i: number) =>
     mode === "off"
-      ? {}
+      ? { initial: false, animate: { opacity: 1, y: 0 } }
       : {
           initial: { opacity: 0, y: mode === "full" ? 14 : 0 },
           animate: { opacity: 1, y: 0 },
@@ -47,22 +47,22 @@ export function Basics() {
       className="grid grid-cols-[minmax(0,1fr)] border-[3px] border-ink bg-panel [grid-template-areas:'task'_'panels'_'act'] lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:[grid-template-areas:'task_panels'_'act_panels']"
     >
       <ViewTransition name="task-band" share="morph" default="none">
-        <div className="on-spot flex flex-col gap-3 bg-spot p-5 text-panel [grid-area:task] sm:p-6 lg:border-r-[3px] lg:border-ink">
+        <div className="on-spot flex flex-col gap-1.5 bg-spot px-5 py-4 text-panel sm:gap-3 [grid-area:task] sm:p-6 lg:border-r-[3px] lg:border-ink">
           <h1
             id="basics-title"
             ref={headingRef}
             tabIndex={-1}
-            className="text-[clamp(2rem,4.5vw,2.75rem)] leading-[1.02] font-extrabold tracking-[-0.03em]"
+            className="text-[clamp(1.75rem,4.5vw,2.75rem)] leading-[1.02] font-extrabold tracking-[-0.03em]"
           >
             What&apos;s the game?
           </h1>
-          <p className="text-lg text-panel/90">Combat is how you win.</p>
+          <p className="text-base text-panel/90 sm:text-lg">Combat is how you win.</p>
         </div>
       </ViewTransition>
 
       <ol className="m-0 grid list-none gap-[2px] border-y-[3px] border-ink bg-ink p-0 [grid-area:panels] sm:grid-cols-3 lg:border-y-0">
         <Panel n={1} caption="You each start with 20 life." motionProps={reveal(0)}>
-          <div className="flex flex-col items-center gap-2.5">
+          <div className="flex items-center gap-2.5 sm:flex-col">
             <LifeChip who="Opponent" life={20} transitionName="life-opp" />
             <span aria-hidden className="text-sm font-bold text-ink-soft">
               vs
@@ -72,8 +72,8 @@ export function Basics() {
         </Panel>
 
         <Panel n={2} caption="Creatures fight for you." motionProps={reveal(1)}>
-          <div className="flex flex-col items-center gap-3">
-            <div className="[--card-w:clamp(120px,30vw,150px)]">
+          <div className="flex items-center gap-4 sm:flex-col sm:gap-3">
+            <div className="[--card-w:clamp(96px,26vw,150px)]">
               <Card card={CARDS.emberPup} transitionName="card-emberPup" />
             </div>
             <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-1.5 text-[15px]">
@@ -88,7 +88,7 @@ export function Basics() {
         </Panel>
       </ol>
 
-      <div className="flex flex-col gap-3 p-5 [grid-area:act] sm:p-6 lg:border-r-[3px] lg:border-ink">
+      <div className="flex flex-col gap-2 px-5 py-4 [grid-area:act] sm:gap-3 sm:p-6 lg:border-r-[3px] lg:border-ink">
         <Primary onClick={start} className="w-fit">
           Start Step 1
         </Primary>
@@ -112,14 +112,14 @@ function Panel({
   return (
     // Fading the whole panel would show the divider ink as a dark block.
     <li className="paper flex">
-      <motion.div {...motionProps} className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+      <motion.div {...motionProps} className="flex flex-1 flex-col gap-3 px-5 py-4 sm:gap-4 sm:p-6">
         <p className="flex items-start gap-2.5 text-[17px] leading-snug font-bold">
           <span aria-hidden className="grid size-[26px] shrink-0 place-items-center rounded-full border-2 border-ink text-xs">
             {n}
           </span>
           {caption}
         </p>
-        <div className="flex min-h-[8rem] flex-1 items-center justify-center sm:min-h-[13rem]">{children}</div>
+        <div className="flex flex-1 items-center justify-center sm:min-h-[13rem]">{children}</div>
       </motion.div>
     </li>
   );
@@ -128,7 +128,7 @@ function Panel({
 function Legend({ n, text, delay, mode }: { n: string; text: string; delay: number; mode: "full" | "calm" | "off" }) {
   const anim =
     mode === "off"
-      ? {}
+      ? { initial: false, animate: { opacity: 1 } }
       : { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay, duration: 0.6, ease: "easeOut" as const } };
   return (
     <>
@@ -162,10 +162,12 @@ function LifeChip({ who, life, transitionName }: { who: string; life: number | s
   );
 }
 
+const WIN = "bg-spot px-3 py-1 text-sm font-extrabold text-panel";
+
 function WinCountdown({ mode }: { mode: "full" | "calm" | "off" }) {
-  const life = useMotionValue(mode === "full" ? 20 : 0);
+  const life = useMotionValue(20);
   const shown = useTransform(life, (v) => Math.round(v));
-  const [won, setWon] = useState(mode !== "full");
+  const [finished, setWon] = useState(false);
 
   useEffect(() => {
     if (mode !== "full") return;
@@ -179,22 +181,26 @@ function WinCountdown({ mode }: { mode: "full" | "calm" | "off" }) {
   }, [life, mode]);
 
   return (
-    <div aria-hidden className="flex flex-col items-center gap-3">
+    <div aria-hidden className="flex items-center gap-3 sm:flex-col">
       <span className="inline-flex items-center gap-2.5 border-2 border-ink bg-panel px-3 py-1.5 font-bold">
         <span className="text-[15px]">Opponent</span>
         <span className="inline-flex min-w-[3ch] items-center gap-1.5 tabular-nums">
           <HeartIcon className="size-4 text-miss" />
-          <motion.span>{shown}</motion.span>
+          {mode === "full" ? <motion.span>{shown}</motion.span> : 0}
         </span>
       </span>
-      <motion.span
-        initial={false}
-        animate={{ opacity: won ? 1 : 0, scale: won ? 1 : 0.92 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-spot px-3 py-1 text-sm font-extrabold text-panel"
-      >
-        You win
-      </motion.span>
+      {mode === "full" ? (
+        <motion.span
+          initial={false}
+          animate={{ opacity: finished ? 1 : 0, scale: finished ? 1 : 0.92 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className={WIN}
+        >
+          You win
+        </motion.span>
+      ) : (
+        <span className={WIN}>You win</span>
+      )}
     </div>
   );
 }
