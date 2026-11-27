@@ -200,9 +200,9 @@ export function Board({
   className?: string;
 }) {
   return (
-    <figure ref={scope} className={`paper relative m-0 flex flex-col gap-2 overflow-visible px-3 pt-6 sm:px-6 ${className}`}>
+    <figure ref={scope} className={`paper relative m-0 flex flex-col gap-1 overflow-visible px-3 pt-3 sm:gap-2 sm:px-6 sm:pt-6 ${className}`}>
       {opp}
-      <div aria-hidden className="table-midline relative flex min-h-12 items-center justify-center">
+      <div aria-hidden className="table-midline relative flex min-h-5 items-center sm:min-h-12 justify-center">
         {between && <span className="relative bg-panel px-3">{between}</span>}
       </div>
       {you}
@@ -240,9 +240,9 @@ export function Row({
         alt=""
         width={48}
         height={48}
-        className={`size-12 shrink-0 rounded-full border-2 object-cover ${side === "you" ? "border-[#c99a2e]" : "border-ink"}`}
+        className={`size-10 shrink-0 rounded-full sm:size-12 border-2 object-cover ${side === "you" ? "border-[#c99a2e]" : "border-ink"}`}
       />
-      <div className="flex flex-col items-start gap-1">
+      <div className="flex items-center gap-2 sm:flex-col sm:items-start sm:gap-1">
         <span className="text-sm leading-none font-bold">{label}</span>
         <Life side={side} life={life} />
       </div>
@@ -252,7 +252,7 @@ export function Row({
   return (
     <div
       data-side={side}
-      className={`table-side -mx-3 flex flex-col gap-5 px-3 sm:-mx-6 sm:px-6 ${side === "opp" ? "-mt-6 pt-6 pb-3" : "pt-3 pb-6"}`}
+      className={`table-side -mx-3 flex flex-col gap-3 px-3 sm:-mx-6 sm:gap-5 sm:px-6 ${side === "opp" ? "-mt-3 pt-3 pb-2 sm:-mt-6 sm:pt-6 sm:pb-3" : "pt-2 pb-3 sm:pt-3 sm:pb-6"}`}
     >
       {side === "opp" && plate}
       <div className="board-row flex min-h-[8rem] items-center justify-center gap-2.5 sm:gap-5">
